@@ -259,4 +259,14 @@ Dead dep: **Fuel** (0 usages) — remove.
   - Green: `:shared:jvmJar`, `:app:assembleDebug`, `:app:testDebugUnitTest`. **This also means
     `:app` → `:shared` linkage is now live.** Next: the `java.time` → `kotlinx-datetime` conversion
     (blocker for moving `UserDatabase` + its 18 entities/2 DAOs).
+- 2026-10-11 — **Coil 2 → 3** (§7 item 6, partial). `2.7.0` (`io.coil-kt:coil-compose`) →
+  `3.2.0` (`io.coil-kt.coil3:coil-compose`). Version chosen because 3.2.0's `kotlin-stdlib` is
+  `2.1.20` (== our Kotlin); **3.3.0+ requires Kotlin 2.2.0 and would be unreadable.** Coil 3 ships no
+  network support by default, so added `coil-network-okhttp:3.2.0` (Android/JVM only; auto-enables
+  `https://` URLs — the two call sites load GitHub avatars). Only two files used Coil
+  (`Contributor.kt`, `infocenter/fragments/Messages.kt`); changed the imports to `coil3.compose.*`
+  (`rememberAsyncImagePainter`, `AsyncImagePainter.State.Success` unchanged). No `ImageLoaderFactory`
+  / implicit Coil 2 config elsewhere. Green: `:app:assembleDebug`, `:app:testDebugUnitTest`.
+  - Still open in item 6: replace Accompanist (FlowRow, SwipeRefresh, SystemUiController, Permissions
+    — `accompanist-permissions` has no direct androidx drop-in).
 

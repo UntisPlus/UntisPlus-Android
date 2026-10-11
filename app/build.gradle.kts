@@ -223,6 +223,7 @@ dependencies {
 	implementation(libs.androidx.work)
 	implementation(libs.colormath)
 	implementation(libs.coil)
+	implementation(libs.coil.network.okhttp)
 	implementation(libs.koin.android)
 	implementation(libs.koin.androidx.compose)
 	implementation(libs.koin.androidx.workmanager)

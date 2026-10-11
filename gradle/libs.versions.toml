@@ -18,7 +18,7 @@ androidx-room = "2.7.2"
 androidx-swiperefreshlayout = "1.2.0-beta01"
 androidx-test = "1.6.1"
 androidx-work = "2.10.2"
-coil = "2.7.0"
+coil = "3.2.0"
 colormath = "3.6.1"
 compose-theme-adapter = "1.2.1"
 dagger = "2.56.2"
@@ -85,7 +85,8 @@ androidx-test = { module = "androidx.test:core", version.ref = "androidx-test" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test" }
 androidx-transition-ktx = { module = "androidx.transition:transition-ktx", version.ref = "transition-ktx" }
 androidx-work = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
-coil = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+coil = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 colormath = { module = "com.github.ajalt.colormath:colormath", version.ref = "colormath" }
 dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref="dagger"}
 desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar-jdk" }

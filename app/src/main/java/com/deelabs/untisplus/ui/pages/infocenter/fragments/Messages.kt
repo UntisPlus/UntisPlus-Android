@@ -58,8 +58,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.text.HtmlCompat
 import org.koin.androidx.compose.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImagePainter
-import coil.compose.rememberAsyncImagePainter
+import coil3.compose.AsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.api.model.untis.Attachment
 import com.deelabs.untisplus.api.model.untis.MessageOfDay

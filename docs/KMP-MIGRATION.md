@@ -159,3 +159,14 @@ Dead dep: **Fuel** (0 usages) — remove.
 - [ ] Auto-mute (Shortcuts approximation)
 - [ ] `.ics` share-sheet import
 - [ ] SideStore auto-refresh set up
+
+## 14. Progress log
+- 2026-10-11 — Phase 1 started on branch `feature/kmp-shared-core`:
+  - Added an in-repo `:shared` Kotlin Multiplatform module (targets: `android`, `jvm`, iOS
+    `arm64`/`simulatorArm64`/`x64`; the Apple targets are disabled on non-macOS hosts). This is the
+    seed of the future `UntisPlus-Shared` repo — it can be extracted to its own repository once its
+    modules are free of JVM-only dependencies.
+  - Moved the self-contained, JVM-free `Base32` utility into `commonMain`; `:api` now depends on
+    `:shared`.
+  - Removed the unused Fuel dependency.
+  - `./gradlew :app:assembleDebug` verified green.

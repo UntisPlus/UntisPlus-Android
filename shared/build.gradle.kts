@@ -30,6 +30,8 @@ kotlin {
 
 	sourceSets {
 		commonMain.dependencies {
+			api(project(":api"))
+			implementation(libs.kotlinx.serialization.json)
 			implementation(libs.androidx.room.runtime)
 		}
 	}

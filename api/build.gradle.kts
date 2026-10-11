@@ -28,7 +28,6 @@ kotlin {
 
 	sourceSets {
 		commonMain.dependencies {
-			implementation(project(":shared"))
 			implementation(libs.kotlinx.serialization.json)
 			api(libs.kotlinx.datetime)
 			implementation(libs.ktor.client.core)

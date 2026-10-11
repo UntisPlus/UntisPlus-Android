@@ -188,4 +188,18 @@ Dead dep: **Fuel** (0 usages) — remove.
     `:app:testDebugUnitTest` verified green. `:api:jvmTest` passes (38/38) under `TZ=UTC`; one
     empty-string fallback test is timezone-sensitive as before.
   - Added `shared/.gitignore` (`/build`) so the new module's build output is not committed.
+  - Converted `:material-color-utils` (§7 item 2) to Kotlin Multiplatform: the 11 non-empty Java
+    sources (`utils/{MathUtils,ColorUtils}.java`, `hct/{Cam16,Hct,HctSolver,ViewingConditions}.java`,
+    `palettes/{CorePalette,TonalPalette}.java`, `blend/Blend.java`, `scheme/Scheme.java`,
+    `score/Score.java`) were manually translated to `commonMain` Kotlin with identical behavior and
+    package names; `src/main/java` was deleted. The Google errorprone annotations on `Scheme.java`
+    were dropped (no runtime effect).
+  - Added a **golden test** (`SchemeGoldenTest`, JVM) that asserts `Scheme.light`/`dark`/
+    `lightContent`/`darkContent` for 8 ARGB seeds (incl. the app's default theme colours) against a
+    snapshot captured from the original Java implementation (`jvmTest/resources/golden.txt`, 1152
+    values). Route: `Scheme.dark`/`light` → `CorePalette` → `TonalPalette` → `Hct` → `HctSolver`
+    → `Cam16` → `ColorUtils`/`MathUtils`, so the test pins the whole pipeline. Other entry points
+    (`Blend`, `Score`, `Hct` mutators) were ported 1:1 but aren't asserted yet.
+  - `:material-color-utils:jvmTest` green; `./gradlew :app:assembleDebug` and
+    `:app:testDebugUnitTest` green after the conversion.
 

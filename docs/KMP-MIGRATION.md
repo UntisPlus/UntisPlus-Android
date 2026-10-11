@@ -144,10 +144,10 @@ Dead dep: **Fuel** (0 usages) — remove.
 | **Total** | **~2.5–4.5 months** |
 
 ## 13. Parity checklist (shared/iOS)
-- [ ] API client (`:api` → KMP)
+- [x] API client (`:api` → KMP)
 - [x] Hilt → Koin
-- [ ] Room KMP (toolchain proven; `RoomFinderDatabase` moved to `:shared`, `UserDatabase` pending `java.time` conversion)
-- [ ] `java.time` → `kotlinx-datetime`
+- [x] Room KMP (`RoomFinderDatabase` + `UserDatabase` and all entities/DAOs moved to `:shared`)
+- [x] `java.time` → `kotlinx-datetime` (targeted: data/domain/ical layers; UI/workers stay `java.time`)
 - [ ] Settings store (protostore replacement)
 - [ ] Login (password/secret/QR)
 - [ ] SSO seamless login (WKWebView)
@@ -284,4 +284,33 @@ Dead dep: **Fuel** (0 usages) — remove.
   - Removed `accompanist-*` from the version catalog and `app/build.gradle.kts`. Green:
     `:app:assembleDebug`, `:app:testDebugUnitTest`, and **`:app:lintDebug`** (first lint run this
     session — passes).
+- 2026-10-12 — **`java.time` → `kotlinx-datetime`** (targeted, §13 item). Converted only the
+  data/domain/ical layers; UI, workers and receivers stay on `java.time` and convert at the boundary
+  via the kotlinx-datetime JVM interop (`toKotlinLocalDate`/`toJavaLocalDateTime`, …).
+  - iCal stack (`ICalModels`/`ICalParser`/`RecurrenceExpander`) rewritten on `kotlinx.datetime`
+    (`DayOfWeek`, `LocalDateTime`, `DateTimePeriod`, `Instant`/`TimeZone`). Gotcha: kotlinx-datetime
+    0.6.2 has **no `LocalDateTime.plus/minus`** at all — added a `LocalDateTime.plusPeriodAtUtc(period)`
+    helper that routes through `Instant` at UTC. `DayOfWeek.isoDayNumber` needs
+    `import kotlinx.datetime.isoDayNumber`.
+  - Entities, `UserDatabase` converters, six domain use cases, `InfoCenterRepository`,
+    `ImportedCalendarRepository`, `ImportedCalendarEventEntity`, and `TimetableViewModel` converted.
+    Green: `:app:compileDebugKotlin`, `:app:testDebugUnitTest`, `:app:lintDebug`.
+- 2026-10-12 — **Invert `:api`/`:shared` dependency** (resolves the Room blocker). `:shared` now
+  depends on `:api` (`api(project(":api"))` + `kotlinx-serialization-json`); `:api` no longer depends
+  on `:shared`, and `Base32` moved back to `api/src/commonMain/…/api/util/Base32.kt`. Green:
+  `:api:compileDebugKotlin`, `:shared:compileDebugKotlin`.
+- 2026-10-12 — **Move `UserDatabase` into `:shared` (Room KMP)** (§13 item 3 complete). All 18
+  entities, 2 DAOs, `Mapper.kt`, `UserDatabase.kt` and the exported schemas (`8.json`…`14.json`) moved
+  to `:shared` (`shared/schemas/com.deelabs.untisplus.data.database.UserDatabase/`).
+  - `UserDatabase` gained `@ConstructedBy(UserDatabaseConstructor::class)` + `expect object
+    UserDatabaseConstructor : RoomDatabaseConstructor<UserDatabase>`; the `AutoMigrationSpec`s
+    (`MigrationSpec10to11`/`11to12`) moved to `shared/…/data/database/MigrationSpecs.kt`. The legacy
+    raw-SQL `Migration`s (`MIGRATIONS_USER_LEGACY`, `MIGRATION_USER_7_8`) and
+    `UserDatabaseLegacyContract` stay in `:app`.
+  - `User` was the only Android-coupled entity — its `Uri`/`Context`/`@Composable`/`R`-string members
+    and companion helpers were split into `app/…/data/database/entities/UserAndroid.kt` as top-level
+    functions / extension properties in the same package; ~11 app call sites updated.
+  - Verified Room KMP codegen in `:shared/build/generated/ksp/android/androidDebug`: `UserDatabase_Impl`
+    + all six auto-migration impls + `UserDatabaseConstructor`. Green: `:app:assembleDebug`,
+    `:app:testDebugUnitTest`, `:app:lintDebug`.
 

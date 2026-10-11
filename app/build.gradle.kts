@@ -285,4 +285,5 @@ dependencies {
 
 	implementation(project(":api"))
 	implementation(project(":material-color-utils"))
+	implementation(project(":shared"))
 }

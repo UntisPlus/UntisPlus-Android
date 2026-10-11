@@ -1,7 +1,9 @@
 package com.deelabs.untisplus.data.database
 
+import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import com.deelabs.untisplus.data.database.entities.RoomFinderDao
@@ -14,8 +16,15 @@ import com.deelabs.untisplus.data.database.entities.RoomFinderEntity
 	]
 )
 @TypeConverters(RoomFinderConverters::class)
+@ConstructedBy(RoomFinderDatabaseConstructor::class)
 abstract class RoomFinderDatabase : RoomDatabase() {
 	abstract fun roomFinderDao(): RoomFinderDao
+}
+
+// The Room compiler generates the `actual` implementations for each target.
+@Suppress("KotlinNoActualForExpect")
+expect object RoomFinderDatabaseConstructor : RoomDatabaseConstructor<RoomFinderDatabase> {
+	override fun initialize(): RoomFinderDatabase
 }
 
 internal class RoomFinderConverters {

@@ -146,7 +146,7 @@ Dead dep: **Fuel** (0 usages) — remove.
 ## 13. Parity checklist (shared/iOS)
 - [ ] API client (`:api` → KMP)
 - [x] Hilt → Koin
-- [ ] Room KMP
+- [ ] Room KMP (toolchain proven; `RoomFinderDatabase` moved to `:shared`, `UserDatabase` pending `java.time` conversion)
 - [ ] `java.time` → `kotlinx-datetime`
 - [ ] Settings store (protostore replacement)
 - [ ] Login (password/secret/QR)
@@ -240,4 +240,23 @@ Dead dep: **Fuel** (0 usages) — remove.
     `:app:testDebugUnitTest` green. Removed the now-unused Hilt plugin from the root build script.
   - Deferred: `app/src/androidTest/**` still references Hilt (`HiltTestRunner`, test modules,
     screenshots) — not compiled by the normal build; migrate to Koin later.
+- 2026-10-11 — **Room KMP toolchain proof-of-concept** (§13 item 3, partial). Moved the
+  `java.time`-free `RoomFinderDatabase` (+ `RoomFinderEntity`/`RoomFinderDao`, package unchanged at
+  `com.deelabs.untisplus.data.database`) into `:shared/commonMain` as a real KMP `@Database`:
+  `@ConstructedBy(RoomFinderDatabaseConstructor::class)` + `expect object … : RoomDatabaseConstructor`.
+  - `:shared/build.gradle.kts`: added the KSP plugin, `room-runtime` in `commonMain`,
+    `room-compiler` on `kspAndroid` **and** `kspJvm`, and `room.schemaLocation = shared/schemas`
+    (moved the existing exported schema `…RoomFinderDatabase/1.json` there from `app/schemas`).
+  - Gotcha: KSP's JVM Java-compile task defaulted to the toolchain (21) while the Kotlin
+    `jvmTarget` is 17, tripping Kotlin's JVM-target validation — fixed by pinning all
+    `JavaCompile` tasks to source/target 17 (`options.release` is rejected by AGP, so
+    `sourceCompatibility`/`targetCompatibility` are used instead).
+  - `:app` now depends on `:shared`; `DatabaseModule` keeps the classic
+    `Room.databaseBuilder(androidContext(), RoomFinderDatabase::class.java, "roomfinder.db")`.
+    Verified the Room 2.7.2 generated `_Impl` uses the new `RoomOpenDelegate`/`SQLiteConnection`
+    architecture (no `(Context)` ctor) — same shape as the working `UserDatabase_Impl`, so the
+    classic builder still resolves it by reflection.
+  - Green: `:shared:jvmJar`, `:app:assembleDebug`, `:app:testDebugUnitTest`. **This also means
+    `:app` → `:shared` linkage is now live.** Next: the `java.time` → `kotlinx-datetime` conversion
+    (blocker for moving `UserDatabase` + its 18 entities/2 DAOs).
 

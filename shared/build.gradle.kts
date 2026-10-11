@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
 	alias(libs.plugins.kotlin.multiplatform)
 	alias(libs.plugins.agp.library)
+	alias(libs.plugins.ksp)
 }
 
 kotlin {
@@ -26,6 +27,28 @@ kotlin {
 	iosX64()
 
 	jvmToolchain(21)
+
+	sourceSets {
+		commonMain.dependencies {
+			implementation(libs.androidx.room.runtime)
+		}
+	}
+}
+
+ksp {
+	arg("room.schemaLocation", "$projectDir/schemas")
+}
+
+// The JVM target pins bytecode to 17 while the toolchain is 21; keep the
+// Java compilation tasks (including the one KSP creates) in sync.
+tasks.withType<JavaCompile>().configureEach {
+	sourceCompatibility = JavaVersion.VERSION_17.toString()
+	targetCompatibility = JavaVersion.VERSION_17.toString()
+}
+
+dependencies {
+	add("kspAndroid", libs.androidx.room.compiler)
+	add("kspJvm", libs.androidx.room.compiler)
 }
 
 android {

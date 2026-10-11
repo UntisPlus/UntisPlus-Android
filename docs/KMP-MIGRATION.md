@@ -313,4 +313,44 @@ Dead dep: **Fuel** (0 usages) — remove.
   - Verified Room KMP codegen in `:shared/build/generated/ksp/android/androidDebug`: `UserDatabase_Impl`
     + all six auto-migration impls + `UserDatabaseConstructor`. Green: `:app:assembleDebug`,
     `:app:testDebugUnitTest`, `:app:lintDebug`.
+- 2026-10-12 — **Move ical/models/exceptions into `:shared`.** Moved (packages unchanged, no import
+  churn): `ical/{ICalModels,ICalParser,RecurrenceExpander}.kt`, `models/{TimetableItem,RoomFinder}.kt`,
+  `data/repository/TimetableChangeBus.kt`, `data/model/github/GitHubUser.kt`,
+  `exceptions/UntisRestApiException.kt`. Green: `:app:assembleDebug`, `:app:testDebugUnitTest`.
+- 2026-10-12 — **Multiplatform `User` URL builder + `UserDao` suspend-only.**
+  - Added `shared/…/data/database/entities/UserUrl.kt`: pure-Kotlin endpoint resolution for `User`
+    (`normalizeApiEndpoint`, `buildApiUrlString`/`buildJsonRpcApiUrlString`, `resolveApiEndpoint`,
+    `queryParameter`, `UNTISPLUS_API_HOST`) plus `apiUrlString`/`jsonRpcApiUrlString`/
+    `proxyBaseUrlString`/`proxySchoolNameValue`/`restApiUrlString`/`restApiAuthUrlString`. The Android
+    `Uri`-returning helpers in `UserAndroid.kt` now delegate to these.
+  - Converted `UserDao.getAll()`/`getById()` to `suspend` (Room KMP rejects blocking DAO functions on
+    non-Android targets — this had silently broken the `jvm`/iOS `:shared` targets). Added
+    `commonTest` (`kotlin-test`), a `UserUrlTest` (11 cases) and the
+    `-Xexpect-actual-classes` compiler flag.
+  - Green: `:shared:jvmTest`, `:app:assembleDebug`, `:app:testDebugUnitTest`, `:app:lintDebug`.
+- 2026-10-12 — **Move the disk cache into `:shared` (okio).** `DiskCache`/`ApiCacheCleaner` rewritten on
+  `okio.FileSystem`/`okio.Path` (MD5 key via `HashingSink`, `lastModifiedAtMillis` for the cache time)
+  and moved to `shared/…/data/cache/`; `universal-cache` (KMP) + `okio` exposed as `api` deps.
+  `cacheDir` DI now provides `okio.Path` (`androidContext().cacheDir.toOkioPath()`); repositories build
+  cache paths with `Path.resolve(...)`. `ApiCacheCleaner.clearApiCaches(cacheDir: Path)`. Green.
+- 2026-10-12 — **Move repositories into `:shared`.**
+  - Added `shared/…/data/repository/CurrentUserProvider.kt` (`val currentUser: User?`) so shared
+    repositories no longer depend on the Android/DataStore-backed `UserRepository`; the app's
+    `UserRepository` implements it and is bound as a Koin `single<CurrentUserProvider>`.
+  - Moved `TimetableRepository` (interface converted to `kotlinx.datetime` `LocalDate`/`LocalTime`;
+    `TimetableParams.endDate` default uses `LocalDate.plus(5, DateTimeUnit.DAY)`), `InfoCenterRepository`
+    and `ProxyRepository` (ktor `ClientRequestException`; ktor-client-core + coroutines-core added to
+    `:shared` commonMain) to `:shared`, using the `…String` URL extensions and `CurrentUserProvider`.
+    Android call sites convert `java.time` at the boundary (`toKotlinLocalDate`/`toKotlinLocalTime`).
+  - Green: `:shared:jvmTest`, `:app:assembleDebug`, `:app:testDebugUnitTest`, `:app:lintDebug`.
+  - Left in `:app` (Android/engine-coupled): `MessagesRepository` (needs `MessagesApiFactory`, ktor
+    engine + `synchronized` `keyedLazy`), `UserRepository`, settings repositories,
+    `ImportedCalendarRepository`, `UntisMasterDataRepository`.
+- 2026-10-12 — **Move `MasterDataRepository` interface + pure domain use cases into `:shared`.** Split
+  `MasterDataRepository.kt`: the interface + `DefaultMasterDataRepository` (pure) moved to `:shared`
+  (`ELEMENT_NAME_UNKNOWN` now lives on `MasterDataRepository.Companion`); `UntisMasterDataRepository` +
+  `LocalMasterDataRepository` (Compose `compositionLocalOf`) stay in `:app`. Moved `GetCurrentSchoolYear`,
+  `GetExams`, `GetHomework`, `GetMessagesOfDay`, `GetOfficeHours` use cases (former two via
+  `MasterDataRepository`; the rest via `CurrentUserProvider`). `GetAbsences` (UserSettings/DataStore),
+  `GetMessages` (MessagesRepository) and `GetRoomFinderItems` (WeekLogicService) stay in `:app`. Green.
 

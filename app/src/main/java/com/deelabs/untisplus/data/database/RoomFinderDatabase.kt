@@ -7,7 +7,6 @@ import androidx.room.TypeConverters
 import com.deelabs.untisplus.data.database.entities.RoomFinderDao
 import com.deelabs.untisplus.data.database.entities.RoomFinderEntity
 
-
 @Database(
 	version = 1,
 	entities = [

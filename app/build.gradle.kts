@@ -12,7 +12,6 @@ plugins {
 	alias(libs.plugins.mikepenz.aboutlibraries)
 	alias(libs.plugins.ksp)
 	alias(libs.plugins.mannodermaus.android.junit5)
-	alias(libs.plugins.dagger.hilt)
 	alias(libs.plugins.kotlin.parcelize)
 	alias(libs.plugins.protobuf)
 }
@@ -62,7 +61,7 @@ android {
 		versionCode = deriveVersionCode(versionNameValue)
 		versionName = versionNameValue
 		vectorDrawables.useSupportLibrary = true
-		testInstrumentationRunner = "com.deelabs.untisplus.HiltTestRunner"
+		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
 		buildConfigField(
 			"String[]",
@@ -213,8 +212,6 @@ dependencies {
 	implementation(libs.androidx.constraintlayout)
 	implementation(libs.androidx.datastore)
 	implementation(libs.androidx.fragment)
-	implementation(libs.androidx.hilt.navigation.compose)
-	implementation(libs.androidx.hilt.work)
 	implementation(libs.androidx.lifecycle)
 	implementation(libs.androidx.lifecycle.compose)
 	implementation(libs.androidx.navigation.compose)
@@ -226,8 +223,10 @@ dependencies {
 	implementation(libs.androidx.work)
 	implementation(libs.colormath)
 	implementation(libs.coil)
-	implementation(libs.hilt.android)
-	implementation(libs.hilt.compiler)
+	implementation(libs.koin.android)
+	implementation(libs.koin.androidx.compose)
+	implementation(libs.koin.androidx.workmanager)
+	implementation(libs.koin.core)
 	implementation(libs.kotlin.reflect)
 	implementation(libs.kotlinx.coroutines)
 	implementation(libs.kotlinx.datetime)
@@ -251,10 +250,6 @@ dependencies {
 	coreLibraryDesugaring(libs.desugar.jdk.libs)
 
 	ksp(libs.androidx.room.compiler)
-	ksp(libs.androidx.hilt.compiler)
-	ksp(libs.dagger.compiler)
-	ksp(libs.hilt.compiler)
-	kspTest(libs.hilt.compiler)
 
 	testImplementation(libs.junit.jupiter.api)
 	testImplementation(libs.junit.jupiter.params)
@@ -264,13 +259,16 @@ dependencies {
 	testImplementation(libs.junit)
 	testImplementation(libs.mock)
 	testImplementation(libs.mockito)
+	testImplementation(libs.koin.test)
+	testImplementation(libs.koin.test.junit5)
 	testImplementation(libs.hamcrest)
 	testImplementation(libs.hamcrest.library)
 
 	androidTestImplementation(libs.androidx.test)
 	androidTestImplementation(libs.androidx.test.runner)
 	androidTestImplementation(libs.androidx.compose.ui.test)
-	androidTestImplementation(libs.hilt.android.testing)
+	androidTestImplementation(libs.koin.android.test)
+	androidTestImplementation(libs.koin.test)
 	debugImplementation(libs.androidx.compose.ui.test.manifest)
 
 	// fix for Crash from missing `beginTransactionReadOnly()` method in Room due to sqlite version mismatch

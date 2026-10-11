@@ -9,11 +9,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
-import javax.inject.Inject
 import com.deelabs.untisplus.data.repository.UserRepository
 
-
-class GetExamsUseCase @Inject constructor(
+class GetExamsUseCase constructor(
 	private val userRepository: UserRepository,
 	private val infoCenterRepository: InfoCenterRepository,
 	getCurrentSchoolYear: GetCurrentSchoolYearUseCase,

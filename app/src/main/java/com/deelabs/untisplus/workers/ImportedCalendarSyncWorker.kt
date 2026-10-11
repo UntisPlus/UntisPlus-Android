@@ -1,7 +1,6 @@
 package com.deelabs.untisplus.workers
 
 import android.content.Context
-import androidx.hilt.work.HiltWorker
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -11,8 +10,6 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.deelabs.untisplus.data.repository.ImportedCalendarRepository
 import com.deelabs.untisplus.data.repository.UserRepository
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import java.util.concurrent.TimeUnit
 
 /**
@@ -20,10 +17,9 @@ import java.util.concurrent.TimeUnit
  * on-demand refresh happens when a calendar is added; this is the background
  * backstop that keeps long-lived subscriptions up to date.
  */
-@HiltWorker
-class ImportedCalendarSyncWorker @AssistedInject constructor(
-	@Assisted context: Context,
-	@Assisted params: WorkerParameters,
+class ImportedCalendarSyncWorker constructor(
+	context: Context,
+	params: WorkerParameters,
 	private val userRepository: UserRepository,
 	private val importedCalendarRepository: ImportedCalendarRepository,
 ) : CoroutineWorker(context, params) {

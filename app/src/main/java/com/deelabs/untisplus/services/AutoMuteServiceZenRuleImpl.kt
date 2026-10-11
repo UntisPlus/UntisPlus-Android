@@ -12,8 +12,6 @@ import com.deelabs.untisplus.BuildConfig
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.activities.AutoMuteConfigurationActivity
 import com.deelabs.untisplus.data.database.entities.User
-import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
 
 /**
  * Implementation of the AutoMuteService for API 29 (Q) and above.
@@ -27,8 +25,8 @@ import javax.inject.Inject
  * and Zen mode will be enabled if any of them are active.
  */
 @RequiresApi(Build.VERSION_CODES.Q)
-class AutoMuteServiceZenRuleImpl @Inject constructor(
-	@ApplicationContext private val context: Context,
+class AutoMuteServiceZenRuleImpl constructor(
+	private val context: Context,
 	private val notificationManager: NotificationManager,
 ) : AutoMuteService {
 	private lateinit var conditionUri: Uri

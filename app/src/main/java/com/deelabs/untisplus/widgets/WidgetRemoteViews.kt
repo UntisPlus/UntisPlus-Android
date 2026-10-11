@@ -1,6 +1,5 @@
 package com.deelabs.untisplus.widgets
 
-
 /*class WidgetRemoteViewsFactory(private val applicationContext: Context, intent: Intent) : RemoteViewsFactory {
 	companion object {
 		const val EXTRA_INT_WIDGET_ID = "com.deelabs.widgets.id"

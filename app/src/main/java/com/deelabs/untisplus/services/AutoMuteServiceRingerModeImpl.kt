@@ -1,9 +1,8 @@
 package com.deelabs.untisplus.services
 
 import android.media.AudioManager
-import javax.inject.Inject
 
-class AutoMuteServiceRingerModeImpl @Inject constructor(
+class AutoMuteServiceRingerModeImpl constructor(
 	private val audioManager: AudioManager,
 ) : AutoMuteService {
 	override fun isPermissionGranted(): Boolean = true

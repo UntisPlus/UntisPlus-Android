@@ -19,7 +19,6 @@ import com.deelabs.untisplus.data.database.entities.User
 import com.deelabs.untisplus.helpers.SerializationUtils.getJSON
 import com.deelabs.untisplus.ui.navigation.AppNavigator
 import com.deelabs.untisplus.ui.navigation.AppRoutes
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -30,10 +29,8 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.net.HttpURLConnection
 import java.net.URL
-import javax.inject.Inject
 
-@HiltViewModel
-class SsoLoginViewModel @Inject constructor(
+class SsoLoginViewModel constructor(
 	private val navigator: AppNavigator,
 	savedStateHandle: SavedStateHandle
 ) : ViewModel() {

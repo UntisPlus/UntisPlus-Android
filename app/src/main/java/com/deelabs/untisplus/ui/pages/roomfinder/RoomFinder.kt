@@ -42,7 +42,7 @@ import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
@@ -63,7 +63,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoomFinder(
-	viewModel: RoomFinderViewModel = hiltViewModel()
+	viewModel: RoomFinderViewModel = koinViewModel()
 ) {
 	val roomList by viewModel.roomList.collectAsStateWithLifecycle()
 	var showElementPicker by rememberSaveable { mutableStateOf(false) }

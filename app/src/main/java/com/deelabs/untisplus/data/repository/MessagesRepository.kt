@@ -8,8 +8,6 @@ import crocodile8.universal_cache.CachedSource
 import crocodile8.universal_cache.time.TimeProvider
 import kotlinx.serialization.serializer
 import java.io.File
-import javax.inject.Inject
-import javax.inject.Named
 
 interface MessagesRepository {
 	fun messageSource(): CachedSource<Long, Message>
@@ -21,9 +19,9 @@ interface MessagesRepository {
 	fun messagesDraftsSource(): CachedSource<Unit, List<Message>>
 }
 
-class UntisMessagesRepository @Inject constructor(
+class UntisMessagesRepository constructor(
 	private val messagesApiFactory: MessagesApiFactory,
-	@Named("cacheDir") private val cacheDir: File,
+	private val cacheDir: File,
 	private val timeProvider: TimeProvider,
 ) : MessagesRepository {
 	override fun messageSource(): CachedSource<Long, Message> {

@@ -7,7 +7,6 @@ import android.os.Build
 import androidx.core.content.pm.PackageInfoCompat
 import com.deelabs.untisplus.R
 
-
 class GithubIssue(type: Type, log: String) : Issue(type, log) {
 
 	private lateinit var c: Context

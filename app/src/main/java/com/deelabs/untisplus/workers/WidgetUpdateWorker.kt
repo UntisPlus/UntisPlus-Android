@@ -1,21 +1,17 @@
 package com.deelabs.untisplus.workers
 
 import android.content.Context
-import androidx.hilt.work.HiltWorker
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.deelabs.untisplus.data.repository.TimetableRepository
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 
 /**
  * This worker loads the data for widgets.
  */
-@HiltWorker
-class WidgetUpdateWorker @AssistedInject constructor(
-	@Assisted context: Context,
-	@Assisted params: WorkerParameters,
+class WidgetUpdateWorker constructor(
+	context: Context,
+	params: WorkerParameters,
 	timetableRepository: TimetableRepository,
 ) :
 	TimetableDependantWorker(context, params, timetableRepository) {

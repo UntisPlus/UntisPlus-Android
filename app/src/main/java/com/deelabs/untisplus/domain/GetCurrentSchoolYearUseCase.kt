@@ -3,9 +3,8 @@ package com.deelabs.untisplus.domain
 import com.deelabs.untisplus.data.database.entities.SchoolYearEntity
 import com.deelabs.untisplus.data.repository.MasterDataRepository
 import java.time.LocalDate
-import javax.inject.Inject
 
-class GetCurrentSchoolYearUseCase @Inject constructor(
+class GetCurrentSchoolYearUseCase constructor(
 	private val masterDataRepository: MasterDataRepository
 ) {
 	operator fun invoke(currentDate: LocalDate = LocalDate.now()): SchoolYearEntity? {

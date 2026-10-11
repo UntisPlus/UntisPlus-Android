@@ -13,9 +13,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
-import javax.inject.Inject
 
-class GetAbsencesUseCase @Inject constructor(
+class GetAbsencesUseCase constructor(
 	private val userRepository: UserRepository,
 	private val infoCenterRepository: InfoCenterRepository,
 	private val userSettingsRepository: UserSettingsRepository,

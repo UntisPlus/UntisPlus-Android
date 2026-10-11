@@ -18,7 +18,6 @@ import com.deelabs.untisplus.ui.material.scheme.Scheme
 import com.deelabs.untisplus.ui.theme.animated
 import com.deelabs.untisplus.ui.theme.toColorScheme
 
-
 private fun setSystemUiColor(
 	systemUiController: SystemUiController,
 	color: Color = Color.Transparent,

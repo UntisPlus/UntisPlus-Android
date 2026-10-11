@@ -9,17 +9,14 @@ import com.deelabs.untisplus.api.client.SchoolSearchApi
 import com.deelabs.untisplus.api.exception.UntisApiException
 import com.deelabs.untisplus.api.model.untis.SchoolInfo
 import com.deelabs.untisplus.helpers.ErrorMessageDictionary
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @OptIn(FlowPreview::class)
-@HiltViewModel
-class SchoolSearchViewModel @Inject constructor(
+class SchoolSearchViewModel constructor(
 	private val schoolSearchApi: SchoolSearchApi,
 ) : ViewModel() {
 	private val _schoolSearchText = MutableStateFlow("")

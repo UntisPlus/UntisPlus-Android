@@ -10,15 +10,12 @@ import com.deelabs.untisplus.data.database.entities.UserDao
 import com.deelabs.untisplus.data.repository.UserSettingsRepository
 import com.deelabs.untisplus.services.AutoMuteService
 import com.deelabs.untisplus.services.AutoMuteServiceZenRuleImpl
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @SuppressLint("NewApi")
-@HiltViewModel
-class AutoMuteSettingsViewModel @Inject constructor(
+class AutoMuteSettingsViewModel constructor(
 	userDao: UserDao,
 	val userSettingsRepository: UserSettingsRepository,
 	val autoMuteService: AutoMuteService,

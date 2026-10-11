@@ -30,7 +30,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sapuseven.compose.protostore.ui.preferences.PreferenceGroup
 import com.deelabs.untisplus.R
@@ -41,7 +41,7 @@ import com.deelabs.untisplus.ui.pages.settings.CalendarSubscriptionsViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsCategoryCalendar(viewModel: CalendarSubscriptionsViewModel = hiltViewModel()) {
+fun SettingsCategoryCalendar(viewModel: CalendarSubscriptionsViewModel = koinViewModel()) {
 	val context = LocalContext.current
 	val uriHandler = LocalUriHandler.current
 	val scope = rememberCoroutineScope()

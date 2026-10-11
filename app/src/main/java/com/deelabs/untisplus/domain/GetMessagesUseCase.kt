@@ -7,7 +7,6 @@ import crocodile8.universal_cache.FromCache
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
 interface GetMessagesUseCase {
 	operator fun invoke(): Flow<Result<List<Message>>>
@@ -15,7 +14,7 @@ interface GetMessagesUseCase {
 	operator fun invoke(id: Long): Flow<Result<Message>>
 }
 
-class GetMessagesUseCaseImpl @Inject constructor(
+class GetMessagesUseCaseImpl constructor(
 	private val userRepository: UserRepository,
 	private val messagesRepository: MessagesRepository,
 ) : GetMessagesUseCase {

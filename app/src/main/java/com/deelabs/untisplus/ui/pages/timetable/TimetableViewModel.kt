@@ -46,7 +46,6 @@ import com.deelabs.untisplus.ui.weekview.WeekViewHour
 import com.deelabs.untisplus.ui.weekview.startDateForPageIndex
 import crocodile8.universal_cache.CachedSourceResult
 import crocodile8.universal_cache.FromCache
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
@@ -68,10 +67,8 @@ import java.time.Clock
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
-import javax.inject.Inject
 
-@HiltViewModel
-class TimetableViewModel @Inject constructor(
+class TimetableViewModel constructor(
 	private val navigator: AppNavigator,
 	private val userSettingsRepository: UserSettingsRepository,
 	private val timetableMapper: TimetableMapper,

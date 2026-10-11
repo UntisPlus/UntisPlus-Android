@@ -4,7 +4,6 @@ import com.deelabs.untisplus.api.model.untis.masterdata.timegrid.Day
 import com.deelabs.untisplus.api.model.untis.masterdata.timegrid.Unit
 import com.deelabs.untisplus.data.database.entities.RoomEntity
 
-
 data class RoomFinderHour(
 	val timeGridDay: Day,
 	val timeGridUnit: Unit

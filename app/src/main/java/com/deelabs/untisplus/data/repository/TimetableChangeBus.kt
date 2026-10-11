@@ -2,8 +2,6 @@ package com.deelabs.untisplus.data.repository
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * In-process signal that the proxy reported a timetable change. The SSE
@@ -15,8 +13,7 @@ import javax.inject.Singleton
  * `StateFlow` does not conflate repeated signals, and so an observer that
  * starts late still sees the latest value.
  */
-@Singleton
-class TimetableChangeBus @Inject constructor() {
+class TimetableChangeBus constructor() {
 	private val _updates = MutableStateFlow(0L)
 	val updates: StateFlow<Long> = _updates
 

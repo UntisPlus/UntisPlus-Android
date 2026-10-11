@@ -95,7 +95,6 @@ open class BaseComposeWidget : GlanceAppWidget() {
 					supportingContent = user?.userData?.schoolName
 				)
 
-
 				items?.let {
 					WidgetListView(
 						modifier = GlanceModifier

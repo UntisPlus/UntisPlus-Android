@@ -21,7 +21,6 @@ import com.deelabs.untisplus.ui.pages.infocenter.fragments.AbsencesUiState
 import com.deelabs.untisplus.ui.pages.infocenter.fragments.EventsUiState
 import com.deelabs.untisplus.ui.pages.infocenter.fragments.MessagesUiState
 import com.deelabs.untisplus.ui.pages.infocenter.fragments.OfficeHoursUiState
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,10 +31,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class InfoCenterViewModel @Inject constructor(
+class InfoCenterViewModel constructor(
 	private val userRepository: UserRepository,
 	internal val masterDataRepository: MasterDataRepository,
 	private val navigator: AppNavigator,

@@ -26,7 +26,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.deelabs.untisplus.R
@@ -35,16 +34,17 @@ import com.deelabs.untisplus.ui.common.MessageBubble
 import com.deelabs.untisplus.ui.functional.insetsPaddingValues
 import com.deelabs.untisplus.ui.pages.settings.Contributor
 import com.deelabs.untisplus.ui.pages.settings.SettingsScreenViewModel
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsCategoryAboutContributors(navController: NavController) {
 	val uriHandler = LocalUriHandler.current
 	val colorScheme = MaterialTheme.colorScheme
-	val viewModel =
-		hiltViewModel<SettingsScreenViewModel, SettingsScreenViewModel.Factory>(creationCallback = { factory ->
-			factory.create(colorScheme)
-		})
+	val viewModel = koinViewModel<SettingsScreenViewModel> {
+		parametersOf(colorScheme)
+	}
 
 	val contributors by viewModel.contributors.collectAsStateWithLifecycle()
 	val contributorsError by viewModel.contributorsError.collectAsStateWithLifecycle()

@@ -25,9 +25,8 @@ import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toJavaLocalTime
 import java.time.DayOfWeek
 import java.time.temporal.ChronoUnit
-import javax.inject.Inject
 
-class TimetableMapper @Inject constructor(
+class TimetableMapper constructor(
 	private val userRepository: UserRepository,
 	private val userSettingsRepository: UserSettingsRepository,
 	private val masterDataRepository: MasterDataRepository,

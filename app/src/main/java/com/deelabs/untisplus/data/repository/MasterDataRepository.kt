@@ -22,8 +22,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import javax.inject.Singleton
 
 interface MasterDataRepository {
 	val user: User?
@@ -44,7 +42,6 @@ interface MasterDataRepository {
 	fun isAllowed(periodElement: PeriodElement): Boolean
 }
 
-@Singleton
 class DefaultMasterDataRepository : MasterDataRepository {
 	override val user: User? = null
 	override val userData: UserWithData? = null
@@ -64,8 +61,7 @@ class DefaultMasterDataRepository : MasterDataRepository {
 	override fun isAllowed(periodElement: PeriodElement): Boolean = true
 }
 
-@Singleton
-class UntisMasterDataRepository @Inject constructor(
+class UntisMasterDataRepository constructor(
 	private val userDao: UserDao,
 	private val userRepository: UserRepository
 ) : MasterDataRepository {

@@ -8,13 +8,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
-import javax.inject.Inject
 
 interface GetMessagesOfDayUseCase {
 	operator fun invoke(): Flow<Result<List<MessageOfDay>>>
 }
 
-class GetMessagesOfDayUseCaseImpl @Inject constructor(
+class GetMessagesOfDayUseCaseImpl constructor(
 	private val userRepository: UserRepository,
 	private val infoCenterRepository: InfoCenterRepository,
 ) : GetMessagesOfDayUseCase {

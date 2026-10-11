@@ -6,10 +6,6 @@ import com.deelabs.untisplus.api.rest.MessagesApi
 import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.exceptions.UntisRestApiException
 import com.deelabs.untisplus.model.rest.ErrorResponse
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.plugins.ClientRequestException
@@ -18,27 +14,20 @@ import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.CookiesStorage
 import io.ktor.serialization.kotlinx.json.json
-import javax.inject.Inject
+import org.koin.dsl.module
 import kotlin.reflect.KProperty
 
-@Module
-@InstallIn(SingletonComponent::class)
-object RestApiClientModule {
-	@Provides
-	fun provideMessagesApiFactory(
-		userRepository: UserRepository,
-		userDataApi: UserDataApi,
-		httpClientEngineFactory: HttpClientEngineFactory<*>,
-		cookiesStorage: CookiesStorage
-	): MessagesApiFactory =
-		DefaultMessagesApiFactory(userRepository, userDataApi, httpClientEngineFactory, cookiesStorage)
+val restApiClientModule = module {
+	single<MessagesApiFactory> {
+		DefaultMessagesApiFactory(get(), get(), get(), get())
+	}
 }
 
 interface MessagesApiFactory {
 	suspend fun create(): MessagesApi
 }
 
-class DefaultMessagesApiFactory @Inject constructor(
+class DefaultMessagesApiFactory constructor(
 	private val userRepository: UserRepository,
 	private val userDataApi: UserDataApi,
 	private val httpClientEngineFactory: HttpClientEngineFactory<*>,

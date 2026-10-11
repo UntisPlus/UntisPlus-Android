@@ -18,13 +18,12 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
-import javax.inject.Inject
 
 interface GetRoomFinderItemsUseCase {
 	operator fun invoke(): Flow<List<RoomFinderItem>>
 }
 
-class GetRoomFinderItemsUseCaseImpl @Inject constructor(
+class GetRoomFinderItemsUseCaseImpl constructor(
 	private val userRepository: UserRepository,
 	private val roomFinderDao: RoomFinderDao,
 	private val timetableRepository: TimetableRepository,

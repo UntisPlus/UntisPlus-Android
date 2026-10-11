@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Context.ALARM_SERVICE
 import android.content.Intent
 import android.util.Log
-import androidx.hilt.work.HiltWorker
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -24,8 +23,6 @@ import com.deelabs.untisplus.receivers.AutoMuteReceiver.Companion.EXTRA_BOOLEAN_
 import com.deelabs.untisplus.receivers.AutoMuteReceiver.Companion.EXTRA_INT_ID
 import com.deelabs.untisplus.receivers.AutoMuteReceiver.Companion.EXTRA_LONG_USER_ID
 import crocodile8.universal_cache.FromCache
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.toJavaLocalDateTime
 import java.time.LocalDateTime
@@ -34,14 +31,13 @@ import java.time.temporal.ChronoUnit
 /**
  * This worker schedules all auto-mute events for the day.
  */
-@HiltWorker
-class AutoMuteSetupWorker @AssistedInject constructor(
+class AutoMuteSetupWorker constructor(
 	private val userSettingsRepository: UserSettingsRepository,
 	private val timetableMapper: TimetableMapper,
 	private val masterDataRepository: MasterDataRepository,
 	private val userDao: UserDao,
-	@Assisted context: Context,
-	@Assisted params: WorkerParameters,
+	context: Context,
+	params: WorkerParameters,
 	timetableRepository: TimetableRepository,
 ) : TimetableDependantWorker(context, params, timetableRepository) {
 	companion object {

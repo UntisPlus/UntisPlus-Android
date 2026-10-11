@@ -10,7 +10,6 @@ import android.content.Context.ALARM_SERVICE
 import android.content.Intent
 import android.os.Build
 import android.util.Log
-import androidx.hilt.work.HiltWorker
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -42,8 +41,6 @@ import com.deelabs.untisplus.receivers.NotificationReceiver.Companion.EXTRA_STRI
 import com.deelabs.untisplus.receivers.NotificationReceiver.Companion.EXTRA_STRING_NEXT_TEACHER
 import com.deelabs.untisplus.receivers.NotificationReceiver.Companion.EXTRA_STRING_NEXT_TEACHER_LONG
 import crocodile8.universal_cache.FromCache
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.toJavaLocalDateTime
 import java.time.Clock
@@ -54,15 +51,14 @@ import java.time.format.FormatStyle
 /**
  * This worker schedules all break info notifications for the day.
  */
-@HiltWorker
-class NotificationSetupWorker @AssistedInject constructor(
+class NotificationSetupWorker constructor(
 	private val userSettingsRepository: UserSettingsRepository,
 	private val masterDataRepository: MasterDataRepository,
 	private val timetableMapper: TimetableMapper,
 	private val clock: Clock,
 	private val userDao: UserDao,
-	@Assisted context: Context,
-	@Assisted params: WorkerParameters,
+	context: Context,
+	params: WorkerParameters,
 	timetableRepository: TimetableRepository,
 ) : TimetableDependantWorker(context, params, timetableRepository) {
 	companion object {

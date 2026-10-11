@@ -2,7 +2,6 @@ package com.deelabs.untisplus.workers
 
 import android.content.Context
 import android.util.Log
-import androidx.hilt.work.HiltWorker
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -16,8 +15,6 @@ import com.deelabs.untisplus.data.repository.TimetableChangeBus
 import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.data.repository.UserSettingsRepository
 import com.deelabs.untisplus.helpers.isOnUnmeteredNetwork
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
 import java.util.concurrent.TimeUnit
 
@@ -32,10 +29,9 @@ import java.util.concurrent.TimeUnit
  * within seconds. Both share the persisted version, so a change is notified
  * only once.
  */
-@HiltWorker
-class TimetableChangeWorker @AssistedInject constructor(
-	@Assisted context: Context,
-	@Assisted params: WorkerParameters,
+class TimetableChangeWorker constructor(
+	context: Context,
+	params: WorkerParameters,
 	private val userRepository: UserRepository,
 	private val userSettingsRepository: UserSettingsRepository,
 	private val proxyRepository: ProxyRepository,

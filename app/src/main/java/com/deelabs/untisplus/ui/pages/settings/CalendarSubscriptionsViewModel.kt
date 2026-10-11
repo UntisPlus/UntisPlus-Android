@@ -6,11 +6,9 @@ import com.deelabs.untisplus.api.model.proxy.ProxyCalendarOptions
 import com.deelabs.untisplus.api.model.proxy.ProxyCalendarToken
 import com.deelabs.untisplus.api.model.proxy.ProxyCalendarTokenRequest
 import com.deelabs.untisplus.data.repository.ProxyRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Drives the calendar-subscription screen: the subscribable targets from
@@ -19,8 +17,7 @@ import javax.inject.Inject
  * is a bearer credential and is never stored locally — the list always comes
  * from the proxy.
  */
-@HiltViewModel
-class CalendarSubscriptionsViewModel @Inject constructor(
+class CalendarSubscriptionsViewModel constructor(
 	private val proxyRepository: ProxyRepository,
 ) : ViewModel() {
 	private val _options = MutableStateFlow<ProxyCalendarOptions?>(null)

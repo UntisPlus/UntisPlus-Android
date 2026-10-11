@@ -15,8 +15,6 @@ import kotlinx.datetime.toKotlinLocalTime
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalTime
-import javax.inject.Inject
-import javax.inject.Named
 
 interface TimetableRepository {
 	fun timetableSource(): CachedSource<TimetableParams, List<Period>>
@@ -40,10 +38,10 @@ interface TimetableRepository {
 	)
 }
 
-class UntisTimetableRepository @Inject constructor(
+class UntisTimetableRepository constructor(
 	private val userRepository: UserRepository,
 	private val api: TimetableApi,
-	@Named("cacheDir") private val cacheDir: File,
+	private val cacheDir: File,
 	private val timeProvider: TimeProvider,
 	private val userDao: UserDao,
 ) : TimetableRepository {

@@ -18,7 +18,6 @@ import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
 import com.deelabs.untisplus.api.model.untis.timetable.PeriodElement
 import com.deelabs.untisplus.ui.navigation.AppRoutes
 
-
 @Composable
 fun DrawerItems(
 	disableTypeSelection: Boolean = false,

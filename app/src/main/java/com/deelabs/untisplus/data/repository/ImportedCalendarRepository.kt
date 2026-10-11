@@ -7,7 +7,6 @@ import com.deelabs.untisplus.data.database.entities.ImportedCalendarEntity
 import com.deelabs.untisplus.data.database.entities.ImportedCalendarEventEntity
 import com.deelabs.untisplus.ical.ICalParser
 import com.deelabs.untisplus.ical.RecurrenceExpander
-import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -22,21 +21,17 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalTime
-import javax.inject.Inject
-import javax.inject.Named
-import javax.inject.Singleton
 
 /**
  * Stores and refreshes calendars imported from external `.ics` feeds. Fetched
  * files are parsed with [ICalParser] and recurring events are expanded into
  * concrete occurrences across a moving horizon.
  */
-@Singleton
-class ImportedCalendarRepository @Inject constructor(
+class ImportedCalendarRepository constructor(
 	private val userRepository: UserRepository,
 	private val importedCalendarDao: ImportedCalendarDao,
-	@Named("ics") private val httpClient: HttpClient,
-	@ApplicationContext private val context: Context,
+	private val httpClient: HttpClient,
+	private val context: Context,
 ) {
 	companion object {
 		private const val PAST_WEEKS = 2L

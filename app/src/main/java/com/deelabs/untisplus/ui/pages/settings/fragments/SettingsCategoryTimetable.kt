@@ -62,7 +62,6 @@ fun SettingsCategoryTimetable(navController: NavController, viewModel: SettingsS
 		)
 	}
 
-
 	ElementPickerPreference(
 		title = { Text(stringResource(R.string.preference_timetable_personal_timetable)) },
 		leadingContent = {

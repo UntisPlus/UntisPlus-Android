@@ -5,7 +5,6 @@ import java.util.LinkedList
 import java.util.PriorityQueue
 import java.util.Queue
 
-
 private enum class EventType {
 	EVENT_START,
 	EVENT_STOP

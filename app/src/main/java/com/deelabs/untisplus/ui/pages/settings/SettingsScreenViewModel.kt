@@ -16,36 +16,25 @@ import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.data.repository.UserSettingsRepository
 import com.deelabs.untisplus.services.AutoMuteService
 import com.deelabs.untisplus.services.AutoMuteServiceZenRuleImpl
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Named
 
 @SuppressLint("NewApi")
-@HiltViewModel(assistedFactory = SettingsScreenViewModel.Factory::class)
-class SettingsScreenViewModel @AssistedInject constructor(
+class SettingsScreenViewModel constructor(
 	globalSettingsRepository: GlobalSettingsRepository,
 	private val userRepository: UserRepository,
 	internal val userSettingsRepository: UserSettingsRepository,
 	internal val autoMuteService: AutoMuteService,
 	internal val savedStateHandle: SavedStateHandle,
 	internal val masterDataRepository: MasterDataRepository,
-	@Named("json") private val httpClient: HttpClient,
-	@Assisted val colorScheme: ColorScheme,
+	private val httpClient: HttpClient,
+	val colorScheme: ColorScheme,
 	private val proxyRepository: ProxyRepository,
 ) : ViewModel() {
-	@AssistedFactory
-	interface Factory {
-		fun create(colorScheme: ColorScheme): SettingsScreenViewModel
-	}
-
 	init {
 		if (autoMuteService is AutoMuteServiceZenRuleImpl) {
 			autoMuteService.setUser(userRepository.currentUser!!)

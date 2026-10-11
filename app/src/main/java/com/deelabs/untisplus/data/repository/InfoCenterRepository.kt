@@ -17,8 +17,6 @@ import kotlinx.serialization.serializer
 import kotlinx.datetime.toKotlinLocalDate
 import java.io.File
 import java.time.LocalDate
-import javax.inject.Inject
-import javax.inject.Named
 
 interface InfoCenterRepository {
 	fun messagesOfDaySource(): CachedSource<LocalDate, List<MessageOfDay>>
@@ -51,13 +49,13 @@ interface InfoCenterRepository {
 	)
 }
 
-class UntisInfoCenterRepository @Inject constructor(
+class UntisInfoCenterRepository constructor(
 	private val userRepository: UserRepository,
 	private val messagesApi: MessagesApi,
 	private val classRegApi: ClassRegApi,
 	private val absenceApi: AbsenceApi,
 	private val officeHoursApi: OfficeHoursApi,
-	@Named("cacheDir") private val cacheDir: File,
+	private val cacheDir: File,
 	private val timeProvider: TimeProvider,
 ) : InfoCenterRepository {
 

@@ -2,7 +2,6 @@ package com.deelabs.untisplus.workers
 
 import android.content.Context
 import android.util.Log
-import androidx.hilt.work.HiltWorker
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
@@ -11,8 +10,6 @@ import com.deelabs.untisplus.data.database.entities.UserDao
 import com.deelabs.untisplus.data.repository.TimetableRepository
 import com.deelabs.untisplus.data.repository.UserSettingsRepository
 import crocodile8.universal_cache.FromCache
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -23,10 +20,9 @@ import java.util.concurrent.TimeUnit
  * This worker caches the personal timetable if it exists and starts all other daily workers
  * which can then use the cached timetable.
  */
-@HiltWorker
-class DailyWorker @AssistedInject constructor(
-	@Assisted context: Context,
-	@Assisted params: WorkerParameters,
+class DailyWorker constructor(
+	context: Context,
+	params: WorkerParameters,
 	private val userSettingsRepository: UserSettingsRepository,
 	timetableRepository: TimetableRepository,
 	private val userDao: UserDao,

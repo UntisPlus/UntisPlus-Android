@@ -33,7 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.activities.MainActivity
@@ -52,7 +52,7 @@ import kotlinx.serialization.json.Json
 
 @Composable
 fun TimetableDrawer(
-	viewModel: TimetableDrawerViewModel = hiltViewModel(),
+	viewModel: TimetableDrawerViewModel = koinViewModel(),
 	drawerState: DrawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
 	masterDataRepository: MasterDataRepository,
 	displayedElement: PeriodElement? = null,

@@ -19,7 +19,6 @@ import com.deelabs.untisplus.helpers.isOnUnmeteredNetwork
 import com.deelabs.untisplus.helpers.isPowerSaveMode
 import com.deelabs.untisplus.workers.TimetableChangeNotifications
 import com.deelabs.untisplus.workers.TimetableChangeNotifications.NOTIFICATION_ID_SERVICE
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -29,7 +28,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
  * Keeps a live Server-Sent-Events connection to the untis-proxy
@@ -42,8 +42,7 @@ import javax.inject.Inject
  * backstop; both share the persisted change version, so nothing is announced
  * twice.
  */
-@AndroidEntryPoint
-class TimetableChangeService : Service() {
+class TimetableChangeService : Service(), KoinComponent {
 	companion object {
 		private const val LOG_TAG = "TimetableChangeService"
 		private const val RECONNECT_DELAY_MS = 15_000L
@@ -57,17 +56,13 @@ class TimetableChangeService : Service() {
 		}
 	}
 
-	@Inject
-	lateinit var userRepository: UserRepository
+	private val userRepository: UserRepository by inject()
 
-	@Inject
-	lateinit var userSettingsRepository: UserSettingsRepository
+	private val userSettingsRepository: UserSettingsRepository by inject()
 
-	@Inject
-	lateinit var proxyRepository: ProxyRepository
+	private val proxyRepository: ProxyRepository by inject()
 
-	@Inject
-	lateinit var changeBus: TimetableChangeBus
+	private val changeBus: TimetableChangeBus by inject()
 
 	private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 	private var watchJob: Job? = null

@@ -32,8 +32,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Entry point for the `untis-proxy`'s own endpoints (`/status`, `/me`, and the
@@ -44,8 +42,7 @@ import javax.inject.Singleton
  * stored app secret and the call is retried once; if that fails the caller sees
  * the error (and the existing re-login UI can take over).
  */
-@Singleton
-class ProxyRepository @Inject constructor(
+class ProxyRepository constructor(
 	private val userRepository: UserRepository,
 	private val userDataApi: UserDataApi,
 	private val proxyStatusApi: ProxyStatusApi,

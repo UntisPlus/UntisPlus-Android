@@ -39,7 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.ui.common.AppScaffold
 import kotlinx.coroutines.delay
@@ -57,7 +57,7 @@ import androidx.compose.material3.TextButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SsoLogin(
-	viewModel: SsoLoginViewModel = hiltViewModel()
+	viewModel: SsoLoginViewModel = koinViewModel()
 ) {
 	val context = LocalContext.current
 

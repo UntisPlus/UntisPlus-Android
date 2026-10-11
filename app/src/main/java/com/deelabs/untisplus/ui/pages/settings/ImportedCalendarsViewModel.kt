@@ -5,20 +5,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deelabs.untisplus.data.database.entities.ImportedCalendarEntity
 import com.deelabs.untisplus.data.repository.ImportedCalendarRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Drives the imported-calendars screen: the user's `.ics` subscriptions and the
  * add/refresh/enable/delete actions backed by [ImportedCalendarRepository].
  */
-@HiltViewModel
-class ImportedCalendarsViewModel @Inject constructor(
+class ImportedCalendarsViewModel constructor(
 	private val repository: ImportedCalendarRepository,
 ) : ViewModel() {
 	val calendars: StateFlow<List<ImportedCalendarEntity>> = repository.calendarsFlow()

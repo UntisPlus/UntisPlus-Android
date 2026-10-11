@@ -56,7 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.text.HtmlCompat
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
@@ -78,10 +78,9 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun InfoCenterMessages(viewModel: InfoCenterViewModel = hiltViewModel()) {
+fun InfoCenterMessages(viewModel: InfoCenterViewModel = koinViewModel()) {
 	val uiState by viewModel.messagesState.collectAsStateWithLifecycle()
 	val selectedMessage by viewModel.selectedMessage.collectAsStateWithLifecycle()
 	val selectedMessageContent by viewModel.selectedMessageContent.collectAsStateWithLifecycle()
@@ -203,7 +202,6 @@ fun InfoCenterMessages(viewModel: InfoCenterViewModel = hiltViewModel()) {
 		AttachmentsDialog(attachments = attachments, onDismiss = { attachmentsDialog = null })
 	}
 }
-
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable

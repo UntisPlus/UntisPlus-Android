@@ -145,7 +145,7 @@ Dead dep: **Fuel** (0 usages) — remove.
 
 ## 13. Parity checklist (shared/iOS)
 - [ ] API client (`:api` → KMP)
-- [ ] Hilt → Koin
+- [x] Hilt → Koin
 - [ ] Room KMP
 - [ ] `java.time` → `kotlinx-datetime`
 - [ ] Settings store (protostore replacement)
@@ -202,4 +202,42 @@ Dead dep: **Fuel** (0 usages) — remove.
     (`Blend`, `Score`, `Hct` mutators) were ported 1:1 but aren't asserted yet.
   - `:material-color-utils:jvmTest` green; `./gradlew :app:assembleDebug` and
     `:app:testDebugUnitTest` green after the conversion.
+- 2026-10-11 — **Hilt → Koin 4** (§13 item 2). Koin `4.1.1` chosen (built with Kotlin 2.1.21, readable
+  by our 2.1.20; `4.1.0` was 2.1.20). `4.2.x` is unusable: built with Kotlin 2.3.20 (metadata too new)
+  and raised `minSdk` to 23 (we are 21).
+  - `gradle/libs.versions.toml`: added `koin` version + `koin-android`, `koin-android-test`,
+    `koin-androidx-compose`, `koin-androidx-workmanager`, `koin-core`, `koin-test`,
+    `koin-test-junit4`, `koin-test-junit5`. `app/build.gradle.kts`: removed the Hilt plugin and all
+    Hilt/Dagger deps + KSP processors, added the Koin deps; `testInstrumentationRunner` switched to
+    `androidx.test.runner.AndroidJUnitRunner`.
+  - Stripped **127 Hilt/Jakarta/Dagger annotations across 58 files** (imports + `@Inject`, `@Module`,
+    `@Provides`, `@Binds`, `@Singleton`, `@Named`, `@Assisted`, …). Workers additionally lost
+    `@HiltWorker`/`@AssistedInject`/`@Assisted`. No `dagger`/`javax.inject`/`jakarta.inject`/`@Inject`
+    references remain in `app/src/main`.
+  - Hand-written the Koin graph under `modules/`: `ConfigurationModule` (Clock/TimeProvider/cacheDir/
+    BuildConfig), `DatabaseModule` (Room DBs + DAOs + migrations), `DataStoreModule`,
+    `JsonRpcApiClientModule` (engines, cookie storage, named HttpClients, all API clients),
+    `RestApiClientModule` (`MessagesApiFactory`), `RepositoryModule`, `UseCaseModule`,
+    `WeekLogicModule`, `AutoMuteModule`, `CodeScanModule`, `NavigationModule`
+    (`single { AppNavigator() }`), `ViewModelModule`, `WorkerModule`; aggregated by `appModules` in
+    `AppModule.kt`. Scoping mirrors the old Hilt scopes (`@Singleton` → `single`, otherwise `factory`).
+  - `App` now calls `startKoin { androidContext(); workManagerFactory(); modules(appModules) }`
+    (WorkManager is initialised by Koin — the manifest already removes the `androidx.startup`
+    initialiser, so no manifest change). Entry points (`MainActivity`,
+    `ShortcutConfigureActivity`, `AutoMuteConfigurationActivity` unchanged, `TimetableChangeService`,
+    `NotificationReceiver`, `AutoMuteReceiver`) use `KoinComponent` + `by inject()`;
+    `SettingsScreenViewModel` de-Hilted. All `hiltViewModel()` call sites (15) are now `koinViewModel()`.
+  - **Runtime bug found & fixed:** `viewModelOf(::X)` resolves constructor parameters with a bare
+    `get<T>()`, which for `SavedStateHandle` relies on the scope's *parameter stack* — and that lookup
+    failed deterministically, crashing the first navigation to Timetable with
+    `NoDefinitionFoundException: androidx.lifecycle.SavedStateHandle` (Koin issue #2044). Fix: for the
+    five VMs that take `SavedStateHandle` (`Timetable`, `SsoLogin`, `LoginDataInput`,
+    `AutoMuteSettings`, `SettingsScreen`) use an explicit `viewModel { params -> ... }` and read the
+    handle via `params.get<SavedStateHandle>()`, which goes through Koin's `AndroidParametersHolder` /
+    `createSavedStateHandle()` (topology-independent). The remaining VMs stay on `viewModelOf`.
+  - Verified on device (`ZY32KRC5MJ`): app cold-starts clean, the Timetable route resolves
+    `TimetableViewModel` and **no DI errors** appear in logcat. `./gradlew :app:assembleDebug` and
+    `:app:testDebugUnitTest` green. Removed the now-unused Hilt plugin from the root build script.
+  - Deferred: `app/src/androidTest/**` still references Hilt (`HiltTestRunner`, test modules,
+    screenshots) — not compiled by the normal build; migrate to Koin later.
 

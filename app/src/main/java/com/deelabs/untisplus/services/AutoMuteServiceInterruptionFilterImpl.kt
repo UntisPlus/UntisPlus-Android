@@ -3,7 +3,6 @@ package com.deelabs.untisplus.services
 import android.app.NotificationManager
 import android.os.Build
 import androidx.annotation.RequiresApi
-import javax.inject.Inject
 
 /**
  * Implementation of the AutoMuteService for API 23 (M) and above.
@@ -11,7 +10,7 @@ import javax.inject.Inject
  * This implementation utilizes the notification manager to set the notification interruption filter.
  */
 @RequiresApi(Build.VERSION_CODES.M)
-class AutoMuteServiceInterruptionFilterImpl @Inject constructor(
+class AutoMuteServiceInterruptionFilterImpl constructor(
 	private val notificationManager: NotificationManager,
 ) : AutoMuteService {
 	override fun isPermissionGranted(): Boolean =

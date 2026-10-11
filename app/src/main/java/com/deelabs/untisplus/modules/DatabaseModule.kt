@@ -1,62 +1,40 @@
 package com.deelabs.untisplus.modules
 
-import android.content.Context
 import androidx.room.Room
 import com.deelabs.untisplus.data.database.MIGRATIONS_USER_LEGACY
 import com.deelabs.untisplus.data.database.MIGRATION_USER_7_8
 import com.deelabs.untisplus.data.database.RoomFinderDatabase
 import com.deelabs.untisplus.data.database.UserDatabase
-import com.deelabs.untisplus.data.database.entities.ImportedCalendarDao
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import org.koin.android.ext.koin.androidContext
+import org.koin.dsl.module
 
-@Module
-@InstallIn(SingletonComponent::class)
-object UserDatabaseModule {
-	@Provides
-	@Singleton
-	fun provideUserDatabase(
-		@ApplicationContext context: Context
-	) = Room.databaseBuilder(
-		context,
-		UserDatabase::class.java, "userdata.db"
-	)
-		.addMigrations(
-			*MIGRATIONS_USER_LEGACY.toTypedArray(),
-			MIGRATION_USER_7_8,
+val databaseModule = module {
+	single {
+		Room.databaseBuilder(
+			androidContext(),
+			UserDatabase::class.java, "userdata.db"
 		)
-		.build()
+			.addMigrations(
+				*MIGRATIONS_USER_LEGACY.toTypedArray(),
+				MIGRATION_USER_7_8,
+			)
+			.build()
+	}
 
-	@Provides
-	@Singleton
-	fun provideUserDao(db: UserDatabase) = db.userDao()
+	single { get<UserDatabase>().userDao() }
 
-	@Provides
-	@Singleton
-	fun provideImportedCalendarDao(db: UserDatabase): ImportedCalendarDao = db.importedCalendarDao()
-}
+	single { get<UserDatabase>().importedCalendarDao() }
 
-@Module
-@InstallIn(SingletonComponent::class)
-object RoomFinderDatabaseModule {
-	@Provides
-	@Singleton
-	fun provideRoomFinderDatabase(
-		@ApplicationContext context: Context
-	) = Room.databaseBuilder(
-		context,
-		RoomFinderDatabase::class.java, "roomfinder.db"
-	)
-		// In old versions, each profile has their own roomfinder database file.
-		// This makes it hard to run an automatic migration.
-		// Since the data can be recovered easily, migration is skipped and a new database is used.
-		.build()
+	single {
+		Room.databaseBuilder(
+			androidContext(),
+			RoomFinderDatabase::class.java, "roomfinder.db"
+		)
+			// In old versions, each profile has their own roomfinder database file.
+			// This makes it hard to run an automatic migration.
+			// Since the data can be recovered easily, migration is skipped and a new database is used.
+			.build()
+	}
 
-	@Provides
-	@Singleton
-	fun provideRoomFinderDao(db: RoomFinderDatabase) = db.roomFinderDao()
+	single { get<RoomFinderDatabase>().roomFinderDao() }
 }

@@ -13,7 +13,6 @@ import com.deelabs.untisplus.models.RoomFinderHour
 import com.deelabs.untisplus.models.RoomFinderItem
 import com.deelabs.untisplus.ui.navigation.AppNavigator
 import com.deelabs.untisplus.ui.navigation.AppRoutes
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,10 +23,8 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.toJavaLocalTime
 import java.time.Clock
 import java.time.LocalDateTime
-import javax.inject.Inject
 
-@HiltViewModel
-class RoomFinderViewModel @Inject constructor(
+class RoomFinderViewModel constructor(
 	private val userRepository: UserRepository,
 	internal val masterDataRepository: MasterDataRepository,
 	private val roomFinderDao: RoomFinderDao,

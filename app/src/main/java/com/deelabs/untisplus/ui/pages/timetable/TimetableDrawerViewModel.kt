@@ -13,14 +13,11 @@ import com.deelabs.untisplus.data.settings.model.TimetableElement
 import com.deelabs.untisplus.ui.navigation.AppNavigator
 import com.deelabs.untisplus.ui.navigation.AppRoutes
 import com.deelabs.untisplus.ui.preferences.toTimetableElement
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class TimetableDrawerViewModel @Inject constructor(
+class TimetableDrawerViewModel constructor(
 	private val userSettingsRepository: UserSettingsRepository,
 	private val navigator: AppNavigator,
 	private val masterDataRepository: MasterDataRepository,

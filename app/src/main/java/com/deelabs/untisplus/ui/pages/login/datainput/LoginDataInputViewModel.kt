@@ -40,7 +40,6 @@ import com.deelabs.untisplus.ui.pages.ActivityViewModel
 import com.deelabs.untisplus.ui.pages.login.sso.SsoLoginResultBus
 import com.deelabs.untisplus.ui.pages.login.sso.SsoProvider
 import crocodile8.universal_cache.FromCache
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -48,8 +47,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
-import javax.inject.Inject
-import javax.inject.Named
 
 const val DEMO_API_URL = "https://api.sapuseven.com/untis/testing"
 
@@ -59,8 +56,7 @@ enum class ApiProvider {
 	CUSTOM
 }
 
-@HiltViewModel
-class LoginDataInputViewModel @Inject constructor(
+class LoginDataInputViewModel constructor(
 	private val userDao: UserDao,
 	private val schoolSearchApi: SchoolSearchApi,
 	private val userDataApi: UserDataApi,
@@ -69,7 +65,7 @@ class LoginDataInputViewModel @Inject constructor(
 	private val navigator: AppNavigator,
 	private val userRepository: UserRepository,
 	private val codeScanService: CodeScanService,
-	@Named("cacheDir") private val cacheDir: File,
+	private val cacheDir: File,
 	private val savedStateHandle: SavedStateHandle
 ) : ActivityViewModel() {
 	private val args = savedStateHandle.toRoute<AppRoutes.LoginDataInput>()

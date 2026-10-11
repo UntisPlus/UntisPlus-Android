@@ -9,7 +9,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.lifecycleScope
 import com.deelabs.untisplus.data.database.entities.ImportedCalendarEntity
 import com.deelabs.untisplus.data.repository.ImportedCalendarRepository
@@ -21,30 +20,26 @@ import com.deelabs.untisplus.ui.navigation.AppRoutes
 import com.deelabs.untisplus.ui.pages.main.MainAppContent
 import com.deelabs.untisplus.ui.pages.main.MainViewModel
 import com.deelabs.untisplus.workers.TimetableChangeWorker
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-@AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), KoinComponent {
 	companion object {
 		const val MESSENGER_PACKAGE_NAME = "com.untis.chat"
 
 		const val EXTRA_STRING_PERIOD_ELEMENT = "com.deelabs.untisplus.activities.main.element"
 	}
 
-	@Inject
-	lateinit var appNavigator: AppNavigator
+	private val appNavigator: AppNavigator by inject()
 
-	@Inject
-	lateinit var userRepository: UserRepository
+	private val userRepository: UserRepository by inject()
 
-	@Inject
-	lateinit var importedCalendarRepository: ImportedCalendarRepository
+	private val importedCalendarRepository: ImportedCalendarRepository by inject()
 
-	@Inject
-	lateinit var userSettingsRepository: UserSettingsRepository
+	private val userSettingsRepository: UserSettingsRepository by inject()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		enableEdgeToEdge()
@@ -66,7 +61,7 @@ class MainActivity : ComponentActivity() {
 
 		setContent {
 			// ViewModel (or other injector) that exposes current userState + settings
-			val viewModel: MainViewModel = hiltViewModel()
+			val viewModel: MainViewModel = koinViewModel()
 			val userState by viewModel.userState.collectAsState()
 			val currentIntentData by viewModel.pendingIntentData.collectAsState()
 

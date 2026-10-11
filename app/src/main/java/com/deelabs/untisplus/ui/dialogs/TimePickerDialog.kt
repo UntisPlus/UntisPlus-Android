@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package com.deelabs.untisplus.ui.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
@@ -38,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.deelabs.untisplus.R
 import java.time.LocalTime
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,6 +94,4 @@ fun TimePickerDialog(
 		}
 	}
 }
-
-
 

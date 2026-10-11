@@ -18,39 +18,31 @@ import com.deelabs.untisplus.data.settings.model.NotificationVisibility
 import com.deelabs.untisplus.data.settings.model.Settings
 import com.deelabs.untisplus.data.settings.model.UserSettings
 import com.deelabs.untisplus.ui.preferences.toTimetableElement
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
+import org.koin.android.ext.koin.androidContext
+import org.koin.dsl.module
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
-import javax.inject.Singleton
 
 private const val DATA_STORE_FILE_NAME = "settings.pb"
 
 private val Context.oldPreferenceDataStore by preferencesDataStore(name = "preferences")
 
-@InstallIn(SingletonComponent::class)
-@Module
-object DataStoreModule {
-	@Provides
-	@Singleton
-	fun provideProtoDataStore(@ApplicationContext appContext: Context): DataStore<Settings> {
-		return DataStoreFactory.create(
+val dataStoreModule = module {
+	single<DataStore<Settings>> {
+		DataStoreFactory.create(
 			serializer = UserSettingsSerializer,
-			produceFile = { appContext.dataStoreFile(DATA_STORE_FILE_NAME) },
+			produceFile = { androidContext().dataStoreFile(DATA_STORE_FILE_NAME) },
 			corruptionHandler = ReplaceFileCorruptionHandler {
 				Settings.getDefaultInstance()
 			},
 			migrations = listOf(
-				OldPreferenceDataStoreMigration(appContext)
+				OldPreferenceDataStoreMigration(androidContext())
 			),
 			scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 		)

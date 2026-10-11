@@ -1,12 +1,19 @@
 package com.deelabs.untisplus.modules
 
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
+import org.koin.core.module.Module
 
-@Module
-@InstallIn(SingletonComponent::class)
-object AppModule {
-	// Nothing extra needed here; Hilt will see @Subcomponent(UserComponent) automatically.
-	// If you had any top-level, app-wide @Provides, put them here.
-}
+val appModules: List<Module> = listOf(
+	configurationModule,
+	databaseModule,
+	dataStoreModule,
+	jsonRpcApiClientModule,
+	restApiClientModule,
+	autoMuteModule,
+	codeScanModule,
+	repositoryModule,
+	useCaseModule,
+	weekLogicModule,
+	navigationModule,
+	viewModelModule,
+	workerModule
+)

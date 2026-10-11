@@ -29,7 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.data.database.entities.ImportedCalendarEntity
@@ -37,7 +37,7 @@ import com.deelabs.untisplus.ui.pages.settings.ImportedCalendarsViewModel
 import com.sapuseven.compose.protostore.ui.preferences.PreferenceGroup
 
 @Composable
-fun SettingsCategoryImportedCalendars(viewModel: ImportedCalendarsViewModel = hiltViewModel()) {
+fun SettingsCategoryImportedCalendars(viewModel: ImportedCalendarsViewModel = koinViewModel()) {
 	val calendars by viewModel.calendars.collectAsStateWithLifecycle()
 	val busy by viewModel.busy.collectAsStateWithLifecycle()
 

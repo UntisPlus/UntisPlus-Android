@@ -33,6 +33,7 @@ tasks {
 //compileKotlin.dependsOn tasks.openApiGenerate
 
 dependencies {
+	implementation(project(":shared"))
 	implementation(libs.kotlinx.serialization.json)
 	implementation(libs.ktor.client.core)
 	implementation(libs.ktor.client.content.negotiation)

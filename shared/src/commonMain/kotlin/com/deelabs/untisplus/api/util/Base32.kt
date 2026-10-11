@@ -1,7 +1,5 @@
 package com.deelabs.untisplus.api.util
 
-import java.nio.charset.StandardCharsets
-import java.util.Locale
 import kotlin.experimental.or
 
 /**
@@ -28,8 +26,8 @@ object Base32 {
 	)
 
 	fun encode(data: ByteArray): ByteArray {
-		val lower = encodeOriginal(data).lowercase(Locale.ROOT)
-		return lower.toByteArray(StandardCharsets.US_ASCII)
+		val lower = encodeOriginal(data).lowercase()
+		return lower.encodeToByteArray()
 	}
 
 	/**

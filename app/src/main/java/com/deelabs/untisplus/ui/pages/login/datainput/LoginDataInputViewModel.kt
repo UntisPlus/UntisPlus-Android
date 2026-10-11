@@ -48,7 +48,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
+import okio.Path
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -69,7 +69,7 @@ class LoginDataInputViewModel constructor(
 	private val navigator: AppNavigator,
 	private val userRepository: UserRepository,
 	private val codeScanService: CodeScanService,
-	private val cacheDir: File,
+	private val cacheDir: Path,
 	private val savedStateHandle: SavedStateHandle
 ) : ActivityViewModel() {
 	private val args = savedStateHandle.toRoute<AppRoutes.LoginDataInput>()

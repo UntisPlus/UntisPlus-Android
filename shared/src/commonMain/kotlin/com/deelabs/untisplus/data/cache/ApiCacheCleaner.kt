@@ -1,6 +1,7 @@
 package com.deelabs.untisplus.data.cache
 
-import java.io.File
+import okio.FileSystem
+import okio.Path
 
 /**
  * Clears all JSON-RPC response caches that are tied to a specific API endpoint.
@@ -10,10 +11,10 @@ import java.io.File
 object ApiCacheCleaner {
 	private val CACHE_DIRECTORIES = listOf("timetable", "periodData", "infocenter", "messenger")
 
-	fun clearApiCaches(cacheDir: File) {
+	fun clearApiCaches(cacheDir: Path, fileSystem: FileSystem = FileSystem.SYSTEM) {
 		CACHE_DIRECTORIES.asSequence()
-			.map { File(cacheDir, it) }
-			.filter { it.exists() }
-			.forEach { it.deleteRecursively() }
+			.map { cacheDir.resolve(it) }
+			.filter { fileSystem.exists(it) }
+			.forEach { fileSystem.deleteRecursively(it) }
 	}
 }

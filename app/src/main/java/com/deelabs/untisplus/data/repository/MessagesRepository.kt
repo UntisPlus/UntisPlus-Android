@@ -7,7 +7,7 @@ import com.deelabs.untisplus.modules.MessagesApiFactory
 import crocodile8.universal_cache.CachedSource
 import crocodile8.universal_cache.time.TimeProvider
 import kotlinx.serialization.serializer
-import java.io.File
+import okio.Path
 
 interface MessagesRepository {
 	fun messageSource(): CachedSource<Long, Message>
@@ -21,7 +21,7 @@ interface MessagesRepository {
 
 class UntisMessagesRepository constructor(
 	private val messagesApiFactory: MessagesApiFactory,
-	private val cacheDir: File,
+	private val cacheDir: Path,
 	private val timeProvider: TimeProvider,
 ) : MessagesRepository {
 	override fun messageSource(): CachedSource<Long, Message> {
@@ -29,7 +29,7 @@ class UntisMessagesRepository constructor(
 			source = { params ->
 				messagesApiFactory.create().getMessage(params).body()
 			},
-			cache = DiskCache(File(cacheDir, "messenger/message"), serializer()),
+			cache = DiskCache(cacheDir.resolve("messenger").resolve("message"), serializer()),
 			timeProvider = timeProvider
 		)
 	}
@@ -39,7 +39,7 @@ class UntisMessagesRepository constructor(
 			source = { params ->
 				messagesApiFactory.create().getMessages().body()
 			},
-			cache = DiskCache(File(cacheDir, "messenger/messages"), serializer()),
+			cache = DiskCache(cacheDir.resolve("messenger").resolve("messages"), serializer()),
 			timeProvider = timeProvider
 		)
 	}
@@ -49,7 +49,7 @@ class UntisMessagesRepository constructor(
 			source = { params ->
 				messagesApiFactory.create().getMessagesSent().body().sentMessages ?: emptyList()
 			},
-			cache = DiskCache(File(cacheDir, "messenger/messagesSent"), serializer()),
+			cache = DiskCache(cacheDir.resolve("messenger").resolve("messagesSent"), serializer()),
 			timeProvider = timeProvider
 		)
 	}
@@ -59,7 +59,7 @@ class UntisMessagesRepository constructor(
 			source = { params ->
 				messagesApiFactory.create().getMessagesDrafts().body().draftMessages ?: emptyList()
 			},
-			cache = DiskCache(File(cacheDir, "messenger/messagesDrafts"), serializer()),
+			cache = DiskCache(cacheDir.resolve("messenger").resolve("messagesDrafts"), serializer()),
 			timeProvider = timeProvider
 		)
 	}

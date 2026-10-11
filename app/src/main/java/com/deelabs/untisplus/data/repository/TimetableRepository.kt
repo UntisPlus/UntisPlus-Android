@@ -13,7 +13,7 @@ import crocodile8.universal_cache.time.TimeProvider
 import kotlinx.serialization.serializer
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalTime
-import java.io.File
+import okio.Path
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -42,7 +42,7 @@ interface TimetableRepository {
 class UntisTimetableRepository constructor(
 	private val userRepository: UserRepository,
 	private val api: TimetableApi,
-	private val cacheDir: File,
+	private val cacheDir: Path,
 	private val timeProvider: TimeProvider,
 	private val userDao: UserDao,
 ) : TimetableRepository {
@@ -63,7 +63,7 @@ class UntisTimetableRepository constructor(
 				userDao.upsertMasterData(user.id, timetableResponse.masterData)
 				return@CachedSource timetableResponse.timetable.periods
 			},
-			cache = DiskCache(File(cacheDir, "timetable"), serializer()),
+			cache = DiskCache(cacheDir.resolve("timetable"), serializer()),
 			timeProvider = timeProvider
 		)
 	}
@@ -79,7 +79,7 @@ class UntisTimetableRepository constructor(
 					key = user.key
 				)
 			},
-			cache = DiskCache(File(cacheDir, "periodData"), serializer()),
+			cache = DiskCache(cacheDir.resolve("periodData"), serializer()),
 			timeProvider = timeProvider
 		)
 	}

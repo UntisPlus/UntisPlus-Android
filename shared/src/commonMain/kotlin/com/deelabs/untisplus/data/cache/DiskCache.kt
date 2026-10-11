@@ -1,6 +1,5 @@
 package com.deelabs.untisplus.data.cache
 
-import android.util.Log
 import crocodile8.universal_cache.keep.Cache
 import crocodile8.universal_cache.keep.CacheKey
 import crocodile8.universal_cache.keep.CachedData
@@ -9,18 +8,23 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.cbor.Cbor
-import java.io.File
-import java.security.MessageDigest
+import okio.Buffer
+import okio.FileSystem
+import okio.HashingSink
+import okio.Path
+import okio.buffer
 
 class DiskCache<KeyType : Any, ValueType : Any>(
-	private val cacheDir: File, private val valueSerializer: KSerializer<ValueType>
+	private val cacheDir: Path,
+	private val valueSerializer: KSerializer<ValueType>,
+	private val fileSystem: FileSystem = FileSystem.SYSTEM,
 ) : Cache<KeyType, ValueType> {
 	init {
-		if (!cacheDir.exists()) {
-			cacheDir.mkdirs()
+		if (!fileSystem.exists(cacheDir)) {
+			fileSystem.createDirectories(cacheDir)
 		}
 
-		if (!cacheDir.isDirectory) {
+		if (!fileSystem.metadata(cacheDir).isDirectory) {
 			throw IllegalArgumentException("cacheDir must be a directory")
 		}
 	}
@@ -31,13 +35,13 @@ class DiskCache<KeyType : Any, ValueType : Any>(
 	override suspend fun get(params: KeyType, additionalKey: Any?): CachedData<ValueType>? {
 		val key = CacheKey(params, additionalKey)
 		cacheLock.withLock {
-			getCacheFile(key).let { cacheFile ->
-				if (!cacheFile.exists()) return null
+			val cacheFile = getCacheFile(key)
+			if (!fileSystem.exists(cacheFile)) return null
 
-				val decoded = cacheFile.readBytes().let { Cbor.decodeFromByteArray(valueSerializer, it) }
-				Log.d("DiskCache", "get: $key -> $decoded")
-				return CachedData(decoded, cacheFile.lastModified())
-			}
+			val decoded = fileSystem.read(cacheFile) { readByteArray() }
+				.let { Cbor.decodeFromByteArray(valueSerializer, it) }
+			val lastModified = fileSystem.metadata(cacheFile).lastModifiedAtMillis ?: 0L
+			return CachedData(decoded, lastModified)
 		}
 	}
 
@@ -46,20 +50,21 @@ class DiskCache<KeyType : Any, ValueType : Any>(
 		val key = CacheKey(params, additionalKey)
 		cacheLock.withLock {
 			val encoded = Cbor.encodeToByteArray(valueSerializer, value)
-			Log.d("DiskCache", "put: $key -> $encoded")
-			getCacheFile(key).writeBytes(encoded)
+			fileSystem.write(getCacheFile(key)) { write(encoded) }
 		}
 	}
 
 	override suspend fun clear() {
 		cacheLock.withLock {
-			cacheDir.listFiles()?.forEach { it.delete() }
+			if (fileSystem.exists(cacheDir)) {
+				fileSystem.list(cacheDir).forEach { fileSystem.delete(it) }
+			}
 		}
 	}
 
-	@OptIn(ExperimentalStdlibApi::class)
-	private fun getCacheFile(key: CacheKey<KeyType>): File {
-		val md = MessageDigest.getInstance("MD5")
-		return File(cacheDir, md.digest(key.toString().toByteArray()).toHexString())
+	private fun getCacheFile(key: CacheKey<KeyType>): Path {
+		val hashingSink = HashingSink.md5(Buffer())
+		hashingSink.buffer().use { it.writeUtf8(key.toString()) }
+		return cacheDir.resolve(hashingSink.hash.hex())
 	}
 }

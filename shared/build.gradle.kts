@@ -35,7 +35,10 @@ kotlin {
 	sourceSets {
 		commonMain.dependencies {
 			api(project(":api"))
+			api(libs.andrew0000.cache)
+			api(libs.okio)
 			implementation(libs.kotlinx.serialization.json)
+			implementation(libs.kotlinx.serialization.cbor)
 			implementation(libs.androidx.room.runtime)
 		}
 

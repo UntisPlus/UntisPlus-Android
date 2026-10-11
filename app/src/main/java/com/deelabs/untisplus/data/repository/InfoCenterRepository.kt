@@ -17,7 +17,7 @@ import crocodile8.universal_cache.CachedSource
 import crocodile8.universal_cache.time.TimeProvider
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.serializer
-import java.io.File
+import okio.Path
 
 interface InfoCenterRepository {
 	fun messagesOfDaySource(): CachedSource<LocalDate, List<MessageOfDay>>
@@ -56,7 +56,7 @@ class UntisInfoCenterRepository constructor(
 	private val classRegApi: ClassRegApi,
 	private val absenceApi: AbsenceApi,
 	private val officeHoursApi: OfficeHoursApi,
-	private val cacheDir: File,
+	private val cacheDir: Path,
 	private val timeProvider: TimeProvider,
 ) : InfoCenterRepository {
 
@@ -71,7 +71,7 @@ class UntisInfoCenterRepository constructor(
 					key = user.key
 				).messages
 			},
-			cache = DiskCache(File(cacheDir, "infocenter/messages"), serializer()),
+			cache = DiskCache(cacheDir.resolve("infocenter").resolve("messages"), serializer()),
 			timeProvider = timeProvider
 		)
 	}
@@ -90,7 +90,7 @@ class UntisInfoCenterRepository constructor(
 					key = user.key
 				).exams
 			},
-			cache = DiskCache(File(cacheDir, "infocenter/exams"), serializer()),
+			cache = DiskCache(cacheDir.resolve("infocenter").resolve("exams"), serializer()),
 			timeProvider = timeProvider
 		)
 	}
@@ -109,7 +109,7 @@ class UntisInfoCenterRepository constructor(
 					key = user.key
 				).homeWorks
 			},
-			cache = DiskCache(File(cacheDir, "infocenter/homework"), serializer()),
+			cache = DiskCache(cacheDir.resolve("infocenter").resolve("homework"), serializer()),
 			timeProvider = timeProvider
 		)
 	}
@@ -128,7 +128,7 @@ class UntisInfoCenterRepository constructor(
 					key = user.key
 				).absences
 			},
-			cache = DiskCache(File(cacheDir, "infocenter/homework"), serializer()),
+			cache = DiskCache(cacheDir.resolve("infocenter").resolve("homework"), serializer()),
 			timeProvider = timeProvider
 		)
 	}
@@ -145,7 +145,7 @@ class UntisInfoCenterRepository constructor(
 					key = user.key
 				).officeHours
 			},
-			cache = DiskCache(File(cacheDir, "infocenter/officehours"), serializer()),
+			cache = DiskCache(cacheDir.resolve("infocenter").resolve("officehours"), serializer()),
 			timeProvider = timeProvider
 		)
 	}

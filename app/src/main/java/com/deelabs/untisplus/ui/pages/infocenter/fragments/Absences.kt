@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.api.model.untis.absence.StudentAbsence
 import com.deelabs.untisplus.data.database.entities.ExcuseStatusEntity
+import kotlinx.datetime.toJavaLocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -90,7 +91,7 @@ private fun AbsenceItem(
 	ListItem(
 		modifier = if (proxyAvailable) Modifier.clickable(onClick = onEditNote) else Modifier,
 		headlineContent = {
-			Text(item.startDateTime.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)))
+			Text(item.startDateTime.toJavaLocalDateTime().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)))
 		},
 		supportingContent = {
 			Column {
@@ -98,8 +99,8 @@ private fun AbsenceItem(
 				Text(
 					stringResource(
 						R.string.infocenter_absences_timerange,
-						item.startDateTime.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)),
-						item.endDateTime.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
+						item.startDateTime.toJavaLocalDateTime().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)),
+						item.endDateTime.toJavaLocalDateTime().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
 					)
 				)
 

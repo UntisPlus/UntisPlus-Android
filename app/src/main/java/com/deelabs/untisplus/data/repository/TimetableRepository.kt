@@ -10,6 +10,8 @@ import com.deelabs.untisplus.data.database.entities.UserDao
 import crocodile8.universal_cache.CachedSource
 import crocodile8.universal_cache.time.TimeProvider
 import kotlinx.serialization.serializer
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalTime
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalTime
@@ -52,8 +54,8 @@ class UntisTimetableRepository @Inject constructor(
 				val timetableResponse = api.getTimetable(
 					id = params.elementId,
 					type = params.elementType,
-					startDate = params.startDate,
-					endDate = params.endDate,
+					startDate = params.startDate.toKotlinLocalDate(),
+					endDate = params.endDate.toKotlinLocalDate(),
 					masterDataTimestamp = user.masterDataTimestamp,
 					apiUrl = user.jsonRpcApiUrl.toString(),
 					user = user.user,
@@ -102,8 +104,8 @@ class UntisTimetableRepository @Inject constructor(
 			api.postAbsence(
 				periodId = periodId,
 				studentId = studentId,
-				startTime = startTime,
-				endTime = endTime,
+				startTime = startTime.toKotlinLocalTime(),
+				endTime = endTime.toKotlinLocalTime(),
 				apiUrl = user.jsonRpcApiUrl.toString(),
 				user = user.user,
 				key = user.key

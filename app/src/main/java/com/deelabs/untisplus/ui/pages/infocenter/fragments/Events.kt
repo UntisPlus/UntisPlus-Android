@@ -22,6 +22,8 @@ import com.deelabs.untisplus.api.model.untis.classreg.Exam
 import com.deelabs.untisplus.api.model.untis.classreg.HomeWork
 import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
 import com.deelabs.untisplus.data.repository.LocalMasterDataRepository
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalDateTime
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -112,7 +114,7 @@ private fun ExamItem(item: Exam) {
 	)
 	ListItem(
 		overlineContent = {
-			Text(formatExamTime(item.startDateTime, item.endDateTime))
+			Text(formatExamTime(item.startDateTime.toJavaLocalDateTime(), item.endDateTime.toJavaLocalDateTime()))
 		},
 		headlineContent = {
 			Text(
@@ -135,7 +137,7 @@ private fun HomeworkItem(
 ) {
 	ListItem(
 		overlineContent = {
-			Text(item.endDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)))
+			Text(item.endDate.toJavaLocalDate().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)))
 		},
 		headlineContent = {
 			/* TODO Text(

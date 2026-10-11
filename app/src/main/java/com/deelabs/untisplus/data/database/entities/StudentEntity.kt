@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import com.deelabs.untisplus.api.model.untis.masterdata.Student
 import com.deelabs.untisplus.data.database.Mapper
+import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.Transient
 import java.time.LocalDate
 
@@ -34,7 +35,7 @@ data class StudentEntity(
 			klasseId = from.klasseId,
 			firstName = from.firstName,
 			lastName = from.lastName,
-			birthDate = from.birthDate,
+			birthDate = from.birthDate?.toJavaLocalDate(),
 		)
 	}
 

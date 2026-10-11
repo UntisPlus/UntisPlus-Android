@@ -14,6 +14,7 @@ import com.deelabs.untisplus.data.cache.DiskCache
 import crocodile8.universal_cache.CachedSource
 import crocodile8.universal_cache.time.TimeProvider
 import kotlinx.serialization.serializer
+import kotlinx.datetime.toKotlinLocalDate
 import java.io.File
 import java.time.LocalDate
 import javax.inject.Inject
@@ -65,7 +66,7 @@ class UntisInfoCenterRepository @Inject constructor(
 		return CachedSource(
 			source = { params ->
 				messagesApi.getMessagesOfDay(
-					date = params,
+					date = params.toKotlinLocalDate(),
 					apiUrl = user.jsonRpcApiUrl.toString(),
 					user = user.user,
 					key = user.key
@@ -83,8 +84,8 @@ class UntisInfoCenterRepository @Inject constructor(
 				classRegApi.getExams(
 					id = params.elementId,
 					type = params.elementType,
-					startDate = params.startDate,
-					endDate = params.endDate,
+					startDate = params.startDate.toKotlinLocalDate(),
+					endDate = params.endDate.toKotlinLocalDate(),
 					apiUrl = user.jsonRpcApiUrl.toString(),
 					user = user.user,
 					key = user.key
@@ -102,8 +103,8 @@ class UntisInfoCenterRepository @Inject constructor(
 				classRegApi.getHomework(
 					id = params.elementId,
 					type = params.elementType,
-					startDate = params.startDate,
-					endDate = params.endDate,
+					startDate = params.startDate.toKotlinLocalDate(),
+					endDate = params.endDate.toKotlinLocalDate(),
 					apiUrl = user.jsonRpcApiUrl.toString(),
 					user = user.user,
 					key = user.key
@@ -119,8 +120,8 @@ class UntisInfoCenterRepository @Inject constructor(
 		return CachedSource(
 			source = { params ->
 				absenceApi.getStudentAbsences(
-					startDate = params.startDate,
-					endDate = params.endDate,
+					startDate = params.startDate.toKotlinLocalDate(),
+					endDate = params.endDate.toKotlinLocalDate(),
 					includeExcused = params.includeExcused,
 					includeUnExcused = params.includeUnExcused,
 					apiUrl = user.jsonRpcApiUrl.toString(),
@@ -139,7 +140,7 @@ class UntisInfoCenterRepository @Inject constructor(
 			source = { params ->
 				officeHoursApi.getOfficeHours(
 					klasseId = params.klasseId,
-					startDate = params.startDate,
+					startDate = params.startDate.toKotlinLocalDate(),
 					apiUrl = user.jsonRpcApiUrl.toString(),
 					user = user.user,
 					key = user.key

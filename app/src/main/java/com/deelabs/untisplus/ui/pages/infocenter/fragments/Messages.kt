@@ -72,6 +72,7 @@ import io.github.fornewid.placeholder.foundation.placeholder
 import io.github.fornewid.placeholder.foundation.shimmer
 import io.github.fornewid.placeholder.material3.color
 import io.github.fornewid.placeholder.material3.shimmerHighlightColor
+import kotlinx.datetime.toJavaLocalDateTime
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -162,7 +163,7 @@ fun InfoCenterMessages(viewModel: InfoCenterViewModel = hiltViewModel()) {
 													body = message.contentPreview ?: "",
 													sender = message.sender?.displayName,
 													imageUrl = message.sender?.imageUrl,
-													time = message.sentDateTime,
+													time = message.sentDateTime?.toJavaLocalDateTime(),
 													read = message.isMessageRead ?: true,
 													attachments = null // TODO: Support attachments (message.hasAttachments)
 												)
@@ -249,7 +250,7 @@ private fun SharedTransitionScope.MessageDetails(
 									subject = targetMessage.subject ?: "",
 									sender = targetMessage.sender?.displayName,
 									imageUrl = targetMessage.sender?.imageUrl,
-									time = targetMessage.sentDateTime,
+									time = targetMessage.sentDateTime?.toJavaLocalDateTime(),
 									read = targetMessage.isMessageRead ?: true,
 									attachments = null
 								)

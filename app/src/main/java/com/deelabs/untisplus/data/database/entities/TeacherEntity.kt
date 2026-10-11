@@ -6,6 +6,7 @@ import androidx.room.Index
 import com.deelabs.untisplus.api.model.untis.masterdata.Teacher
 import com.deelabs.untisplus.data.database.Mapper
 import java.time.LocalDate
+import kotlinx.datetime.toJavaLocalDate
 
 @Entity(
 	tableName = "Teacher",
@@ -42,8 +43,8 @@ data class TeacherEntity(
 			departmentIds = from.departmentIds,
 			foreColor = from.foreColor,
 			backColor = from.backColor,
-			entryDate = from.entryDate,
-			exitDate = from.exitDate,
+			entryDate = from.entryDate?.toJavaLocalDate(),
+			exitDate = from.exitDate?.toJavaLocalDate(),
 			active = from.active,
 			displayAllowed = from.displayAllowed,
 		)

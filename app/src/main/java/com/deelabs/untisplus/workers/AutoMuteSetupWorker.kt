@@ -27,6 +27,7 @@ import crocodile8.universal_cache.FromCache
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
+import kotlinx.datetime.toJavaLocalDateTime
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -90,11 +91,13 @@ class AutoMuteSetupWorker @AssistedInject constructor(
 				timetable.merged(masterDataRepository).sortedBy { it.originalPeriod.startDateTime }.zipWithNext().withLast()
 					.forEach {
 						it.first?.let { item ->
+							val startDateTime = item.originalPeriod.startDateTime.toJavaLocalDateTime()
+							val endDateTime = item.originalPeriod.endDateTime.toJavaLocalDateTime()
 							val alarmManager =
 								applicationContext.getSystemService(ALARM_SERVICE) as AlarmManager
-							val id = item.originalPeriod.startDateTime.toLocalTime().toSecondOfDay()
+							val id = startDateTime.toLocalTime().toSecondOfDay()
 
-							if (item.originalPeriod.endDateTime.isBefore(LocalDateTime.now()))
+							if (endDateTime.isBefore(LocalDateTime.now()))
 								return@forEach // lesson is in the past
 
 							if (item.isCancelled() && !userSettings.automuteCancelledLessons)
@@ -107,12 +110,12 @@ class AutoMuteSetupWorker @AssistedInject constructor(
 									.putExtra(EXTRA_BOOLEAN_MUTE, true)
 							val pendingMuteIntent = PendingIntent.getBroadcast(
 								applicationContext,
-								item.originalPeriod.startDateTime.toLocalTime().toSecondOfDay(),
+								startDateTime.toLocalTime().toSecondOfDay(),
 								muteIntent,
 								FLAG_IMMUTABLE
 							)
 							alarmManager.setBest(
-								item.originalPeriod.startDateTime,
+								startDateTime,
 								pendingMuteIntent
 							)
 							Log.d(
@@ -121,7 +124,7 @@ class AutoMuteSetupWorker @AssistedInject constructor(
 							)
 
 							val subsequentBreakLength = it.second?.let { subsequentPeriod ->
-								ChronoUnit.MINUTES.between(item.originalPeriod.endDateTime, subsequentPeriod.originalPeriod.startDateTime)
+								ChronoUnit.MINUTES.between(endDateTime, subsequentPeriod.originalPeriod.startDateTime.toJavaLocalDateTime())
 							}
 							if (subsequentBreakLength != null && subsequentBreakLength < userSettings.automuteMinimumBreakLength) {
 								Log.d(
@@ -138,12 +141,12 @@ class AutoMuteSetupWorker @AssistedInject constructor(
 									.putExtra(EXTRA_BOOLEAN_MUTE, false)
 							val pendingUnmuteIntent = PendingIntent.getBroadcast(
 								applicationContext,
-								item.originalPeriod.endDateTime.toLocalTime().toSecondOfDay(),
+								endDateTime.toLocalTime().toSecondOfDay(),
 								unmuteIntent,
 								FLAG_IMMUTABLE
 							)
 							alarmManager.setBest(
-								item.originalPeriod.endDateTime,
+								endDateTime,
 								pendingUnmuteIntent
 							)
 							Log.d(

@@ -63,6 +63,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.toJavaLocalTime
 import java.time.Clock
 import java.time.DayOfWeek
 import java.time.Instant
@@ -445,7 +446,7 @@ class TimetableViewModel @Inject constructor(
 				hour.label.ifEmpty { (index + 1).toString() }
 			}
 
-			hourList.add(WeekViewHour(hour.startTime, hour.endTime, label))
+			hourList.add(WeekViewHour(hour.startTime.toJavaLocalTime(), hour.endTime.toJavaLocalTime(), label))
 		}
 
 		return hourList

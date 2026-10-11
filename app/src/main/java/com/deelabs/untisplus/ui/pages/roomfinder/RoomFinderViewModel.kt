@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.datetime.toJavaLocalTime
 import java.time.Clock
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -68,7 +69,7 @@ class RoomFinderViewModel @Inject constructor(
 			_hourList.collect { hourList ->
 				_selectedHourIndex.value = hourList.indexOfFirst {
 					it.timeGridDay.day == currentDateTime.dayOfWeek
-						&& currentDateTime.toLocalTime().isBefore(it.timeGridUnit.endTime)
+						&& currentDateTime.toLocalTime().isBefore(it.timeGridUnit.endTime.toJavaLocalTime())
 				}.coerceAtLeast(0)
 			}
 		}

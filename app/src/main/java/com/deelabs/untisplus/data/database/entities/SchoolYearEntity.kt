@@ -6,6 +6,7 @@ import androidx.room.Index
 import com.deelabs.untisplus.api.model.untis.masterdata.SchoolYear
 import com.deelabs.untisplus.data.database.Mapper
 import java.time.LocalDate
+import kotlinx.datetime.toJavaLocalDate
 
 @Entity(
 	tableName = "SchoolYear",
@@ -30,8 +31,8 @@ data class SchoolYearEntity(
 			id = from.id,
 			userId = userId,
 			name = from.name,
-			startDate = from.startDate,
-			endDate = from.endDate,
+			startDate = from.startDate.toJavaLocalDate(),
+			endDate = from.endDate.toJavaLocalDate(),
 		)
 	}
 }

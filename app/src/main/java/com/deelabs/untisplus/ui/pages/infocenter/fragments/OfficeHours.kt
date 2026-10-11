@@ -14,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.api.model.untis.timetable.OfficeHour
+import kotlinx.datetime.toJavaLocalDateTime
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -60,7 +61,7 @@ private fun OfficeHourItem(item: OfficeHour) {
 	ListItem(
 		overlineContent = {
 			Text(
-				formatOfficeHourTime(item.startDateTime, item.endDateTime)
+				formatOfficeHourTime(item.startDateTime.toJavaLocalDateTime(), item.endDateTime.toJavaLocalDateTime())
 			)
 		},
 		headlineContent = { Text(item.displayNameTeacher) },

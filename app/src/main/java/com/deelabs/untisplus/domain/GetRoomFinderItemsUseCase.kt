@@ -86,8 +86,8 @@ class GetRoomFinderItemsUseCaseImpl @Inject constructor(
 				periods.any { period ->
 					!period.`is`(PeriodState.CANCELLED) &&
 						period.startDateTime.dayOfWeek == day.day &&
-						unit.endTime.isAfter(period.startDateTime.toLocalTime()) &&
-						unit.startTime.isBefore(period.endDateTime.toLocalTime())
+						unit.endTime > period.startDateTime.time &&
+						unit.startTime < period.endDateTime.time
 				}
 			}
 		}

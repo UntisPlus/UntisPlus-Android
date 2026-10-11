@@ -54,6 +54,7 @@ import com.deelabs.untisplus.ui.common.AppScaffold
 import com.deelabs.untisplus.ui.common.SmallCircularProgressIndicator
 import com.deelabs.untisplus.ui.dialogs.ElementPickerDialogFullscreen
 import com.deelabs.untisplus.ui.functional.bottomInsets
+import kotlinx.datetime.toJavaLocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
@@ -228,8 +229,8 @@ fun RoomFinderHourSelector(
 				Text(
 					text = stringResource(
 						id = R.string.roomfinder_current_hour_time,
-						hour.timeGridUnit.startTime.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)),
-						hour.timeGridUnit.endTime.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
+						hour.timeGridUnit.startTime.toJavaLocalTime().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)),
+						hour.timeGridUnit.endTime.toJavaLocalTime().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
 					),
 					textAlign = TextAlign.Center,
 					modifier = Modifier.fillMaxWidth()

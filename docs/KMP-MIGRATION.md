@@ -170,3 +170,22 @@ Dead dep: **Fuel** (0 usages) — remove.
     `:shared`.
   - Removed the unused Fuel dependency.
   - `./gradlew :app:assembleDebug` verified green.
+  - Converted `:api` to Kotlin Multiplatform: sources moved from `src/main/kotlin` →
+    `src/commonMain/kotlin` and `src/test/kotlin` → `src/jvmTest/kotlin`; `jvmMain`/`androidMain`
+    (JCA `Mac`) and `iosMain` (CoreCrypto `CCHmac`) `expect`/`actual` implementations for SHA-1
+    HMAC added in `HmacSha1.kt` (the iOS actual is unverified — no macOS host yet).
+  - Replaced `java.time` with `kotlinx-datetime` throughout `:api` (`SerializableTypes` typealiases,
+    `LocalDate`/`LocalTime`/`LocalDateTime`/`DayOfWeek` serializers, `Auth`, `TimeGrid`, `Day`,
+    `StudentExemption` and the client request signatures). The OpenAPI generator keeps
+    `dateLibrary=java8` but maps `OffsetDateTime`/`LocalDateTime`/`LocalDate` onto the kotlinx-datetime
+    serializers via `typeMappings`, so generated code is free of `java.*` references. Generator output
+    moved to `api/build/openapi` (was colliding with AGP's `build/generated`).
+  - `:api` uses `api(libs.kotlinx.datetime)` so the date types are visible to consumers.
+  - Kept the Android app on `java.time` internally and convert at the ~20 boundary sites using
+    kotlinx-datetime's JVM interop (`toKotlinLocalDate/Time`, `toJavaLocalDate/Time/DateTime`). This
+    keeps the UI formatting code (java.time `DateTimeFormatter`) unchanged for now.
+  - Migrated `:api`'s serializer tests to kotlinx-datetime. `./gradlew :app:assembleDebug`,
+    `:app:testDebugUnitTest` verified green. `:api:jvmTest` passes (38/38) under `TZ=UTC`; one
+    empty-string fallback test is timezone-sensitive as before.
+  - Added `shared/.gitignore` (`/build`) so the new module's build output is not committed.
+

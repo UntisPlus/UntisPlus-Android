@@ -230,6 +230,7 @@ dependencies {
 	implementation(libs.hilt.compiler)
 	implementation(libs.kotlin.reflect)
 	implementation(libs.kotlinx.coroutines)
+	implementation(libs.kotlinx.datetime)
 	implementation(libs.kotlinx.serialization.cbor)
 	implementation(libs.kotlinx.serialization.json)
 	implementation(libs.ktor.client.cio)

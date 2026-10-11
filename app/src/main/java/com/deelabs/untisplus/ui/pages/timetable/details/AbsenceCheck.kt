@@ -33,6 +33,7 @@ import com.deelabs.untisplus.ui.dialogs.TimePickerDialog
 import com.deelabs.untisplus.ui.functional.insetsPaddingValues
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.datetime.toJavaLocalDateTime
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -74,8 +75,8 @@ data class AbsenceCheckState(
 	}
 
 	fun showDetailed(student: Person) {
-		newAbsenceStartDateTime = _period?.startDateTime
-		newAbsenceEndDateTime = _period?.endDateTime
+		newAbsenceStartDateTime = _period?.startDateTime?.toJavaLocalDateTime()
+		newAbsenceEndDateTime = _period?.endDateTime?.toJavaLocalDateTime()
 		_detailedPerson = student
 	}
 
@@ -93,8 +94,8 @@ data class AbsenceCheckState(
 	suspend fun createAbsence(
 		studentId: Long,
 		periodId: Long = _period!!.id,
-		startTime: LocalTime = _period!!.startDateTime.toLocalTime(),
-		endTime: LocalTime = _period!!.endDateTime.toLocalTime()
+		startTime: LocalTime = _period!!.startDateTime.toJavaLocalDateTime().toLocalTime(),
+		endTime: LocalTime = _period!!.endDateTime.toJavaLocalDateTime().toLocalTime()
 	) {
 		timetableRepository.postAbsence(periodId, studentId, startTime, endTime).onSuccess { newAbsences ->
 			updatePeriodData(_periodData?.let { it.copy(absences = (it.absences ?: emptyList()).plus(newAbsences)) })

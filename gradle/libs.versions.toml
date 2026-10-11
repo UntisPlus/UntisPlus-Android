@@ -1,5 +1,4 @@
 [versions]
-accompanist = "0.36.0"
 android-gradle-plugin = "8.13.2"
 androidx-activity = "1.10.1"
 androidx-appcompat = "1.7.1"
@@ -51,10 +50,6 @@ universal-cache = "1.1.8"
 
 
 [libraries]
-accompanist-flowlayout = { module = "com.google.accompanist:accompanist-flowlayout", version.ref = "accompanist" }
-accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanist" }
-accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanist" }
-accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
 andrew0000-cache = { module = "io.github.andrew0000:universal-cache", version.ref = "universal-cache" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }

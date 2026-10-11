@@ -269,4 +269,19 @@ Dead dep: **Fuel** (0 usages) — remove.
   / implicit Coil 2 config elsewhere. Green: `:app:assembleDebug`, `:app:testDebugUnitTest`.
   - Still open in item 6: replace Accompanist (FlowRow, SwipeRefresh, SystemUiController, Permissions
     — `accompanist-permissions` has no direct androidx drop-in).
+- 2026-10-11 — **Remove Accompanist** (§7 item 6, partial). Only 3 files used it (SwipeRefresh was an
+  unused dependency and was simply dropped):
+  - `DatePickerDialog.kt`: Accompanist `FlowRow` → `androidx.compose.foundation.layout.FlowRow`
+    (stable in Compose 1.7+); `mainAxisAlignment = MainAxisAlignment.End` + `mainAxisSpacing = 8.dp` →
+    `horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)`. No opt-in needed on 1.8.3.
+  - `ThemeUtils.kt`: `rememberSystemUiController()` + `setSystemBarsColor`/`setNavigationBarColor`
+    (both to transparent) → `enableEdgeToEdge()` already runs in `MainActivity`, so `AppTheme` now only
+    drives the icon appearance via `WindowCompat.getInsetsController(...)` inside a `SideEffect`. The
+    `systemUiController` parameter was removed (all call sites used positional args 1–3 only).
+  - `SettingsCategoryNotifications.kt`: Accompanist `rememberPermissionState`/`isGranted` →
+    `rememberLauncherForActivityResult(RequestPermission())` + `ContextCompat.checkSelfPermission`
+    (state kept in a `remember`; grant/deny updates the setting and `notificationsMessageVisible`).
+  - Removed `accompanist-*` from the version catalog and `app/build.gradle.kts`. Green:
+    `:app:assembleDebug`, `:app:testDebugUnitTest`, and **`:app:lintDebug`** (first lint run this
+    session — passes).
 

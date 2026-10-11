@@ -2,7 +2,10 @@ package com.deelabs.untisplus.ui.pages.settings.fragments
 
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,12 +22,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
 import com.sapuseven.compose.protostore.ui.preferences.ListPreference
 import com.sapuseven.compose.protostore.ui.preferences.NumericInputPreference
 import com.sapuseven.compose.protostore.ui.preferences.Preference
@@ -42,7 +43,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SettingsCategoryNotifications(navController: NavController, viewModel: SettingsScreenViewModel) {
 	val scope = rememberCoroutineScope()
@@ -50,17 +50,28 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 
 	var notificationsMessageVisible by rememberSaveable { mutableStateOf(false) }
 
-	val notificationPermissionsState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-		rememberPermissionState(android.Manifest.permission.POST_NOTIFICATIONS) {
-			notificationsMessageVisible = !it
+	var notificationPermissionGranted by remember {
+		mutableStateOf(
+			Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+				ContextCompat.checkSelfPermission(
+					context,
+					android.Manifest.permission.POST_NOTIFICATIONS
+				) == PackageManager.PERMISSION_GRANTED
+		)
+	}
 
-			scope.launch {
-				viewModel.userSettingsRepository.updateSettings {
-					notificationsEnable = it
-				}
+	val notificationPermissionLauncher = rememberLauncherForActivityResult(
+		ActivityResultContracts.RequestPermission()
+	) { granted ->
+		notificationPermissionGranted = granted
+		notificationsMessageVisible = !granted
+
+		scope.launch {
+			viewModel.userSettingsRepository.updateSettings {
+				notificationsEnable = granted
 			}
 		}
-	else null
+	}
 
 	fun enqueueNotificationSetup() = scope.launch {
 		delay(1000) // Delay to ensure the settings are updated before worker is enqueued
@@ -95,11 +106,9 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 		title = stringResource(R.string.preference_category_notifications_break)
 	) {
 		LaunchedEffect(Unit) {
-			notificationPermissionsState?.let {
-				if (!it.status.isGranted) {
-					viewModel.userSettingsRepository.updateSettings {
-						notificationsEnable = false
-					}
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationPermissionGranted) {
+				viewModel.userSettingsRepository.updateSettings {
+					notificationsEnable = false
 				}
 			}
 		}
@@ -111,12 +120,12 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 			value = { it.notificationsEnable },
 			onValueChange = {
 				notificationsEnable = if (it) {
-					if (notificationPermissionsState?.status?.isGranted != false) {
+					if (notificationPermissionGranted) {
 						notificationsMessageVisible = false
 						enqueueNotificationSetup()
 						true
 					} else {
-						notificationPermissionsState.launchPermissionRequest()
+						notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
 						false
 					}
 				} else {

@@ -1,5 +1,6 @@
 package com.deelabs.untisplus.helpers
 
+import android.app.Activity
 import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -7,39 +8,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import com.google.accompanist.systemuicontroller.SystemUiController
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import com.sapuseven.compose.protostore.ui.preferences.materialColors
 import com.deelabs.untisplus.ui.material.scheme.Scheme
 import com.deelabs.untisplus.ui.theme.animated
 import com.deelabs.untisplus.ui.theme.toColorScheme
-
-private fun setSystemUiColor(
-	systemUiController: SystemUiController,
-	color: Color = Color.Transparent,
-	darkIcons: Boolean = color.luminance() > 0.5f
-) {
-	systemUiController.run {
-		setSystemBarsColor(
-			color = color, darkIcons = darkIcons
-		)
-
-		setNavigationBarColor(
-			color = color, darkIcons = darkIcons
-		)
-	}
-}
 
 @Composable
 fun AppTheme(
 	darkTheme: ThemeMode = ThemeMode.FollowSystem,
 	darkThemeOled: Boolean? = null,
 	themeColor: Color? = null,
-	systemUiController: SystemUiController? = rememberSystemUiController(),
 	content: @Composable () -> Unit
 ) {
 	val defaultThemeColor = materialColors[0]
@@ -66,8 +51,15 @@ fun AppTheme(
 	}
 
 	val darkIcons = colorScheme.background.luminance() > .5f
-	systemUiController?.let {
-		setSystemUiColor(it, Color.Transparent, darkIcons)
+	val view = LocalView.current
+	if (!view.isInEditMode) {
+		SideEffect {
+			val window = (view.context as Activity).window
+			WindowCompat.getInsetsController(window, view).apply {
+				isAppearanceLightStatusBars = darkIcons
+				isAppearanceLightNavigationBars = darkIcons
+			}
+		}
 	}
 
 	MaterialTheme(

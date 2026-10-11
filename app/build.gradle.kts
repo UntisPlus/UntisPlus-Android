@@ -198,10 +198,6 @@ protobuf {
 }
 
 dependencies {
-	implementation(libs.accompanist.flowlayout)
-	implementation(libs.accompanist.swiperefresh)
-	implementation(libs.accompanist.systemuicontroller)
-	implementation(libs.accompanist.permissions)
 	implementation(libs.androidx.activity.compose)
 	implementation(libs.androidx.appcompat)
 	implementation(libs.androidx.compose.animation)

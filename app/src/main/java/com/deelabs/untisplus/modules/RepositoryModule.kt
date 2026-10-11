@@ -1,6 +1,7 @@
 package com.deelabs.untisplus.modules
 
 import com.deelabs.untisplus.data.repository.GlobalSettingsRepository
+import com.deelabs.untisplus.data.repository.CurrentUserProvider
 import com.deelabs.untisplus.data.repository.ImportedCalendarRepository
 import com.deelabs.untisplus.data.repository.InfoCenterRepository
 import com.deelabs.untisplus.data.repository.MasterDataRepository
@@ -21,6 +22,8 @@ import org.koin.dsl.module
 
 val repositoryModule = module {
 	single<UserRepository> { UserRepository(get(), get(), get()) }
+
+	single<CurrentUserProvider> { get<UserRepository>() }
 
 	single<ImportedCalendarRepository> {
 		ImportedCalendarRepository(get(), get(), get(named("ics")), androidContext())

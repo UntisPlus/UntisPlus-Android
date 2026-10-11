@@ -48,6 +48,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.toKotlinLocalDate
 import okio.Path
 import java.net.HttpURLConnection
 import java.net.URL
@@ -364,7 +365,7 @@ class LoginDataInputViewModel constructor(
 					params = TimetableRepository.TimetableParams(
 						elementId = element.id,
 						elementType = element.type,
-						startDate = startDate,
+						startDate = startDate.toKotlinLocalDate(),
 					),
 					fromCache = FromCache.CACHED_THEN_LOAD,
 					additionalKey = user.id

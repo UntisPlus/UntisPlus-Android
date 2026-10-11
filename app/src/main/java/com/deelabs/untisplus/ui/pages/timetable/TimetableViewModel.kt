@@ -368,7 +368,7 @@ class TimetableViewModel constructor(
 				params = TimetableRepository.TimetableParams(
 					elementId = it.id,
 					elementType = it.type,
-					startDate = startDate,
+					startDate = startDate.toKotlinLocalDate(),
 				),
 				fromCache = fromCache,
 				additionalKey = currentUser.id

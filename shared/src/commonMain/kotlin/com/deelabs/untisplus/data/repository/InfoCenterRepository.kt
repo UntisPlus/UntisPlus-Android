@@ -1,6 +1,6 @@
 package com.deelabs.untisplus.data.repository
 
-import com.deelabs.untisplus.data.database.entities.jsonRpcApiUrl
+import com.deelabs.untisplus.data.database.entities.jsonRpcApiUrlString
 
 import com.deelabs.untisplus.api.client.AbsenceApi
 import com.deelabs.untisplus.api.client.ClassRegApi
@@ -51,7 +51,7 @@ interface InfoCenterRepository {
 }
 
 class UntisInfoCenterRepository constructor(
-	private val userRepository: UserRepository,
+	private val currentUserProvider: CurrentUserProvider,
 	private val messagesApi: MessagesApi,
 	private val classRegApi: ClassRegApi,
 	private val absenceApi: AbsenceApi,
@@ -61,12 +61,12 @@ class UntisInfoCenterRepository constructor(
 ) : InfoCenterRepository {
 
 	override fun messagesOfDaySource(): CachedSource<LocalDate, List<MessageOfDay>> {
-		val user = userRepository.currentUser!!
+		val user = currentUserProvider.currentUser!!
 		return CachedSource(
 			source = { params ->
 				messagesApi.getMessagesOfDay(
 					date = params,
-					apiUrl = user.jsonRpcApiUrl.toString(),
+					apiUrl = user.jsonRpcApiUrlString,
 					user = user.user,
 					key = user.key
 				).messages
@@ -77,7 +77,7 @@ class UntisInfoCenterRepository constructor(
 	}
 
 	override fun examsSource(): CachedSource<InfoCenterRepository.EventsParams, List<Exam>> {
-		val user = userRepository.currentUser!!
+		val user = currentUserProvider.currentUser!!
 		return CachedSource(
 			source = { params ->
 				classRegApi.getExams(
@@ -85,7 +85,7 @@ class UntisInfoCenterRepository constructor(
 					type = params.elementType,
 					startDate = params.startDate,
 					endDate = params.endDate,
-					apiUrl = user.jsonRpcApiUrl.toString(),
+					apiUrl = user.jsonRpcApiUrlString,
 					user = user.user,
 					key = user.key
 				).exams
@@ -96,7 +96,7 @@ class UntisInfoCenterRepository constructor(
 	}
 
 	override fun homeworkSource(): CachedSource<InfoCenterRepository.EventsParams, List<HomeWork>> {
-		val user = userRepository.currentUser!!
+		val user = currentUserProvider.currentUser!!
 		return CachedSource(
 			source = { params ->
 				classRegApi.getHomework(
@@ -104,7 +104,7 @@ class UntisInfoCenterRepository constructor(
 					type = params.elementType,
 					startDate = params.startDate,
 					endDate = params.endDate,
-					apiUrl = user.jsonRpcApiUrl.toString(),
+					apiUrl = user.jsonRpcApiUrlString,
 					user = user.user,
 					key = user.key
 				).homeWorks
@@ -115,7 +115,7 @@ class UntisInfoCenterRepository constructor(
 	}
 
 	override fun absencesSource(): CachedSource<InfoCenterRepository.AbsencesParams, List<StudentAbsence>> {
-		val user = userRepository.currentUser!!
+		val user = currentUserProvider.currentUser!!
 		return CachedSource(
 			source = { params ->
 				absenceApi.getStudentAbsences(
@@ -123,7 +123,7 @@ class UntisInfoCenterRepository constructor(
 					endDate = params.endDate,
 					includeExcused = params.includeExcused,
 					includeUnExcused = params.includeUnExcused,
-					apiUrl = user.jsonRpcApiUrl.toString(),
+					apiUrl = user.jsonRpcApiUrlString,
 					user = user.user,
 					key = user.key
 				).absences
@@ -134,13 +134,13 @@ class UntisInfoCenterRepository constructor(
 	}
 
 	override fun officeHoursSource(): CachedSource<InfoCenterRepository.OfficeHoursParams, List<OfficeHour>> {
-		val user = userRepository.currentUser!!
+		val user = currentUserProvider.currentUser!!
 		return CachedSource(
 			source = { params ->
 				officeHoursApi.getOfficeHours(
 					klasseId = params.klasseId,
 					startDate = params.startDate,
-					apiUrl = user.jsonRpcApiUrl.toString(),
+					apiUrl = user.jsonRpcApiUrlString,
 					user = user.user,
 					key = user.key
 				).officeHours

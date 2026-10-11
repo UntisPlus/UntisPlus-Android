@@ -19,6 +19,7 @@ import com.deelabs.untisplus.models.mergeValuesWith
 import com.deelabs.untisplus.ui.preferences.toPeriodElement
 import crocodile8.universal_cache.FromCache
 import kotlinx.coroutines.flow.last
+import kotlinx.datetime.toKotlinLocalDate
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -51,8 +52,8 @@ abstract class TimetableDependantWorker(
 			params = TimetableRepository.TimetableParams(
 				element.id,
 				element.type,
-				currentDate,
-				currentDate,
+				currentDate.toKotlinLocalDate(),
+				currentDate.toKotlinLocalDate(),
 			),
 			fromCache = fromCache,
 			maxAge = 60 * 60 * 1000,

@@ -34,6 +34,7 @@ import com.deelabs.untisplus.ui.functional.insetsPaddingValues
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toKotlinLocalTime
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -97,7 +98,7 @@ data class AbsenceCheckState(
 		startTime: LocalTime = _period!!.startDateTime.toJavaLocalDateTime().toLocalTime(),
 		endTime: LocalTime = _period!!.endDateTime.toJavaLocalDateTime().toLocalTime()
 	) {
-		timetableRepository.postAbsence(periodId, studentId, startTime, endTime).onSuccess { newAbsences ->
+		timetableRepository.postAbsence(periodId, studentId, startTime.toKotlinLocalTime(), endTime.toKotlinLocalTime()).onSuccess { newAbsences ->
 			updatePeriodData(_periodData?.let { it.copy(absences = (it.absences ?: emptyList()).plus(newAbsences)) })
 		}
 	}

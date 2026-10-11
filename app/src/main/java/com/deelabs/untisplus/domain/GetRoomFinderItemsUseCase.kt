@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.datetime.toKotlinLocalDate
 
 interface GetRoomFinderItemsUseCase {
 	operator fun invoke(): Flow<List<RoomFinderItem>>
@@ -71,7 +72,7 @@ class GetRoomFinderItemsUseCaseImpl constructor(
 			params = TimetableRepository.TimetableParams(
 				room.id,
 				ElementType.ROOM,
-				startDate
+				startDate.toKotlinLocalDate()
 			),
 			fromCache = FromCache.IF_HAVE, // Use a conservative caching strategy to reduce API request count
 			maxAge = ONE_HOUR,

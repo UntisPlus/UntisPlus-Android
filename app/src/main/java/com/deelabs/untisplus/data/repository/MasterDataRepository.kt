@@ -11,7 +11,6 @@ import com.deelabs.untisplus.data.database.entities.TeacherEntity
 import com.deelabs.untisplus.data.database.entities.User
 import com.deelabs.untisplus.data.database.entities.UserDao
 import com.deelabs.untisplus.data.database.entities.UserWithData
-import com.deelabs.untisplus.models.PeriodItem.Companion.ELEMENT_NAME_UNKNOWN
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,44 +21,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-
-interface MasterDataRepository {
-	val user: User?
-	val userData: UserWithData?
-
-	val allClasses: StateFlow<List<PeriodElement>>
-	val allTeachers: StateFlow<List<PeriodElement>>
-	val allSubjects: StateFlow<List<PeriodElement>>
-	val allRooms: StateFlow<List<PeriodElement>>
-
-	fun getShortName(id: Long, type: ElementType? = null, default: String = ELEMENT_NAME_UNKNOWN): String
-	fun getShortName(periodElement: PeriodElement, default: String = ELEMENT_NAME_UNKNOWN): String
-
-	fun getLongName(id: Long, type: ElementType, default: String = ELEMENT_NAME_UNKNOWN): String
-	fun getLongName(periodElement: PeriodElement, default: String = ELEMENT_NAME_UNKNOWN): String
-
-	fun isAllowed(id: Long, type: ElementType? = null): Boolean
-	fun isAllowed(periodElement: PeriodElement): Boolean
-}
-
-class DefaultMasterDataRepository : MasterDataRepository {
-	override val user: User? = null
-	override val userData: UserWithData? = null
-
-	override val allClasses: StateFlow<List<PeriodElement>> = MutableStateFlow(emptyList())
-	override val allTeachers: StateFlow<List<PeriodElement>> = MutableStateFlow(emptyList())
-	override val allSubjects: StateFlow<List<PeriodElement>> = MutableStateFlow(emptyList())
-	override val allRooms: StateFlow<List<PeriodElement>> = MutableStateFlow(emptyList())
-
-	override fun getShortName(id: Long, type: ElementType?, default: String): String = "$type:$id"
-	override fun getShortName(periodElement: PeriodElement, default: String) = getShortName(periodElement.id, periodElement.type, default)
-
-	override fun getLongName(id: Long, type: ElementType, default: String): String = "$type:$id"
-	override fun getLongName(periodElement: PeriodElement, default: String) = getLongName(periodElement.id, periodElement.type)
-
-	override fun isAllowed(id: Long, type: ElementType?): Boolean = true
-	override fun isAllowed(periodElement: PeriodElement): Boolean = true
-}
 
 class UntisMasterDataRepository constructor(
 	private val userDao: UserDao,

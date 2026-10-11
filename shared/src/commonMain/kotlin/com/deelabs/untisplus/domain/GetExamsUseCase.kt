@@ -11,10 +11,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
-import com.deelabs.untisplus.data.repository.UserRepository
+import com.deelabs.untisplus.data.repository.CurrentUserProvider
 
 class GetExamsUseCase constructor(
-	private val userRepository: UserRepository,
+	private val currentUserProvider: CurrentUserProvider,
 	private val infoCenterRepository: InfoCenterRepository,
 	getCurrentSchoolYear: GetCurrentSchoolYearUseCase,
 ) {
@@ -25,7 +25,7 @@ class GetExamsUseCase constructor(
 		private const val ONE_HOUR: Long = 60 * 60 * 1000
 	}
 
-	operator fun invoke(): Flow<Result<List<Exam>>> = userRepository.currentUser!!.let { user ->
+	operator fun invoke(): Flow<Result<List<Exam>>> = currentUserProvider.currentUser!!.let { user ->
 		infoCenterRepository.examsSource()
 			.get(
 				InfoCenterRepository.EventsParams(

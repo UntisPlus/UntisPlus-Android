@@ -2,7 +2,7 @@ package com.deelabs.untisplus.domain
 
 import com.deelabs.untisplus.api.model.untis.classreg.HomeWork
 import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
-import com.deelabs.untisplus.data.repository.UserRepository
+import com.deelabs.untisplus.data.repository.CurrentUserProvider
 import com.deelabs.untisplus.data.database.entities.SchoolYearEntity
 import com.deelabs.untisplus.data.repository.InfoCenterRepository
 import crocodile8.universal_cache.FromCache
@@ -14,7 +14,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 
 class GetHomeworkUseCase constructor(
-	private val userRepository: UserRepository,
+	private val currentUserProvider: CurrentUserProvider,
 	private val infoCenterRepository: InfoCenterRepository,
 	getCurrentSchoolYear: GetCurrentSchoolYearUseCase,
 ) {
@@ -25,7 +25,7 @@ class GetHomeworkUseCase constructor(
 		private const val ONE_HOUR: Long = 60 * 60 * 1000
 	}
 
-	operator fun invoke(): Flow<Result<List<HomeWork>>> = userRepository.currentUser!!.let { user ->
+	operator fun invoke(): Flow<Result<List<HomeWork>>> = currentUserProvider.currentUser!!.let { user ->
 		infoCenterRepository.homeworkSource()
 			.get(
 				InfoCenterRepository.EventsParams(

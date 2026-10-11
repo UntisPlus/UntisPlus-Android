@@ -2,7 +2,7 @@ package com.deelabs.untisplus.domain
 
 import com.deelabs.untisplus.api.model.untis.MessageOfDay
 import com.deelabs.untisplus.data.repository.InfoCenterRepository
-import com.deelabs.untisplus.data.repository.UserRepository
+import com.deelabs.untisplus.data.repository.CurrentUserProvider
 import crocodile8.universal_cache.FromCache
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -16,7 +16,7 @@ interface GetMessagesOfDayUseCase {
 }
 
 class GetMessagesOfDayUseCaseImpl constructor(
-	private val userRepository: UserRepository,
+	private val currentUserProvider: CurrentUserProvider,
 	private val infoCenterRepository: InfoCenterRepository,
 ) : GetMessagesOfDayUseCase {
 	companion object {
@@ -24,7 +24,7 @@ class GetMessagesOfDayUseCaseImpl constructor(
 	}
 
 	override operator fun invoke(): Flow<Result<List<MessageOfDay>>> = infoCenterRepository.messagesOfDaySource()
-		.get(Clock.System.todayIn(TimeZone.currentSystemDefault()), FromCache.CACHED_THEN_LOAD, maxAge = ONE_HOUR, additionalKey = userRepository.currentUser!!.id)
+		.get(Clock.System.todayIn(TimeZone.currentSystemDefault()), FromCache.CACHED_THEN_LOAD, maxAge = ONE_HOUR, additionalKey = currentUserProvider.currentUser!!.id)
 		.map(Result.Companion::success)
 		.catch { emit(Result.failure(it)) }
 }

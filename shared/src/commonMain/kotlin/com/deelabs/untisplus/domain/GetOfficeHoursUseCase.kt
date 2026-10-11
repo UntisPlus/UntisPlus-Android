@@ -9,10 +9,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
-import com.deelabs.untisplus.data.repository.UserRepository
+import com.deelabs.untisplus.data.repository.CurrentUserProvider
 
 class GetOfficeHoursUseCase constructor(
-	private val userRepository: UserRepository,
+	private val currentUserProvider: CurrentUserProvider,
 	private val infoCenterRepository: InfoCenterRepository,
 ) {
 	companion object {
@@ -24,7 +24,7 @@ class GetOfficeHoursUseCase constructor(
 			InfoCenterRepository.OfficeHoursParams(-1, Clock.System.todayIn(TimeZone.currentSystemDefault())),
 			FromCache.CACHED_THEN_LOAD,
 			maxAge = ONE_HOUR,
-			additionalKey = userRepository.currentUser!!.id
+			additionalKey = currentUserProvider.currentUser!!.id
 		)
 		.map(Result.Companion::success)
 		.catch { emit(Result.failure(it)) }

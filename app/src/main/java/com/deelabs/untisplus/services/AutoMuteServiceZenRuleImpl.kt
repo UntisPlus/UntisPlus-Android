@@ -12,6 +12,7 @@ import com.deelabs.untisplus.BuildConfig
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.activities.AutoMuteConfigurationActivity
 import com.deelabs.untisplus.data.database.entities.User
+import com.deelabs.untisplus.data.database.entities.getDisplayedName
 
 /**
  * Implementation of the AutoMuteService for API 29 (Q) and above.

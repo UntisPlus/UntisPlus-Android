@@ -36,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.data.database.entities.User
+import com.deelabs.untisplus.data.database.entities.getDisplayedName
 import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.ui.common.AppScaffold
 import com.deelabs.untisplus.ui.functional.insetsPaddingValues

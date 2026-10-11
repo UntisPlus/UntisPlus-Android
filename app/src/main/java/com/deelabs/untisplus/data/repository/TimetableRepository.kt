@@ -7,6 +7,7 @@ import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
 import com.deelabs.untisplus.api.model.untis.timetable.Period
 import com.deelabs.untisplus.data.cache.DiskCache
 import com.deelabs.untisplus.data.database.entities.UserDao
+import com.deelabs.untisplus.data.database.entities.jsonRpcApiUrl
 import crocodile8.universal_cache.CachedSource
 import crocodile8.universal_cache.time.TimeProvider
 import kotlinx.serialization.serializer

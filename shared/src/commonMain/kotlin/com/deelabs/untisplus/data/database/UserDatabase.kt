@@ -1,8 +1,10 @@
 package com.deelabs.untisplus.data.database
 
 import androidx.room.AutoMigration
+import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import com.deelabs.untisplus.api.model.untis.SchoolInfo
@@ -61,9 +63,16 @@ import kotlinx.serialization.json.Json
 	]
 )
 @TypeConverters(UserConverters::class)
+@ConstructedBy(UserDatabaseConstructor::class)
 abstract class UserDatabase : RoomDatabase() {
 	abstract fun userDao(): UserDao
 	abstract fun importedCalendarDao(): ImportedCalendarDao
+}
+
+// The Room compiler generates the `actual` implementations for each target.
+@Suppress("KotlinNoActualForExpect")
+expect object UserDatabaseConstructor : RoomDatabaseConstructor<UserDatabase> {
+	override fun initialize(): UserDatabase
 }
 
 internal class UserConverters {

@@ -1,5 +1,8 @@
 package com.deelabs.untisplus.modules
 
+import com.deelabs.untisplus.data.database.entities.jsonRpcApiUrl
+import com.deelabs.untisplus.data.database.entities.restApiUrl
+
 import com.deelabs.untisplus.api.client.UserDataApi
 import com.deelabs.untisplus.api.client.installCookieStorage
 import com.deelabs.untisplus.api.rest.MessagesApi

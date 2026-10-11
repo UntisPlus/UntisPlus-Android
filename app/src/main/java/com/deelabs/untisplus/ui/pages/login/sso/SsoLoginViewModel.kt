@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.toRoute
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.api.model.untis.SchoolInfo
+import com.deelabs.untisplus.data.database.entities.buildApiUrl
 import com.deelabs.untisplus.data.database.entities.User
 import com.deelabs.untisplus.helpers.SerializationUtils.getJSON
 import com.deelabs.untisplus.ui.navigation.AppNavigator
@@ -45,7 +46,7 @@ class SsoLoginViewModel constructor(
 	val schoolInfo: SchoolInfo? = getJSON().decodeFromString<SchoolInfo?>(args.schoolInfoSerialized)
 
 	/** The official school server root, e.g. https://schuldorf.webuntis.com/WebUntis */
-	private val serverRoot: String = User.buildApiUrl("", schoolInfo).toString()
+	private val serverRoot: String = buildApiUrl("", schoolInfo).toString()
 
 	val startUrl: String = computeStartUrl()
 

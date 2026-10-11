@@ -21,6 +21,7 @@ import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
 import com.deelabs.untisplus.api.model.untis.timetable.Period
 import com.deelabs.untisplus.api.model.untis.timetable.PeriodElement
 import com.deelabs.untisplus.data.database.entities.User
+import com.deelabs.untisplus.data.database.entities.getDisplayedName
 import com.deelabs.untisplus.data.database.entities.ImportedCalendarEventEntity
 import com.deelabs.untisplus.data.repository.ImportedCalendarRepository
 import com.deelabs.untisplus.data.repository.MasterDataRepository

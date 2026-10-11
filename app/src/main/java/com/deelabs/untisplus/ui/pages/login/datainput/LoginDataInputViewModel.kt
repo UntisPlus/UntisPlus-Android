@@ -26,7 +26,11 @@ import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
 import com.deelabs.untisplus.api.model.untis.masterdata.TimeGrid
 import com.deelabs.untisplus.data.cache.ApiCacheCleaner
 import com.deelabs.untisplus.data.database.entities.User
-import com.deelabs.untisplus.data.database.entities.User.Companion.buildApiUrl
+import com.deelabs.untisplus.data.database.entities.UNTISPLUS_API_HOST
+import com.deelabs.untisplus.data.database.entities.buildApiUrl
+import com.deelabs.untisplus.data.database.entities.buildJsonRpcApiUrl
+import com.deelabs.untisplus.data.database.entities.jsonRpcApiUrl
+import com.deelabs.untisplus.data.database.entities.normalizeApiEndpoint
 import com.deelabs.untisplus.data.database.entities.UserDao
 import com.deelabs.untisplus.data.repository.TimetableRepository
 import com.deelabs.untisplus.data.repository.UserRepository
@@ -130,11 +134,11 @@ class LoginDataInputViewModel constructor(
 
 	val customEndpointValid: Boolean
 		get() = apiProvider != ApiProvider.CUSTOM ||
-			User.normalizeApiEndpoint(loginData.apiUrl.value.orEmpty()) != null
+			normalizeApiEndpoint(loginData.apiUrl.value.orEmpty()) != null
 
 	val isHttpCustomEndpoint: Boolean
 		get() = apiProvider == ApiProvider.CUSTOM &&
-			User.normalizeApiEndpoint(loginData.apiUrl.value.orEmpty())?.first == "http"
+			normalizeApiEndpoint(loginData.apiUrl.value.orEmpty())?.first == "http"
 
 	private val schoolInfoFromSearch = args.schoolInfoSerialized?.let {
 		getJSON().decodeFromString<SchoolInfo>(it)
@@ -268,7 +272,7 @@ class LoginDataInputViewModel constructor(
 			}
 
 			val apiHost = resolveEndpointOrigin().orEmpty()
-			val untisApiUrl = User.buildJsonRpcApiUrl(
+			val untisApiUrl = buildJsonRpcApiUrl(
 				buildApiUrl(apiHost, schoolInfo),
 				schoolInfo.loginName
 			).toString()
@@ -318,8 +322,8 @@ class LoginDataInputViewModel constructor(
 	private fun resolveEndpointOrigin(): String? {
 		return when (apiProvider) {
 			ApiProvider.OFFICIAL -> null
-			ApiProvider.UNTISPLUS -> "https://${User.UNTISPLUS_API_HOST}"
-			ApiProvider.CUSTOM -> User.normalizeApiEndpoint(loginData.apiUrl.value.orEmpty())
+			ApiProvider.UNTISPLUS -> "https://$UNTISPLUS_API_HOST"
+			ApiProvider.CUSTOM -> normalizeApiEndpoint(loginData.apiUrl.value.orEmpty())
 				?.let { (scheme, authority) -> "$scheme://$authority" }
 		}
 	}
@@ -474,7 +478,7 @@ class LoginDataInputViewModel constructor(
 		anonymousSupportJob = viewModelScope.launch(Dispatchers.IO) {
 			anonymousSupported = try {
 				val apiHost = resolveEndpointOrigin().orEmpty()
-				val untisApiUrl = User.buildJsonRpcApiUrl(
+				val untisApiUrl = buildJsonRpcApiUrl(
 					buildApiUrl(apiHost, schoolInfo),
 					schoolInfo.loginName
 				).toString()

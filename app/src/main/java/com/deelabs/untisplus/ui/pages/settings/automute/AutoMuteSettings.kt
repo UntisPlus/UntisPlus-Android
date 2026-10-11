@@ -1,5 +1,7 @@
 package com.deelabs.untisplus.ui.pages.settings.automute
 
+import com.deelabs.untisplus.data.database.entities.getDisplayedName
+
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build

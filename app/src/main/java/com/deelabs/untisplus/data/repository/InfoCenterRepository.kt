@@ -1,5 +1,7 @@
 package com.deelabs.untisplus.data.repository
 
+import com.deelabs.untisplus.data.database.entities.jsonRpcApiUrl
+
 import com.deelabs.untisplus.api.client.AbsenceApi
 import com.deelabs.untisplus.api.client.ClassRegApi
 import com.deelabs.untisplus.api.client.MessagesApi

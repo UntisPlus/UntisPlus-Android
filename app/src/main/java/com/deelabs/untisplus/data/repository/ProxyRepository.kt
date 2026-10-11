@@ -26,6 +26,9 @@ import com.deelabs.untisplus.api.model.proxy.ProxyTimetableChanges
 import com.deelabs.untisplus.api.model.proxy.ProxyWebhookRequest
 import com.deelabs.untisplus.api.model.proxy.ProxyWebhooks
 import com.deelabs.untisplus.data.database.entities.User
+import com.deelabs.untisplus.data.database.entities.jsonRpcApiUrl
+import com.deelabs.untisplus.data.database.entities.proxyBaseUrl
+import com.deelabs.untisplus.data.database.entities.proxySchoolName
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.Flow

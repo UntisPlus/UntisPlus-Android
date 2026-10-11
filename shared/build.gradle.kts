@@ -28,11 +28,19 @@ kotlin {
 
 	jvmToolchain(21)
 
+	compilerOptions {
+		freeCompilerArgs.add("-Xexpect-actual-classes")
+	}
+
 	sourceSets {
 		commonMain.dependencies {
 			api(project(":api"))
 			implementation(libs.kotlinx.serialization.json)
 			implementation(libs.androidx.room.runtime)
+		}
+
+		commonTest.dependencies {
+			implementation(kotlin("test"))
 		}
 	}
 }

@@ -87,13 +87,8 @@ interface UserDao {
 	@Query("SELECT * FROM user")
 	suspend fun getAllAsync(): List<User>
 
-	@Deprecated("Should be migrated to getAllAsync() or getAllFlow()")
-	@Query("SELECT * FROM user")
-	fun getAll(): List<User>
-
-	// TODO: Make suspend
 	@Query("SELECT * FROM user WHERE id LIKE :userId")
-	fun getById(userId: Long): User?
+	suspend fun getById(userId: Long): User?
 
 	@Query("SELECT * FROM user WHERE id LIKE :userId")
 	suspend fun getByIdAsync(userId: Long): User?

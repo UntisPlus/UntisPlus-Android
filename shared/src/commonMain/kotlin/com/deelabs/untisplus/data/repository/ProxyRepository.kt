@@ -26,9 +26,9 @@ import com.deelabs.untisplus.api.model.proxy.ProxyTimetableChanges
 import com.deelabs.untisplus.api.model.proxy.ProxyWebhookRequest
 import com.deelabs.untisplus.api.model.proxy.ProxyWebhooks
 import com.deelabs.untisplus.data.database.entities.User
-import com.deelabs.untisplus.data.database.entities.jsonRpcApiUrl
-import com.deelabs.untisplus.data.database.entities.proxyBaseUrl
-import com.deelabs.untisplus.data.database.entities.proxySchoolName
+import com.deelabs.untisplus.data.database.entities.jsonRpcApiUrlString
+import com.deelabs.untisplus.data.database.entities.proxyBaseUrlString
+import com.deelabs.untisplus.data.database.entities.proxySchoolNameValue
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.Flow
@@ -46,7 +46,7 @@ import kotlinx.coroutines.flow.flowOf
  * the error (and the existing re-login UI can take over).
  */
 class ProxyRepository constructor(
-	private val userRepository: UserRepository,
+	private val currentUserProvider: CurrentUserProvider,
 	private val userDataApi: UserDataApi,
 	private val proxyStatusApi: ProxyStatusApi,
 	private val proxyHomeworkApi: ProxyHomeworkApi,
@@ -62,7 +62,7 @@ class ProxyRepository constructor(
 
 	/** Whether proxy-only features apply to the current user. */
 	val isAvailable: Boolean
-		get() = userRepository.currentUser?.usesUntisPlusProxy == true
+		get() = currentUserProvider.currentUser?.usesUntisPlusProxy == true
 
 	// --- §8 meta ---
 
@@ -78,7 +78,7 @@ class ProxyRepository constructor(
 	suspend fun isReachable(user: User): Boolean {
 		if (!user.usesUntisPlusProxy) return false
 		return try {
-			proxyStatusApi.status(user.proxyBaseUrl.toString())
+			proxyStatusApi.status(user.proxyBaseUrlString)
 			true
 		} catch (e: Exception) {
 			false
@@ -191,17 +191,17 @@ class ProxyRepository constructor(
 
 	/** Opens the SSE change feed. Returns an empty flow when the proxy is unused. */
 	fun timetableStream(): Flow<ProxyStreamEvent> {
-		val user = userRepository.currentUser ?: return flowOf()
+		val user = currentUserProvider.currentUser ?: return flowOf()
 		if (!user.usesUntisPlusProxy) return flowOf()
-		return proxyTimetableApi.stream(user.proxyBaseUrl.toString(), user.proxySchoolName)
+		return proxyTimetableApi.stream(user.proxyBaseUrlString, user.proxySchoolNameValue)
 	}
 
 	private suspend fun <T> withSession(block: suspend (baseUrl: String, school: String?) -> T): T {
-		val user = userRepository.currentUser
+		val user = currentUserProvider.currentUser
 			?: throw IllegalStateException("No active user")
 		check(user.usesUntisPlusProxy) { "UntisPlus proxy is not configured for this user" }
-		val baseUrl = user.proxyBaseUrl.toString()
-		val school = user.proxySchoolName
+		val baseUrl = user.proxyBaseUrlString
+		val school = user.proxySchoolNameValue
 
 		return try {
 			block(baseUrl, school)
@@ -220,7 +220,7 @@ class ProxyRepository constructor(
 	private suspend fun refreshSession(user: User): Boolean {
 		val key = user.key ?: return false
 		return try {
-			userDataApi.getUserData(user.jsonRpcApiUrl.toString(), user.user, key)
+			userDataApi.getUserData(user.jsonRpcApiUrlString, user.user, key)
 			true
 		} catch (e: Exception) {
 			false

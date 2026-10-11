@@ -39,6 +39,8 @@ kotlin {
 			api(libs.okio)
 			implementation(libs.kotlinx.serialization.json)
 			implementation(libs.kotlinx.serialization.cbor)
+			implementation(libs.kotlinx.coroutines.core)
+			implementation(libs.ktor.client.core)
 			implementation(libs.androidx.room.runtime)
 		}
 

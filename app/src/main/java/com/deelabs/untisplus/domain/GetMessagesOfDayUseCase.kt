@@ -7,7 +7,9 @@ import crocodile8.universal_cache.FromCache
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import java.time.LocalDate
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 interface GetMessagesOfDayUseCase {
 	operator fun invoke(): Flow<Result<List<MessageOfDay>>>
@@ -22,7 +24,7 @@ class GetMessagesOfDayUseCaseImpl constructor(
 	}
 
 	override operator fun invoke(): Flow<Result<List<MessageOfDay>>> = infoCenterRepository.messagesOfDaySource()
-		.get(LocalDate.now(), FromCache.CACHED_THEN_LOAD, maxAge = ONE_HOUR, additionalKey = userRepository.currentUser!!.id)
+		.get(Clock.System.todayIn(TimeZone.currentSystemDefault()), FromCache.CACHED_THEN_LOAD, maxAge = ONE_HOUR, additionalKey = userRepository.currentUser!!.id)
 		.map(Result.Companion::success)
 		.catch { emit(Result.failure(it)) }
 }

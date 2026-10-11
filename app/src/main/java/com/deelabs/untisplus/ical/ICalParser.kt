@@ -1,13 +1,15 @@
 package com.deelabs.untisplus.ical
 
-import java.time.DayOfWeek
-import java.time.Duration
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.DateTimePeriod
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * Minimal, dependency-free iCalendar (RFC 5545) reader.
@@ -19,7 +21,6 @@ import java.time.format.DateTimeFormatter
  */
 object ICalParser {
 
-	private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.BASIC_ISO_DATE
 	private val DURATION_REGEX = Regex(
 		"^([+-])?P(?:(\\d+)W)?(?:(\\d+)D)?(?:T(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?)?$",
 		RegexOption.IGNORE_CASE
@@ -133,12 +134,16 @@ object ICalParser {
 				val parsedEnd = parseDateTime(endProperty)
 				val rawEnd = parsedEnd?.first ?: defaultEnd(parsedStart.first, allDay)
 				// All-day DTEND is exclusive; convert to an inclusive end.
-				if (allDay && rawEnd.isAfter(parsedStart.first)) rawEnd.minusDays(1) else rawEnd
+				if (allDay && rawEnd > parsedStart.first) {
+					LocalDateTime(rawEnd.date.minus(1, DateTimeUnit.DAY), END_OF_DAY)
+				} else {
+					rawEnd
+				}
 			}
 
 			properties["DURATION"] != null ->
 				parseDuration(properties.getValue("DURATION").value)
-					?.let { parsedStart.first.plus(it) }
+					?.let { parsedStart.first.plusPeriodAtUtc(it) }
 					?: defaultEnd(parsedStart.first, allDay)
 
 			else -> defaultEnd(parsedStart.first, allDay)
@@ -161,8 +166,8 @@ object ICalParser {
 	}
 
 	private fun defaultEnd(start: LocalDateTime, allDay: Boolean): LocalDateTime =
-		if (allDay) start.toLocalDate().atTime(LocalTime.MAX)
-		else start.plusHours(1).minusNanos(1)
+		if (allDay) LocalDateTime(start.date, END_OF_DAY)
+		else start.plusPeriodAtUtc(DateTimePeriod(hours = 1, nanoseconds = -1))
 
 	private fun parseDateTime(property: Property): Pair<LocalDateTime, Boolean>? {
 		val allDay = property.params["VALUE"].equals("DATE", ignoreCase = true) ||
@@ -178,14 +183,14 @@ object ICalParser {
 		val core = if (isUtc) value.dropLast(1) else value
 
 		if (core.length == 8 && core.all(Char::isDigit)) {
-			return runCatching { LocalDate.parse(core, DATE_FORMATTER).atStartOfDay() }.getOrNull()
+			return runCatching { LocalDateTime(parseBasicDate(core), LocalTime(0, 0)) }.getOrNull()
 		}
 		if (core.length != 15 || core[8] != 'T') return null
 
 		val local = runCatching {
-			LocalDateTime.of(
-				LocalDate.parse(core.substring(0, 8), DATE_FORMATTER),
-				LocalTime.of(
+			LocalDateTime(
+				parseBasicDate(core.substring(0, 8)),
+				LocalTime(
 					core.substring(9, 11).toInt(),
 					core.substring(11, 13).toInt(),
 					core.substring(13, 15).toInt(),
@@ -194,24 +199,32 @@ object ICalParser {
 		}.getOrNull() ?: return null
 
 		val zone = when {
-			isUtc -> ZoneId.of("UTC")
-			else -> params["TZID"]?.let { runCatching { ZoneId.of(it) }.getOrNull() }
+			isUtc -> TimeZone.UTC
+			else -> params["TZID"]?.let { runCatching { TimeZone.of(it) }.getOrNull() }
 		} ?: return local
 
-		return ZonedDateTime.of(local, zone)
-			.withZoneSameInstant(ZoneId.systemDefault())
-			.toLocalDateTime()
+		return local.toInstant(zone).toLocalDateTime(TimeZone.currentSystemDefault())
 	}
 
-	private fun parseDuration(value: String): Duration? {
+	private fun parseDuration(value: String): DateTimePeriod? {
 		val match = DURATION_REGEX.matchEntire(value.trim()) ?: return null
-		val days = (match.groupValues[3].toLongOrNull() ?: 0) + (match.groupValues[2].toLongOrNull() ?: 0) * 7
-		val duration = Duration.ofDays(days)
-			.plusHours(match.groupValues[4].toLongOrNull() ?: 0)
-			.plusMinutes(match.groupValues[5].toLongOrNull() ?: 0)
-			.plusSeconds(match.groupValues[6].toLongOrNull() ?: 0)
-		return if (match.groupValues[1] == "-") duration.negated() else duration
+		val sign = if (match.groupValues[1] == "-") -1 else 1
+		val weeks = match.groupValues[2].toIntOrNull() ?: 0
+		val days = (match.groupValues[3].toIntOrNull() ?: 0) + weeks * 7
+		return DateTimePeriod(
+			days = sign * days,
+			hours = sign * (match.groupValues[4].toIntOrNull() ?: 0),
+			minutes = sign * (match.groupValues[5].toIntOrNull() ?: 0),
+			seconds = sign * (match.groupValues[6].toIntOrNull() ?: 0),
+		)
 	}
+
+	private fun parseBasicDate(value: String): LocalDate =
+		LocalDate(
+			value.substring(0, 4).toInt(),
+			value.substring(4, 6).toInt(),
+			value.substring(6, 8).toInt(),
+		)
 
 	private fun unescape(value: String): String {
 		if (value.indexOf('\\') < 0) return value
@@ -268,11 +281,14 @@ internal object RecurrenceRuleParser {
 		val core = value.trim().removeSuffix("Z")
 		return runCatching {
 			if (core.length == 8) {
-				LocalDate.parse(core, DateTimeFormatter.BASIC_ISO_DATE).atTime(LocalTime.MAX)
+				LocalDateTime(
+					LocalDate(core.substring(0, 4).toInt(), core.substring(4, 6).toInt(), core.substring(6, 8).toInt()),
+					END_OF_DAY,
+				)
 			} else {
-				LocalDateTime.of(
-					LocalDate.parse(core.substring(0, 8), DateTimeFormatter.BASIC_ISO_DATE),
-					LocalTime.of(
+				LocalDateTime(
+					LocalDate(core.substring(0, 4).toInt(), core.substring(4, 6).toInt(), core.substring(6, 8).toInt()),
+					LocalTime(
 						core.substring(9, 11).toInt(),
 						core.substring(11, 13).toInt(),
 						core.substring(13, 15).toInt(),
@@ -282,15 +298,15 @@ internal object RecurrenceRuleParser {
 		}.getOrNull()
 	}
 
-	private fun parseByDay(value: String): java.time.DayOfWeek? =
+	private fun parseByDay(value: String): DayOfWeek? =
 		when (value.trim().takeLast(2).uppercase()) {
-			"MO" -> java.time.DayOfWeek.MONDAY
-			"TU" -> java.time.DayOfWeek.TUESDAY
-			"WE" -> java.time.DayOfWeek.WEDNESDAY
-			"TH" -> java.time.DayOfWeek.THURSDAY
-			"FR" -> java.time.DayOfWeek.FRIDAY
-			"SA" -> java.time.DayOfWeek.SATURDAY
-			"SU" -> java.time.DayOfWeek.SUNDAY
+			"MO" -> DayOfWeek.MONDAY
+			"TU" -> DayOfWeek.TUESDAY
+			"WE" -> DayOfWeek.WEDNESDAY
+			"TH" -> DayOfWeek.THURSDAY
+			"FR" -> DayOfWeek.FRIDAY
+			"SA" -> DayOfWeek.SATURDAY
+			"SU" -> DayOfWeek.SUNDAY
 			else -> null
 		}
 }

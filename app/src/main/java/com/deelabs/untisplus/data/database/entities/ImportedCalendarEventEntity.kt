@@ -4,8 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.LocalDateTime
 
 /**
  * A single concrete occurrence of an imported calendar event. Recurring events
@@ -35,11 +34,9 @@ data class ImportedCalendarEventEntity(
 	val color: Int = ImportedCalendarEntity.DEFAULT_COLOR,
 ) {
 	companion object {
-		private val FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME
-
-		fun format(dateTime: LocalDateTime): String = dateTime.format(FORMATTER)
+		fun format(dateTime: LocalDateTime): String = dateTime.toString()
 
 		fun parse(value: String): LocalDateTime? =
-			runCatching { LocalDateTime.parse(value, FORMATTER) }.getOrNull()
+			runCatching { LocalDateTime.parse(value) }.getOrNull()
 	}
 }

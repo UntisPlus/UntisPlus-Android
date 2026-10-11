@@ -27,10 +27,9 @@ import com.deelabs.untisplus.data.database.entities.TeacherEntity
 import com.deelabs.untisplus.data.database.entities.TeachingMethodEntity
 import com.deelabs.untisplus.data.database.entities.User
 import com.deelabs.untisplus.data.database.entities.UserDao
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.serialization.json.Json
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 
 @Database(
 	version = 14,
@@ -105,16 +104,16 @@ internal class UserConverters {
 	fun decodeLongList(string: String?): List<Long>? = decode(string)
 
 	@TypeConverter
-	fun encodeDate(date: LocalDate?): String? = date?.format(DateTimeFormatter.ISO_LOCAL_DATE)
+	fun encodeDate(date: LocalDate?): String? = date?.toString()
 
 	@TypeConverter
 	fun decodeDate(date: String?): LocalDate? =
-		date?.let { runCatching { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) }.getOrNull() }
+		date?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
 
 	@TypeConverter
-	fun encodeTime(date: LocalTime?): String? = date?.format(DateTimeFormatter.ISO_LOCAL_TIME)
+	fun encodeTime(date: LocalTime?): String? = date?.toString()
 
 	@TypeConverter
 	fun decodeTime(date: String?): LocalTime? =
-		date?.let { runCatching { LocalTime.parse(it, DateTimeFormatter.ISO_LOCAL_TIME) }.getOrNull() }
+		date?.let { runCatching { LocalTime.parse(it) }.getOrNull() }
 }

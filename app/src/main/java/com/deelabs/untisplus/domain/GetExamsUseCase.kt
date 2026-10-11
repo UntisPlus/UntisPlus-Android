@@ -8,7 +8,9 @@ import crocodile8.universal_cache.FromCache
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import java.time.LocalDate
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import com.deelabs.untisplus.data.repository.UserRepository
 
 class GetExamsUseCase constructor(
@@ -17,7 +19,7 @@ class GetExamsUseCase constructor(
 	getCurrentSchoolYear: GetCurrentSchoolYearUseCase,
 ) {
 	private val currentSchoolYear =
-		getCurrentSchoolYear() ?: SchoolYearEntity(startDate = LocalDate.now(), endDate = LocalDate.now())
+		getCurrentSchoolYear() ?: SchoolYearEntity(startDate = Clock.System.todayIn(TimeZone.currentSystemDefault()), endDate = Clock.System.todayIn(TimeZone.currentSystemDefault()))
 
 	companion object {
 		private const val ONE_HOUR: Long = 60 * 60 * 1000
@@ -29,7 +31,7 @@ class GetExamsUseCase constructor(
 				InfoCenterRepository.EventsParams(
 					user.userData.elemId,
 					user.userData.elemType ?: ElementType.STUDENT,
-					LocalDate.now(),
+					Clock.System.todayIn(TimeZone.currentSystemDefault()),
 					currentSchoolYear.endDate
 				),
 				FromCache.CACHED_THEN_LOAD, maxAge = ONE_HOUR, additionalKey = user.id

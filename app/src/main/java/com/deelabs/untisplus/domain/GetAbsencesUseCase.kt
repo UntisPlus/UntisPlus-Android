@@ -12,7 +12,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import java.time.LocalDate
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.todayIn
 
 class GetAbsencesUseCase constructor(
 	private val userRepository: UserRepository,
@@ -21,7 +25,7 @@ class GetAbsencesUseCase constructor(
 	getCurrentSchoolYear: GetCurrentSchoolYearUseCase
 ) {
 	private val currentSchoolYear =
-		getCurrentSchoolYear() ?: SchoolYearEntity(startDate = LocalDate.now(), endDate = LocalDate.now())
+		getCurrentSchoolYear() ?: SchoolYearEntity(startDate = Clock.System.todayIn(TimeZone.currentSystemDefault()), endDate = Clock.System.todayIn(TimeZone.currentSystemDefault()))
 
 	companion object {
 		private const val ONE_HOUR: Long = 60 * 60 * 1000
@@ -38,8 +42,9 @@ class GetAbsencesUseCase constructor(
 				else -> 0
 			}
 
+			val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
 			val timeRange = if (daysAgo > 0) {
-				LocalDate.now().minusDays(daysAgo) to LocalDate.now()
+				today.minus(daysAgo.toInt(), DateTimeUnit.DAY) to today
 			} else {
 				currentSchoolYear.startDate to currentSchoolYear.endDate
 			}

@@ -62,7 +62,10 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toJavaLocalTime
+import kotlinx.datetime.toKotlinLocalDate
 import java.time.Clock
 import java.time.DayOfWeek
 import java.time.Instant
@@ -260,8 +263,8 @@ class TimetableViewModel constructor(
 					Holiday(
 						title = holiday.name,
 						colorScheme = EventStyle.Transparent,
-						start = holiday.startDate!!,
-						end = holiday.endDate!!,
+						start = holiday.startDate!!.toJavaLocalDate(),
+						end = holiday.endDate!!.toJavaLocalDate(),
 					)
 				}
 			_holidays.emit(holidays)
@@ -398,13 +401,16 @@ class TimetableViewModel constructor(
 	private suspend fun loadImportedEvents(startDate: LocalDate): List<Event<TimetableItem>> {
 		if (!showImportedEvents) return emptyList()
 		val days = maxOf(numDays.value, 7)
-		return importedCalendarRepository.events(startDate, startDate.plusDays(days.toLong()))
+		return importedCalendarRepository.events(
+			startDate.toKotlinLocalDate(),
+			startDate.plusDays(days.toLong()).toKotlinLocalDate(),
+		)
 			.mapNotNull { it.toWeekViewEvent() }
 	}
 
 	private fun ImportedCalendarEventEntity.toWeekViewEvent(): Event<TimetableItem>? {
-		val start = ImportedCalendarEventEntity.parse(this.start) ?: return null
-		val end = ImportedCalendarEventEntity.parse(this.end) ?: start
+		val start = ImportedCalendarEventEntity.parse(this.start)?.toJavaLocalDateTime() ?: return null
+		val end = ImportedCalendarEventEntity.parse(this.end)?.toJavaLocalDateTime() ?: start
 		val item = ImportedCalendarEventItem(
 			calendarId = calendarId,
 			summary = summary,

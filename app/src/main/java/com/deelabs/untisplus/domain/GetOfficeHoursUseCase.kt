@@ -6,7 +6,9 @@ import crocodile8.universal_cache.FromCache
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import java.time.LocalDate
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import com.deelabs.untisplus.data.repository.UserRepository
 
 class GetOfficeHoursUseCase constructor(
@@ -19,7 +21,7 @@ class GetOfficeHoursUseCase constructor(
 
 	operator fun invoke(): Flow<Result<List<OfficeHour>>> = infoCenterRepository.officeHoursSource()
 		.get(
-			InfoCenterRepository.OfficeHoursParams(-1, LocalDate.now()),
+			InfoCenterRepository.OfficeHoursParams(-1, Clock.System.todayIn(TimeZone.currentSystemDefault())),
 			FromCache.CACHED_THEN_LOAD,
 			maxAge = ONE_HOUR,
 			additionalKey = userRepository.currentUser!!.id

@@ -1,7 +1,26 @@
 package com.deelabs.untisplus.ical
 
-import java.time.DayOfWeek
-import java.time.LocalDateTime
+import kotlinx.datetime.DateTimePeriod
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
+
+/** Inclusive end-of-day, used to mark all-day ranges. */
+internal val END_OF_DAY: LocalTime = LocalTime(23, 59, 59, 999_999_999)
+
+/**
+ * Adds [period] to this wall-clock date-time as a fixed-length amount.
+ *
+ * kotlinx-datetime deliberately exposes no `LocalDateTime` arithmetic (DST makes
+ * it ambiguous), so the conversion is routed through `Instant` at UTC, which
+ * keeps the addition linear and DST-independent.
+ */
+internal fun LocalDateTime.plusPeriodAtUtc(period: DateTimePeriod): LocalDateTime =
+	toInstant(TimeZone.UTC).plus(period, TimeZone.UTC).toLocalDateTime(TimeZone.UTC)
 
 /**
  * A single (already expanded) calendar entry. Recurring `VEVENT`s are expanded

@@ -1,11 +1,11 @@
 package com.deelabs.untisplus.ical
 
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 class ICalParserTest {
 
@@ -32,8 +32,8 @@ class ICalParserTest {
 		assertEquals("Room A", event.location)
 		assertEquals("Homework, ch. 3", event.description)
 		assertFalse(event.allDay)
-		assertEquals(LocalDateTime.of(2024, 1, 15, 8, 0), event.start)
-		assertEquals(LocalDateTime.of(2024, 1, 15, 9, 0), event.end)
+		assertEquals(LocalDateTime(2024, 1, 15, 8, 0), event.start)
+		assertEquals(LocalDateTime(2024, 1, 15, 9, 0), event.end)
 	}
 
 	@Test
@@ -49,8 +49,8 @@ class ICalParserTest {
 
 		val event = ICalParser.parse(text).single()
 		assertTrue(event.allDay)
-		assertEquals(LocalDate.of(2024, 1, 15), event.start.toLocalDate())
-		assertEquals(LocalDate.of(2024, 1, 15), event.end.toLocalDate())
+		assertEquals(LocalDate(2024, 1, 15), event.start.date)
+		assertEquals(LocalDate(2024, 1, 15), event.end.date)
 	}
 
 	@Test
@@ -85,18 +85,18 @@ class ICalParserTest {
 
 		val expanded = RecurrenceExpander.expand(
 			ICalParser.parse(text),
-			LocalDate.of(2024, 1, 1),
-			LocalDate.of(2024, 1, 31),
+			LocalDate(2024, 1, 1),
+			LocalDate(2024, 1, 31),
 		)
 
 		assertEquals(
 			listOf(
-				LocalDate.of(2024, 1, 1),
-				LocalDate.of(2024, 1, 3),
-				LocalDate.of(2024, 1, 8),
-				LocalDate.of(2024, 1, 10),
+				LocalDate(2024, 1, 1),
+				LocalDate(2024, 1, 3),
+				LocalDate(2024, 1, 8),
+				LocalDate(2024, 1, 10),
 			),
-			expanded.map { it.start.toLocalDate() },
+			expanded.map { it.start.date },
 		)
 	}
 
@@ -115,13 +115,13 @@ class ICalParserTest {
 
 		val expanded = RecurrenceExpander.expand(
 			ICalParser.parse(text),
-			LocalDate.of(2024, 1, 1),
-			LocalDate.of(2024, 1, 10),
+			LocalDate(2024, 1, 1),
+			LocalDate(2024, 1, 10),
 		)
 
 		assertEquals(
-			listOf(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 3)),
-			expanded.map { it.start.toLocalDate() },
+			listOf(LocalDate(2024, 1, 1), LocalDate(2024, 1, 3)),
+			expanded.map { it.start.date },
 		)
 	}
 
@@ -139,12 +139,12 @@ class ICalParserTest {
 
 		val expanded = RecurrenceExpander.expand(
 			ICalParser.parse(text),
-			LocalDate.of(2024, 1, 1),
-			LocalDate.of(2024, 1, 3),
+			LocalDate(2024, 1, 1),
+			LocalDate(2024, 1, 3),
 		)
 
 		assertEquals(3, expanded.size)
-		assertEquals(LocalDate.of(2024, 1, 1), expanded.first().start.toLocalDate())
-		assertEquals(LocalDate.of(2024, 1, 3), expanded.last().start.toLocalDate())
+		assertEquals(LocalDate(2024, 1, 1), expanded.first().start.date)
+		assertEquals(LocalDate(2024, 1, 3), expanded.last().start.date)
 	}
 }

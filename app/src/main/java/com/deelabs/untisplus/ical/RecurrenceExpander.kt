@@ -1,12 +1,17 @@
 package com.deelabs.untisplus.ical
 
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.YearMonth
-import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalAdjusters
+import kotlinx.datetime.DateTimePeriod
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.daysUntil
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 
 /**
  * Expands recurring [ICalRecurringEvent]s into concrete [ICalEvent] instances
@@ -36,7 +41,7 @@ object RecurrenceExpander {
 			var index = 0
 			for (date in occurrences(event, rule, from, to)) {
 				if (index++ >= MAX_INSTANCES) break
-				val start = LocalDateTime.of(date, event.start.toLocalTime())
+				val start = LocalDateTime(date, event.start.time)
 				if (start in exDates) continue
 				if (overrides.any { it.uid == event.uid && it.recurrenceId == start }) continue
 				val instance = event.toInstance(start)
@@ -52,9 +57,9 @@ object RecurrenceExpander {
 	}
 
 	private fun overlaps(start: LocalDateTime, end: LocalDateTime, from: LocalDate, to: LocalDate): Boolean {
-		val rangeStart = from.atStartOfDay()
-		val rangeEnd = to.atTime(LocalTime.MAX)
-		return !end.isBefore(rangeStart) && !start.isAfter(rangeEnd)
+		val rangeStart = LocalDateTime(from, LocalTime(0, 0))
+		val rangeEnd = LocalDateTime(to, END_OF_DAY)
+		return end >= rangeStart && start <= rangeEnd
 	}
 
 	private fun occurrences(
@@ -64,13 +69,13 @@ object RecurrenceExpander {
 		to: LocalDate,
 	): List<LocalDate> {
 		val result = ArrayList<LocalDate>()
-		val base = event.start.toLocalDate()
-		val until = rule.until?.toLocalDate() ?: to.plusYears(1)
-		val limit = if (until.isBefore(to)) until else to.plusDays(1)
+		val base = event.start.date
+		val until = rule.until?.date ?: to.plus(1, DateTimeUnit.YEAR)
+		val limit = if (until < to) until else to.plus(1, DateTimeUnit.DAY)
 		val countLimited = rule.count != null
 
 		fun add(date: LocalDate): Boolean {
-			if (date.isBefore(base) || date.isAfter(limit)) return false
+			if (date < base || date > limit) return false
 			result.add(date)
 			return result.size < MAX_INSTANCES
 		}
@@ -78,23 +83,29 @@ object RecurrenceExpander {
 		when (rule.frequency) {
 			RecurrenceFrequency.DAILY -> {
 				var date = if (countLimited) base else jumpDays(base, from, rule.interval)
-				while (!date.isAfter(limit) && result.size < MAX_INSTANCES) {
+				while (date <= limit && result.size < MAX_INSTANCES) {
 					if (!add(date)) break
-					date = date.plusDays(rule.interval.toLong())
+					date = date.plus(rule.interval, DateTimeUnit.DAY)
 				}
 			}
 
 			RecurrenceFrequency.WEEKLY -> {
-				val days = rule.byDay.ifEmpty { listOf(base.dayOfWeek) }.sortedBy { it.value }
-				val anchor = base.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+				val days = rule.byDay.ifEmpty { listOf(base.dayOfWeek) }.sortedBy { it.isoDayNumber }
+				val anchor = base.minus(
+					(base.dayOfWeek.isoDayNumber - DayOfWeek.MONDAY.isoDayNumber + 7) % 7,
+					DateTimeUnit.DAY,
+				)
 				var week = if (countLimited) 0 else jumpWeeks(anchor, from, rule.interval)
 				while (result.size < MAX_INSTANCES) {
-					val weekMonday = anchor.plusWeeks((week * rule.interval).toLong())
-					if (weekMonday.isAfter(limit)) break
+					val weekMonday = anchor.plus(week * rule.interval, DateTimeUnit.WEEK)
+					if (weekMonday > limit) break
 					for (day in days) {
-						val date = weekMonday.with(TemporalAdjusters.nextOrSame(day))
+						val date = weekMonday.plus(
+							(day.isoDayNumber - weekMonday.dayOfWeek.isoDayNumber + 7) % 7,
+							DateTimeUnit.DAY,
+						)
 						if (!add(date)) {
-							if (date.isAfter(limit)) break
+							if (date > limit) break
 						}
 					}
 					week++
@@ -103,28 +114,31 @@ object RecurrenceExpander {
 
 			RecurrenceFrequency.MONTHLY -> {
 				val monthDays = rule.byMonthDay.ifEmpty { listOf(base.dayOfMonth) }
-				var month = if (countLimited) 0 else jumpMonths(YearMonth.from(base), from, rule.interval)
+				val startMonth = YearMonth(base.year, base.monthNumber)
+				var month = if (countLimited) 0 else jumpMonths(startMonth, from, rule.interval)
 				while (result.size < MAX_INSTANCES) {
-					val yearMonth = YearMonth.from(base).plusMonths((month * rule.interval).toLong())
-					if (yearMonth.atEndOfMonth().isAfter(limit)) break
+					val yearMonth = startMonth.plusMonths(month * rule.interval)
+					if (yearMonth.atEndOfMonth() > limit) break
+					val length = yearMonth.lengthOfMonth
 					for (dom in monthDays) {
-						if (dom !in 1..yearMonth.lengthOfMonth()) continue
-						if (!add(yearMonth.atDay(dom)) && yearMonth.atDay(dom).isAfter(limit)) break
+						if (dom !in 1..length) continue
+						if (!add(yearMonth.atDay(dom)) && yearMonth.atDay(dom) > limit) break
 					}
 					month++
 				}
 			}
 
 			RecurrenceFrequency.YEARLY -> {
-				val months = rule.byMonth.ifEmpty { listOf(base.monthValue) }
+				val months = rule.byMonth.ifEmpty { listOf(base.monthNumber) }
 				val days = rule.byMonthDay.ifEmpty { listOf(base.dayOfMonth) }
 				var year = if (countLimited) 0 else maxOf(0, from.year - base.year)
 				while (result.size < MAX_INSTANCES) {
 					val y = base.year + year * rule.interval
 					if (y > limit.year) break
 					for (m in months) for (dom in days) {
-						if (dom !in 1..YearMonth.of(y, m).lengthOfMonth()) continue
-						if (!add(LocalDate.of(y, m, dom))) break
+						val ym = YearMonth(y, m)
+						if (dom !in 1..ym.lengthOfMonth) continue
+						if (!add(LocalDate(y, m, dom))) break
 					}
 					year++
 				}
@@ -135,35 +149,63 @@ object RecurrenceExpander {
 	}
 
 	private fun jumpDays(base: LocalDate, from: LocalDate, interval: Int): LocalDate {
-		if (!from.isAfter(base)) return base
-		val elapsed = ChronoUnit.DAYS.between(base, from)
-		val steps = (elapsed / interval).toLong()
-		return base.plusDays(steps * interval)
+		if (from <= base) return base
+		val elapsed = base.daysUntil(from)
+		val steps = elapsed / interval
+		return base.plus(steps * interval, DateTimeUnit.DAY)
 	}
 
 	private fun jumpWeeks(anchor: LocalDate, from: LocalDate, interval: Int): Int {
-		if (!from.isAfter(anchor)) return 0
-		val elapsedWeeks = ChronoUnit.WEEKS.between(anchor, from)
-		return ((elapsedWeeks / interval).toInt()).coerceAtLeast(0)
+		if (from <= anchor) return 0
+		val elapsedWeeks = anchor.daysUntil(from) / 7
+		return (elapsedWeeks / interval).coerceAtLeast(0)
 	}
 
 	private fun jumpMonths(baseMonth: YearMonth, from: LocalDate, interval: Int): Int {
-		val target = YearMonth.from(from)
-		if (!target.isAfter(baseMonth)) return 0
-		val elapsed = ChronoUnit.MONTHS.between(baseMonth, target)
-		return ((elapsed / interval).toInt()).coerceAtLeast(0)
+		val target = YearMonth(from.year, from.monthNumber)
+		if (target <= baseMonth) return 0
+		val elapsed = (target.year * 12 + target.month) - (baseMonth.year * 12 + baseMonth.month)
+		return (elapsed / interval).coerceAtLeast(0)
 	}
 
 	private fun ICalRecurringEvent.toInstance(start: LocalDateTime): ICalEvent {
-		val duration = ChronoUnit.SECONDS.between(this.start, this.end).coerceAtLeast(0)
+		val durationSeconds = (
+			this.end.toInstant(TimeZone.UTC).epochSeconds -
+				this.start.toInstant(TimeZone.UTC).epochSeconds
+			).coerceAtLeast(0)
 		return ICalEvent(
 			uid = uid,
 			summary = summary,
 			description = description,
 			location = location,
 			start = start,
-			end = if (allDay) start.toLocalDate().atTime(LocalTime.MAX) else start.plusSeconds(duration),
+			end = if (allDay) LocalDateTime(start.date, END_OF_DAY)
+			else start.plusPeriodAtUtc(DateTimePeriod(seconds = durationSeconds.toInt())),
 			allDay = allDay,
 		)
 	}
+}
+
+/**
+ * Minimal replacement for `java.time.YearMonth`, which has no kotlinx-datetime
+ * equivalent. [month] is 1-based.
+ */
+private data class YearMonth(val year: Int, val month: Int) {
+	val lengthOfMonth: Int
+		get() = LocalDate(year, month, 1)
+			.plus(1, DateTimeUnit.MONTH)
+			.minus(1, DateTimeUnit.DAY)
+			.dayOfMonth
+
+	fun atEndOfMonth(): LocalDate = LocalDate(year, month, lengthOfMonth)
+
+	fun atDay(day: Int): LocalDate = LocalDate(year, month, day)
+
+	fun plusMonths(months: Int): YearMonth {
+		val total = year * 12 + (month - 1) + months
+		return YearMonth(total.floorDiv(12), total.mod(12) + 1)
+	}
+
+	operator fun compareTo(other: YearMonth): Int =
+		(year * 12 + month).compareTo(other.year * 12 + other.month)
 }

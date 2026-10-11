@@ -18,9 +18,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 import java.io.File
-import java.time.LocalDate
-import java.time.LocalTime
 
 /**
  * Stores and refreshes calendars imported from external `.ics` feeds. Fetched
@@ -57,8 +64,8 @@ class ImportedCalendarRepository constructor(
 		val user = userRepository.currentUser ?: return flowOf(emptyList())
 		return importedCalendarDao.eventsFlow(
 			userId = user.id,
-			from = ImportedCalendarEventEntity.format(from.atStartOfDay()),
-			to = ImportedCalendarEventEntity.format(to.atTime(LocalTime.MAX)),
+			from = ImportedCalendarEventEntity.format(LocalDateTime(from, LocalTime(0, 0))),
+			to = ImportedCalendarEventEntity.format(LocalDateTime(to, LocalTime(23, 59, 59, 999_999_999))),
 		)
 	}
 
@@ -66,8 +73,8 @@ class ImportedCalendarRepository constructor(
 		val user = userRepository.currentUser ?: return emptyList()
 		return importedCalendarDao.events(
 			userId = user.id,
-			from = ImportedCalendarEventEntity.format(from.atStartOfDay()),
-			to = ImportedCalendarEventEntity.format(to.atTime(LocalTime.MAX)),
+			from = ImportedCalendarEventEntity.format(LocalDateTime(from, LocalTime(0, 0))),
+			to = ImportedCalendarEventEntity.format(LocalDateTime(to, LocalTime(23, 59, 59, 999_999_999))),
 		)
 	}
 
@@ -182,11 +189,11 @@ class ImportedCalendarRepository constructor(
 			return
 		}
 
-		val today = LocalDate.now()
+		val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
 		val instances = RecurrenceExpander.expand(
 			events = ICalParser.parse(source),
-			from = today.minusWeeks(PAST_WEEKS),
-			to = today.plusWeeks(HORIZON_WEEKS),
+			from = today.minus(PAST_WEEKS.toInt(), DateTimeUnit.WEEK),
+			to = today.plus(HORIZON_WEEKS.toInt(), DateTimeUnit.WEEK),
 		)
 
 		importedCalendarDao.replaceEvents(

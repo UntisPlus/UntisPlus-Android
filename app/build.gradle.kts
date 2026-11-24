@@ -19,7 +19,7 @@ plugins {
 // Version override for the release workflow. Debug builds use their own
 // dev channel version and embed the current git commit so the app can compare
 // itself against the UntisPlus dev branch.
-val versionNameValue = "v1.2.0"
+val versionNameValue = "v1.3.0"
 val devVersionNameValue = "$versionNameValue-dev"
 
 fun gitCommitSha(): String = runCatching {

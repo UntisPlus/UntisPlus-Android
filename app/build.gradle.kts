@@ -16,8 +16,22 @@ plugins {
 	alias(libs.plugins.protobuf)
 }
 
-// Version override for the release workflow.
+// Version override for the release workflow. Debug builds use their own
+// dev channel version and embed the current git commit so the app can compare
+// itself against the UntisPlus dev branch.
 val versionNameValue = "v1.2.0"
+val devVersionNameValue = "$versionNameValue-dev"
+
+fun gitCommitSha(): String = runCatching {
+	val process = ProcessBuilder("git", "rev-parse", "--short=7", "HEAD")
+		.directory(rootDir)
+		.redirectErrorStream(true)
+		.start()
+	val output = process.inputStream.bufferedReader().readText().trim()
+	val exitCode = process.waitFor()
+	process.destroy()
+	if (exitCode == 0 && output.isNotBlank()) output else "unknown"
+}.getOrDefault("unknown")
 
 // SSO identity providers proven to render correctly inside the app's own WebView and
 // complete auto-login on this project's target devices. A school's SSO button is only
@@ -68,6 +82,9 @@ android {
 			"SSO_ENABLED_PROVIDERS",
 			"{\"${ssoProviders.joinToString("\", \"")}\"}"
 		)
+		buildConfigField("String", "RELEASE_VERSION_NAME", "\"$versionNameValue\"")
+		buildConfigField("String", "DEV_VERSION_NAME", "\"$devVersionNameValue\"")
+		buildConfigField("String", "GIT_COMMIT_SHA", "\"${gitCommitSha()}\"")
 
 		ksp {
 			arg("room.schemaLocation", "$projectDir/schemas")
@@ -114,7 +131,7 @@ android {
 			isMinifyEnabled = false
 			isShrinkResources = false
 			applicationIdSuffix = ".debug"
-			versionNameSuffix = "-DEBUG"
+			versionNameSuffix = "-dev+${gitCommitSha()}"
 
 			kotlinOptions {
 				freeCompilerArgs = listOf("-Xdebug")

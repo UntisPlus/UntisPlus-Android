@@ -388,6 +388,12 @@ fun LoginDataInput(
 								onClick = { viewModel.apiProvider = ApiProvider.UNTISPLUS }
 							)
 							ProviderRow(
+								selected = viewModel.apiProvider == ApiProvider.UNTISPLUS_BETA,
+								title = stringResource(id = R.string.logindatainput_api_untisplus_beta),
+								subtitle = stringResource(id = R.string.logindatainput_api_untisplus_beta_desc),
+								onClick = { viewModel.apiProvider = ApiProvider.UNTISPLUS_BETA }
+							)
+							ProviderRow(
 								selected = viewModel.apiProvider == ApiProvider.CUSTOM,
 								title = stringResource(id = R.string.apiprovider_custom),
 								subtitle = stringResource(id = R.string.apiprovider_custom_desc),

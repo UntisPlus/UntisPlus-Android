@@ -60,6 +60,9 @@ object AppRoutes {
 	data object RoomFinder
 
 	@Serializable
+	data object TeacherAbsences
+
+	@Serializable
 	data object Settings {
 
 		@Serializable

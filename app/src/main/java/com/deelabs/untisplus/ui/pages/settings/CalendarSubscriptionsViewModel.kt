@@ -59,6 +59,14 @@ class CalendarSubscriptionsViewModel constructor(
 		runCatching { proxyRepository.calendarUpdateDays(token, days) }
 			.onSuccess { reloadTokens() }
 
+	/** Replaces one of the account's subscription tokens. */
+	suspend fun rotate(token: String): Result<ProxyCalendarToken> =
+		runCatching { proxyRepository.calendarRotate(token) }
+			.onSuccess { reloadTokens() }
+
+	/** The proxy's CSV view for this subscription (null outside proxy accounts). */
+	fun csvUrl(token: String): String? = proxyRepository.calendarCsvUrl(token)
+
 	/** Revokes one of the account's own subscriptions. */
 	suspend fun revoke(token: String): Result<Unit> =
 		runCatching { proxyRepository.calendarRevoke(token) }

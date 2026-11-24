@@ -10,6 +10,8 @@ import android.util.Log
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.deelabs.untisplus.api.client.ProxyStreamEvent
+import com.deelabs.untisplus.api.model.proxy.ProxyStreamTarget
+import com.deelabs.untisplus.api.model.proxy.ProxyStreamTargetType
 import com.deelabs.untisplus.api.model.proxy.ProxyTimetableChangeRow
 import com.deelabs.untisplus.data.repository.ProxyRepository
 import com.deelabs.untisplus.data.repository.TimetableChangeBus
@@ -121,7 +123,11 @@ class TimetableChangeService : Service(), KoinComponent {
 					delay(RECONNECT_DELAY_MS)
 					continue
 				}
-				proxyRepository.timetableStream().collect { event ->
+				val streamTarget = ProxyStreamTarget(
+					type = ProxyStreamTargetType.fromStored(settings.timetableChangeStreamTargetType),
+					id = settings.timetableChangeStreamTargetId.takeIf { it > 0 }
+				).validated()
+				proxyRepository.timetableStream(streamTarget).collect { event ->
 					when (event) {
 						is ProxyStreamEvent.Snapshot -> persistVersions(event.current, event.eventVersion)
 						is ProxyStreamEvent.Change -> {

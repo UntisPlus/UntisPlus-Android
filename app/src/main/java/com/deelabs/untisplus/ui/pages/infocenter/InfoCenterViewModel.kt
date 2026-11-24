@@ -60,6 +60,35 @@ class InfoCenterViewModel constructor(
 	/** Optimistic local overlay of absence notes, keyed by absence id. */
 	private val absenceNoteOverrides = MutableStateFlow<Map<Long, String?>>(emptyMap())
 
+	/** Server-side values from the proxy, used when there is no local override. */
+	private val proxyHomeworkFlags = MutableStateFlow<Map<Long, Boolean>>(emptyMap())
+	private val proxyAbsenceNotes = MutableStateFlow<Map<Long, String?>>(emptyMap())
+
+	init {
+		if (proxyAvailable) {
+			viewModelScope.launch { loadProxyState() }
+		}
+	}
+
+	private suspend fun loadProxyState() {
+		loadHomeworkFlags()
+		loadAbsenceNotes()
+	}
+
+	private suspend fun loadHomeworkFlags() {
+		runCatching { proxyRepository.homeworkFlags() }
+			.onSuccess { flags ->
+				proxyHomeworkFlags.value = flags.flags.associate { it.homeworkId to it.done }
+			}
+	}
+
+	private suspend fun loadAbsenceNotes() {
+		runCatching { proxyRepository.absenceNotes() }
+			.onSuccess { notes ->
+				proxyAbsenceNotes.value = notes.notes.associate { it.absenceKey to it.note }
+			}
+	}
+
 	val shouldShowAbsences: Boolean
 		get() = Right.R_MY_ABSENCES in userRepository.currentUser!!.userData.rights
 	val shouldShowAbsencesAdd: Boolean
@@ -119,11 +148,16 @@ class InfoCenterViewModel constructor(
 	val eventsState: StateFlow<EventsUiState> = combine(
 		getExams(),
 		getHomework(),
-		homeworkDoneOverrides
-	) { exams, homework, overrides ->
+		homeworkDoneOverrides,
+		proxyHomeworkFlags
+	) { exams, homework, overrides, remoteFlags ->
 		EventsUiState.Success(
 			exams,
-			homework.map { list -> list.map { it.copy(done = overrides[it.id] ?: it.done) } }
+			homework.map { list ->
+				list.map { item ->
+					item.copy(done = overrides[item.id] ?: remoteFlags[item.id] ?: item.done)
+				}
+			}
 		)
 	}.stateIn(
 		scope = viewModelScope,
@@ -137,19 +171,26 @@ class InfoCenterViewModel constructor(
 		homeworkDoneOverrides.update { it + (item.id to done) }
 		viewModelScope.launch {
 			runCatching { proxyRepository.setHomeworkDone(item.id, done) }
+				.onSuccess { loadHomeworkFlags() }
 				.onFailure { homeworkDoneOverrides.update { it - item.id } }
 		}
 	}
 
 	val absencesState: StateFlow<AbsencesUiState> = combine(
 		if (!shouldShowAbsences) emptyFlow() else getAbsences(),
-		absenceNoteOverrides
-	) { result, noteOverrides ->
+		absenceNoteOverrides,
+		proxyAbsenceNotes
+	) { result, noteOverrides, remoteNotes ->
 		AbsencesUiState.Success(
 			result.map { list ->
 				list.map { absence ->
-					if (noteOverrides.containsKey(absence.id)) absence.copy(note = noteOverrides[absence.id])
-					else absence
+					when {
+						noteOverrides.containsKey(absence.id) ->
+							absence.copy(note = noteOverrides[absence.id])
+						remoteNotes.containsKey(absence.id) ->
+							absence.copy(note = remoteNotes[absence.id])
+						else -> absence
+					}
 				}
 			},
 			excuseStatuses
@@ -167,6 +208,7 @@ class InfoCenterViewModel constructor(
 		absenceNoteOverrides.update { it + (item.id to trimmed.ifEmpty { null }) }
 		viewModelScope.launch {
 			runCatching { proxyRepository.setAbsenceNote(item.id, trimmed) }
+				.onSuccess { loadAbsenceNotes() }
 				.onFailure { absenceNoteOverrides.update { it - item.id } }
 		}
 	}

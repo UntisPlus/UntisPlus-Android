@@ -171,6 +171,33 @@ class ProxyCalendarApiTest {
 	}
 
 	@Test
+	fun `rotate issues a POST to the token rotate path`() = runBlocking {
+		var method: HttpMethod? = null
+		var path: String? = null
+
+		val api = apiFor { request ->
+			method = request.method
+			path = request.url.encodedPath
+			respond(
+				content = """
+					{"type":"class","id":5000,"name":"5a","token":"new456",
+					 "url":"https://api-untis.deelabs.tech/api/calendar/new456.ics","days":30}
+				""".trimIndent(),
+				status = HttpStatusCode.OK,
+				headers = headersOf(HttpHeaders.ContentType, "application/json")
+			)
+		}
+
+		val token = api.rotate("https://api-untis.deelabs.tech", "abc123")
+
+		assertEquals(HttpMethod.Post, method)
+		assertEquals("/api/calendar/abc123/rotate", path)
+		assertEquals("new456", token.token)
+		assertEquals("https://api-untis.deelabs.tech/api/calendar/new456.ics", token.url)
+		assertEquals(30, token.days)
+	}
+
+	@Test
 	fun `revoke issues a DELETE to the token`() = runBlocking {
 		var method: HttpMethod? = null
 		var path: String? = null

@@ -14,6 +14,7 @@ import com.deelabs.untisplus.ui.pages.settings.ChangeSubscriptionsViewModel
 import com.deelabs.untisplus.ui.pages.settings.ImportedCalendarsViewModel
 import com.deelabs.untisplus.ui.pages.settings.SettingsScreenViewModel
 import com.deelabs.untisplus.ui.pages.settings.automute.AutoMuteSettingsViewModel
+import com.deelabs.untisplus.ui.pages.teacherabsences.TeacherAbsencesViewModel
 import com.deelabs.untisplus.ui.pages.timetable.TimetableDrawerViewModel
 import com.deelabs.untisplus.ui.pages.timetable.TimetableViewModel
 import org.koin.core.module.dsl.viewModel
@@ -42,6 +43,8 @@ val viewModelModule = module {
 	}
 
 	viewModelOf(::RoomFinderViewModel)
+
+	viewModelOf(::TeacherAbsencesViewModel)
 
 	viewModelOf(::TimetableDrawerViewModel)
 

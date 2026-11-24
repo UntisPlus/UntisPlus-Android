@@ -1,6 +1,7 @@
 package com.deelabs.untisplus.data.repository
 
 import com.deelabs.untisplus.api.client.ProxyAbsenceApi
+import com.deelabs.untisplus.api.client.ProxyAnalyticsApi
 import com.deelabs.untisplus.api.client.ProxyCalendarApi
 import com.deelabs.untisplus.api.client.ProxyHomeworkApi
 import com.deelabs.untisplus.api.client.ProxyStatusApi
@@ -8,6 +9,7 @@ import com.deelabs.untisplus.api.client.ProxyStreamEvent
 import com.deelabs.untisplus.api.client.ProxySubscriptionsApi
 import com.deelabs.untisplus.api.client.ProxyTimetableApi
 import com.deelabs.untisplus.api.client.UserDataApi
+import com.deelabs.untisplus.api.model.proxy.AnalyticsReportRequest
 import com.deelabs.untisplus.api.model.proxy.ProxyCalendarOptions
 import com.deelabs.untisplus.api.model.proxy.ProxyCalendarToken
 import com.deelabs.untisplus.api.model.proxy.ProxyCalendarTokenRequest
@@ -21,6 +23,7 @@ import com.deelabs.untisplus.api.model.proxy.ProxyNtfyRequest
 import com.deelabs.untisplus.api.model.proxy.ProxyNtfyTopics
 import com.deelabs.untisplus.api.model.proxy.ProxyPermissions
 import com.deelabs.untisplus.api.model.proxy.ProxyStatus
+import com.deelabs.untisplus.api.model.proxy.ProxyStreamTarget
 import com.deelabs.untisplus.api.model.proxy.ProxySubscriptionTest
 import com.deelabs.untisplus.api.model.proxy.ProxyTimetableChanges
 import com.deelabs.untisplus.api.model.proxy.ProxyWebhookRequest
@@ -35,6 +38,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Entry point for the `untis-proxy`'s own endpoints (`/status`, `/me`, and the
@@ -51,14 +56,23 @@ class ProxyRepository constructor(
 	private val proxyStatusApi: ProxyStatusApi,
 	private val proxyHomeworkApi: ProxyHomeworkApi,
 	private val proxyAbsenceApi: ProxyAbsenceApi,
+	private val proxyAnalyticsApi: ProxyAnalyticsApi,
 	private val proxyCalendarApi: ProxyCalendarApi,
 	private val proxySubscriptionsApi: ProxySubscriptionsApi,
 	private val proxyTimetableApi: ProxyTimetableApi,
 ) {
 	private val _permissions = MutableStateFlow<ProxyPermissionsState>(ProxyPermissionsState.Unknown)
+	private val _me = MutableStateFlow<ProxyMe?>(null)
 
 	/** Last known proxy tier/permissions for the active user, or unknown. */
 	val permissions: StateFlow<ProxyPermissionsState> = _permissions
+
+	/** Full last known `/me` payload, including v2 capabilities. */
+	val me: StateFlow<ProxyMe?> = _me
+
+	private val compatibilityMutex = Mutex()
+	private var compatibilityUserId: Long? = null
+	private var teacherAbsencesSupported = false
 
 	/** Whether proxy-only features apply to the current user. */
 	val isAvailable: Boolean
@@ -87,9 +101,55 @@ class ProxyRepository constructor(
 
 	suspend fun health(): ProxyHealth = withSession { base, _ -> proxyStatusApi.health(base) }
 
-	/** Fetches `/me` and records the permissions for tier gating. */
-	suspend fun refreshMe(): ProxyMe = withSession { base, _ -> proxyStatusApi.me(base) }.also {
-		_permissions.value = ProxyPermissionsState.Known(it.permissions)
+	/** Fetches `/me` and records the permissions/capabilities for feature gating. */
+	suspend fun refreshMe(): ProxyMe = withSession { base, _ -> proxyStatusApi.me(base) }.also { recordMe(it) }
+
+	/**
+	 * Changes one of the active user's own capability opt-ins. The proxy
+	 * validates the ceiling, so an enabled request can never grant access that
+	 * the server or admin has not allowed.
+	 */
+	suspend fun updateCapability(capability: String, enabled: Boolean): ProxyMe =
+		withSession { base, _ -> proxyStatusApi.updatePreferences(base, mapOf(capability to enabled)) }
+			.also { recordMe(it) }
+
+	private fun recordMe(me: ProxyMe) {
+		_me.value = me
+		_permissions.value = ProxyPermissionsState.Known(me.permissions)
+	}
+
+	/**
+	 * Whether the active user's API host is a proxy that implements the
+	 * `/me` endpoint. A successful JSON response is the compatibility signal;
+	 * official Untis servers and old/custom proxies fail this probe.
+	 *
+	 * The result is cached per user so opening the drawer does not issue a
+	 * request on every recomposition.
+	 */
+	suspend fun isTeacherAbsencesSupported(): Boolean = compatibilityMutex.withLock {
+		val user = currentUserProvider.currentUser ?: return@withLock false
+		if (!user.usesUntisPlusProxy) return@withLock false
+		if (compatibilityUserId == user.id) return@withLock teacherAbsencesSupported
+
+		val supported = try {
+			refreshMe()
+			true
+		} catch (e: Exception) {
+			false
+		}
+		compatibilityUserId = user.id
+		teacherAbsencesSupported = supported
+		supported
+	}
+
+	// --- teacher cancellation analytics ---
+
+	suspend fun analyticsOptions() = withSession { base, school ->
+		proxyAnalyticsApi.options(base, school)
+	}
+
+	suspend fun teacherCancellations(request: AnalyticsReportRequest) = withSession { base, school ->
+		proxyAnalyticsApi.teacherCancellations(base, request, school)
 	}
 
 	// --- §3 homework ---
@@ -173,9 +233,21 @@ class ProxyRepository constructor(
 			proxyCalendarApi.updateDays(base, token, days, school)
 		}
 
+	/** Replaces one of the active account's own subscription tokens. */
+	suspend fun calendarRotate(token: String): ProxyCalendarToken = withSession { base, school ->
+		proxyCalendarApi.rotate(base, token, school)
+	}
+
 	/** Revokes one of the active account's own calendar subscriptions. */
 	suspend fun calendarRevoke(token: String) = withSession { base, school ->
 		proxyCalendarApi.revoke(base, token, school)
+	}
+
+	/** The proxy's spreadsheet export for the same window as the ICS feed. */
+	fun calendarCsvUrl(token: String): String? {
+		val user = currentUserProvider.currentUser ?: return null
+		if (!user.usesUntisPlusProxy) return null
+		return "${user.proxyBaseUrlString.trimEnd('/')}/week/$token.csv"
 	}
 
 	// --- §7 change detection ---
@@ -190,10 +262,10 @@ class ProxyRepository constructor(
 	}
 
 	/** Opens the SSE change feed. Returns an empty flow when the proxy is unused. */
-	fun timetableStream(): Flow<ProxyStreamEvent> {
+	fun timetableStream(target: ProxyStreamTarget = ProxyStreamTarget()): Flow<ProxyStreamEvent> {
 		val user = currentUserProvider.currentUser ?: return flowOf()
 		if (!user.usesUntisPlusProxy) return flowOf()
-		return proxyTimetableApi.stream(user.proxyBaseUrlString, user.proxySchoolNameValue)
+		return proxyTimetableApi.stream(user.proxyBaseUrlString, user.proxySchoolNameValue, target)
 	}
 
 	private suspend fun <T> withSession(block: suspend (baseUrl: String, school: String?) -> T): T {

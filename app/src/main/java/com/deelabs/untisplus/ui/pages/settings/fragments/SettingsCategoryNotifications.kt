@@ -32,14 +32,18 @@ import com.sapuseven.compose.protostore.ui.preferences.Preference
 import com.sapuseven.compose.protostore.ui.preferences.PreferenceGroup
 import com.sapuseven.compose.protostore.ui.preferences.SwitchPreference
 import com.deelabs.untisplus.R
+import com.deelabs.untisplus.api.model.proxy.ProxyStreamTargetType
+import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
 import com.deelabs.untisplus.data.settings.model.NotificationVisibility
 import com.deelabs.untisplus.services.TimetableChangeService
 import com.deelabs.untisplus.ui.common.disabled
+import com.deelabs.untisplus.ui.dialogs.ElementPickerDialogFullscreen
 import com.deelabs.untisplus.ui.navigation.AppRoutes
 import com.deelabs.untisplus.ui.pages.settings.SettingsScreenViewModel
 import com.deelabs.untisplus.workers.NotificationSetupWorker
 import com.deelabs.untisplus.workers.TimetableChangeWorker
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -77,6 +81,16 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 		delay(1000) // Delay to ensure the settings are updated before worker is enqueued
 		WorkManager.getInstance(context).apply {
 			enqueue(OneTimeWorkRequestBuilder<NotificationSetupWorker>().build())
+		}
+	}
+
+	fun restartTimetableStream() = scope.launch {
+		// The service reads the target when the SSE connection opens, so a
+		// changed target only takes effect after reconnecting.
+		TimetableChangeService.stop(context)
+		delay(1000) // Let protostore persist the new value first.
+		if (viewModel.userSettingsRepository.getSettings().first().timetableChangeNotifications) {
+			TimetableChangeService.start(context)
 		}
 	}
 
@@ -175,6 +189,32 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 	}
 
 	if (viewModel.proxyAvailable) {
+		val streamTargetSetting by remember {
+			viewModel.userSettingsRepository.getSettings().map {
+				it.timetableChangeStreamTargetType to it.timetableChangeStreamTargetId
+			}
+		}.collectAsState(initial = ProxyStreamTargetType.PERSONAL.storedName to 0L)
+		val streamTargetType = ProxyStreamTargetType.fromStored(streamTargetSetting.first)
+		val streamElementId = when (streamTargetType) {
+			ProxyStreamTargetType.PERSON -> viewModel.proxyPersonId
+			else -> streamTargetSetting.second.takeIf { it > 0 }
+		}
+		var showStreamElementPicker by remember { mutableStateOf(false) }
+
+		val streamElementLabel = when {
+			!streamTargetType.needsId -> stringResource(R.string.preference_notifications_stream_element_none)
+			streamTargetType == ProxyStreamTargetType.PERSON -> stringResource(
+				R.string.preference_notifications_stream_person_self,
+				streamElementId ?: 0L
+			)
+			streamElementId != null -> viewModel.masterDataRepository.getShortName(
+				streamElementId,
+				streamTargetType.pickerElementType(),
+				stringResource(R.string.preference_notifications_stream_element_none)
+			)
+			else -> stringResource(R.string.preference_notifications_stream_element_none)
+		}
+
 		PreferenceGroup(stringResource(R.string.preference_category_notifications_timetable_changes)) {
 			SwitchPreference(
 				title = { Text(stringResource(R.string.preference_notifications_timetable_changes)) },
@@ -203,9 +243,79 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 				onValueChange = {
 					timetableChangeWifiOnly = it
 					// Re-arm the watcher so the new network policy applies now.
-					TimetableChangeService.start(context)
+					restartTimetableStream()
 				}
 			)
+
+			ListPreference(
+				title = { Text(stringResource(R.string.preference_notifications_stream_target)) },
+				supportingContent = { value, enabled ->
+					Text(value.second, modifier = Modifier.disabled(!enabled))
+				},
+				entries = stringArrayResource(id = R.array.preference_notifications_stream_target_values),
+				entryLabels = stringArrayResource(id = R.array.preference_notifications_stream_target),
+				enabledCondition = { it.notificationsEnable && it.timetableChangeNotifications },
+				settingsRepository = viewModel.userSettingsRepository,
+				value = { it.timetableChangeStreamTargetType },
+				onValueChange = { targetType ->
+					timetableChangeStreamTargetType = targetType
+					if (targetType == ProxyStreamTargetType.PERSON.storedName) {
+						timetableChangeStreamTargetId = viewModel.proxyPersonId ?: 0L
+					}
+					restartTimetableStream()
+				}
+			)
+
+			Preference(
+				title = { Text(stringResource(R.string.preference_notifications_stream_element)) },
+				summary = {
+					Text(
+						if (streamTargetType.needsId) streamElementLabel
+						else stringResource(R.string.preference_notifications_stream_element_none)
+					)
+				},
+				settingsRepository = viewModel.userSettingsRepository,
+				value = { it.timetableChangeStreamTargetId },
+				scope = scope,
+				enabledCondition = {
+					it.notificationsEnable && it.timetableChangeNotifications &&
+						ProxyStreamTargetType.fromStored(it.timetableChangeStreamTargetType).needsId
+				},
+				onClick = {
+					if (streamTargetType == ProxyStreamTargetType.PERSON) {
+						scope.launch {
+							viewModel.userSettingsRepository.updateSettings {
+								timetableChangeStreamTargetId = viewModel.proxyPersonId ?: 0L
+							}
+							restartTimetableStream()
+						}
+					} else {
+						showStreamElementPicker = true
+					}
+				}
+			)
+
+			if (showStreamElementPicker) {
+				ElementPickerDialogFullscreen(
+					title = { Text(stringResource(R.string.preference_notifications_stream_element)) },
+					masterDataRepository = viewModel.masterDataRepository,
+					initialType = streamTargetType.pickerElementType(),
+					hideTypeSelection = true,
+					onDismiss = { showStreamElementPicker = false },
+					onSelect = { element ->
+						showStreamElementPicker = false
+						if (element != null) {
+							scope.launch {
+								viewModel.userSettingsRepository.updateSettings {
+									timetableChangeStreamTargetType = streamTargetType.storedName
+									timetableChangeStreamTargetId = element.id
+								}
+								restartTimetableStream()
+							}
+						}
+					}
+				)
+			}
 
 			Preference(
 				title = { Text(stringResource(R.string.preference_notifications_subscriptions)) },
@@ -322,4 +432,12 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 			)
 		}
 	)
+}
+
+private fun ProxyStreamTargetType.pickerElementType(): ElementType? = when (this) {
+	ProxyStreamTargetType.CLASS -> ElementType.CLASS
+	ProxyStreamTargetType.TEACHER -> ElementType.TEACHER
+	ProxyStreamTargetType.ROOM -> ElementType.ROOM
+	ProxyStreamTargetType.SUBJECT -> ElementType.SUBJECT
+	else -> null
 }

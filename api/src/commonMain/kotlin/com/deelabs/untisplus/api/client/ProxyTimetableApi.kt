@@ -1,6 +1,8 @@
 package com.deelabs.untisplus.api.client
 
 import com.deelabs.untisplus.api.model.proxy.ProxySseEventPayload
+import com.deelabs.untisplus.api.model.proxy.ProxyStreamTarget
+import com.deelabs.untisplus.api.model.proxy.ProxyStreamTargetType
 import com.deelabs.untisplus.api.model.proxy.ProxyTimetableChangeRow
 import com.deelabs.untisplus.api.model.proxy.ProxyTimetableChanges
 import io.ktor.client.HttpClientConfig
@@ -55,11 +57,16 @@ open class ProxyTimetableApi(
 	}
 
 	/**
-	 * Opens the SSE change feed. Each emitted [ProxyStreamEvent] corresponds to
-	 * one `event:` frame; the flow stays open until the connection drops.
+	 * Opens the SSE change feed for [target]. Each emitted [ProxyStreamEvent]
+	 * corresponds to one `event:` frame; the flow stays open until the
+	 * connection drops. The default target is the caller's own timetable.
 	 */
-	open fun stream(baseUrl: String, school: String? = null): Flow<ProxyStreamEvent> = channelFlow {
-		httpClient.sse(proxyUrl(baseUrl, "/api/timetable/stream", school)) {
+	open fun stream(
+		baseUrl: String,
+		school: String? = null,
+		target: ProxyStreamTarget = ProxyStreamTarget()
+	): Flow<ProxyStreamEvent> = channelFlow {
+		httpClient.sse(timetableStreamUrl(baseUrl, school, target.validated())) {
 			incoming.collect { sse ->
 				val data = sse.data ?: return@collect
 				val payload = runCatching {
@@ -69,6 +76,27 @@ open class ProxyTimetableApi(
 			}
 		}
 	}
+}
+
+/** Builds the stream URL, keeping query parameter order stable for tests. */
+internal fun timetableStreamUrl(
+	baseUrl: String,
+	school: String?,
+	target: ProxyStreamTarget
+): String {
+	val params = mutableListOf<String>()
+	school?.takeIf { it.isNotBlank() }?.let { params += "school=${it.encodeURLParameter()}" }
+	when (target.type) {
+		ProxyStreamTargetType.PERSONAL -> Unit
+		ProxyStreamTargetType.CLASS -> target.id?.let { params += "classId=$it" }
+		ProxyStreamTargetType.PERSON -> target.id?.let { params += "personId=$it" }
+		ProxyStreamTargetType.TEACHER -> target.id?.let { params += "teacherId=$it" }
+		ProxyStreamTargetType.ROOM -> target.id?.let { params += "roomId=$it" }
+		ProxyStreamTargetType.SUBJECT -> target.id?.let { params += "subjectId=$it" }
+		ProxyStreamTargetType.SCHOOL -> params += "schoolWide=true"
+	}
+	val query = if (params.isEmpty()) "" else params.joinToString("&", prefix = "?")
+	return "${baseUrl.trimEnd('/')}/api/timetable/stream$query"
 }
 
 /** A decoded SSE event from the proxy stream. */

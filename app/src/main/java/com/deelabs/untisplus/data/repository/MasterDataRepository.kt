@@ -6,6 +6,7 @@ import com.deelabs.untisplus.api.model.untis.timetable.PeriodElement
 import com.deelabs.untisplus.data.database.entities.ElementEntity
 import com.deelabs.untisplus.data.database.entities.KlasseEntity
 import com.deelabs.untisplus.data.database.entities.RoomEntity
+import com.deelabs.untisplus.data.database.entities.SchoolYearEntity
 import com.deelabs.untisplus.data.database.entities.SubjectEntity
 import com.deelabs.untisplus.data.database.entities.TeacherEntity
 import com.deelabs.untisplus.data.database.entities.User
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class UntisMasterDataRepository constructor(
 	private val userDao: UserDao,
@@ -34,6 +36,12 @@ class UntisMasterDataRepository constructor(
 	private val _userData = MutableStateFlow<UserWithData?>(null)
 	override val userData: UserWithData?
 		get() = _userData.value
+
+	override suspend fun schoolYears(): List<SchoolYearEntity> = withContext(Dispatchers.IO) {
+		val userId = (userRepository.userState.value as? UserRepository.UserState.User)?.user?.id
+			?: return@withContext emptyList()
+		userDao.getByIdWithData(userId)?.schoolYears.orEmpty()
+	}
 
 	private val _allClasses = MutableStateFlow<Map<Long, KlasseEntity>>(emptyMap())
 	override val allClasses: StateFlow<List<PeriodElement>> = _allClasses.mapToPeriodElements(scope, ElementType.CLASS)

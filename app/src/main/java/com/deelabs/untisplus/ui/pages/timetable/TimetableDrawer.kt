@@ -203,6 +203,7 @@ fun TimetableDrawer(
 				DrawerItems(
 					disableTypeSelection = displayedElement == null || isBookmarkSelected,
 					displayedElement = displayedElement,
+					showTeacherAbsences = viewModel.teacherAbsencesAvailable,
 					onTimetableClick = { item ->
 						scope.launch { drawerState.close() }
 						showElementPicker = item.elementType

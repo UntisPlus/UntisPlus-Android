@@ -54,6 +54,17 @@ open class ProxyCalendarApi : ApiClient {
 			CalendarDaysRequest(days)
 		).body()
 
+	/** Replaces one of the caller's own subscription tokens with a fresh one. */
+	open suspend fun rotate(
+		baseUrl: String,
+		token: String,
+		school: String? = null
+	): ProxyCalendarToken =
+		post(
+			proxyUrl(baseUrl, "/api/calendar/${token.encodeURLPathPart()}/rotate", school),
+			emptyMap<String, String>()
+		).body()
+
 	/** Revokes one of the caller's own calendar subscriptions. */
 	open suspend fun revoke(
 		baseUrl: String,

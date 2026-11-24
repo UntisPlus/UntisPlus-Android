@@ -22,6 +22,7 @@ import com.deelabs.untisplus.ui.navigation.AppRoutes
 fun DrawerItems(
 	disableTypeSelection: Boolean = false,
 	displayedElement: PeriodElement? = null,
+	showTeacherAbsences: Boolean = false,
 	onTimetableClick: (item: NavItemTimetable) -> Unit,
 	onNavigationClick: (item: NavItemNavigation) -> Unit,
 ) {
@@ -43,23 +44,38 @@ fun DrawerItems(
 		),
 	)
 
-	val navItemsNavigation = listOf(
-		NavItemNavigation(
-			icon = painterResource(id = R.drawable.all_infocenter),
-			label = stringResource(id = R.string.activity_title_info_center),
-			route = AppRoutes.InfoCenter
-		),
-		NavItemNavigation(
-			icon = painterResource(id = R.drawable.all_search_rooms),
-			label = stringResource(id = R.string.activity_title_free_rooms),
-			route = AppRoutes.RoomFinder
-		),
-		NavItemNavigation(
-			icon = painterResource(id = R.drawable.all_settings),
-			label = stringResource(id = R.string.activity_title_settings),
-			route = AppRoutes.Settings
+	val navItemsNavigation = buildList {
+		add(
+			NavItemNavigation(
+				icon = painterResource(id = R.drawable.all_infocenter),
+				label = stringResource(id = R.string.activity_title_info_center),
+				route = AppRoutes.InfoCenter
+			)
 		)
-	)
+		add(
+			NavItemNavigation(
+				icon = painterResource(id = R.drawable.all_search_rooms),
+				label = stringResource(id = R.string.activity_title_free_rooms),
+				route = AppRoutes.RoomFinder
+			)
+		)
+		if (showTeacherAbsences) {
+			add(
+				NavItemNavigation(
+					icon = painterResource(id = R.drawable.all_absences),
+					label = stringResource(id = R.string.activity_title_teacher_absences),
+					route = AppRoutes.TeacherAbsences
+				)
+			)
+		}
+		add(
+			NavItemNavigation(
+				icon = painterResource(id = R.drawable.all_settings),
+				label = stringResource(id = R.string.activity_title_settings),
+				route = AppRoutes.Settings
+			)
+		)
+	}
 
 	navItemsElementTypes.forEach { item ->
 		NavigationDrawerItem(

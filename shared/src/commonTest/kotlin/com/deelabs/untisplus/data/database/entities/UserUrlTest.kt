@@ -2,7 +2,9 @@ package com.deelabs.untisplus.data.database.entities
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class UserUrlTest {
 	@Test
@@ -76,5 +78,13 @@ class UserUrlTest {
 			"https://a/WebUntis",
 			resolveApiEndpoint("https://a/WebUntis", null, useUntisPlusApi = false)
 		)
+	}
+
+	@Test
+	fun detectsBetaApiHostWithOrWithoutScheme() {
+		assertTrue(isUntisPlusBetaApiHost(UNTISPLUS_BETA_API_HOST))
+		assertTrue(isUntisPlusBetaApiHost("https://$UNTISPLUS_BETA_API_HOST/WebUntis"))
+		assertFalse(isUntisPlusBetaApiHost(UNTISPLUS_API_HOST))
+		assertFalse(isUntisPlusBetaApiHost(null))
 	}
 }

@@ -30,7 +30,7 @@ val repositoryModule = module {
 	}
 
 	single {
-		ProxyRepository(get(), get(), get(), get(), get(), get(), get(), get())
+		ProxyRepository(get(), get(), get(), get(), get(), get(), get(), get(), get())
 	}
 
 	single { TimetableChangeBus() }

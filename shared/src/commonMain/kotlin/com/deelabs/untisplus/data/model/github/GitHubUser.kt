@@ -7,7 +7,10 @@ object GitHubApi {
 	const val URL_GITHUB_PRIVACY_POLICY = "https://docs.github.com/en/github/site-policy/github-privacy-statement"
 	const val URL_GITHUB_REPOSITORY = "https://github.com/UntisPlus/UntisPlus-Android"
 	const val URL_GITHUB_UPSTREAM_REPOSITORY = "https://github.com/SapuSeven/BetterUntis"
-	const val URL_GITHUB_REPOSITORY_API = "https://api.github.com/repos/SapuSeven/BetterUntis"
+	const val URL_GITHUB_REPOSITORY_API = "https://api.github.com/repos/UntisPlus/UntisPlus-Android"
+	const val URL_GITHUB_RELEASES_API = "$URL_GITHUB_REPOSITORY_API/releases/latest"
+	const val URL_GITHUB_DEV_BRANCH_API = "$URL_GITHUB_REPOSITORY_API/commits/dev"
+	const val URL_GITHUB_DEV_BRANCH = "$URL_GITHUB_REPOSITORY/tree/dev"
 }
 
 @Serializable

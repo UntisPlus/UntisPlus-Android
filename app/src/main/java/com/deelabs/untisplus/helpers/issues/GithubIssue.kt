@@ -16,7 +16,7 @@ class GithubIssue(type: Type, log: String) : Issue(type, log) {
 		val uri = Uri.Builder()
 				.scheme("https")
 				.authority("github.com")
-				.path("/SapuSeven/BetterUntis/issues/new")
+				.path("/UntisPlus/UntisPlus-Android/issues/new")
 				.appendQueryParameter("labels", "bug")
 				.appendQueryParameter("template", "bug-report.md")
 				.appendQueryParameter("title", generateTitle())

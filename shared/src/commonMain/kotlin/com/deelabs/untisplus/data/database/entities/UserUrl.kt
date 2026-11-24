@@ -11,6 +11,9 @@ import com.deelabs.untisplus.api.model.untis.SchoolInfo
 
 const val UNTISPLUS_API_HOST = "api-untis.deelabs.tech"
 
+/** Beta deployment of the UntisPlus proxy; used by the login provider selector. */
+const val UNTISPLUS_BETA_API_HOST = "beta-untis.deelabs.tech"
+
 /**
  * Normalizes a user-provided API endpoint to a scheme/authority pair.
  * A missing scheme defaults to https; http is allowed for custom endpoints only.
@@ -26,6 +29,10 @@ fun normalizeApiEndpoint(raw: String): Pair<String, String>? {
 	if (host.isBlank()) return null
 	return scheme.lowercase() to authority
 }
+
+/** Whether [host] points at the beta UntisPlus proxy (with or without a scheme). */
+fun isUntisPlusBetaApiHost(host: String?): Boolean =
+	host?.let { normalizeApiEndpoint(it)?.second } == UNTISPLUS_BETA_API_HOST
 
 fun buildApiUrlString(
 	apiHost: String,

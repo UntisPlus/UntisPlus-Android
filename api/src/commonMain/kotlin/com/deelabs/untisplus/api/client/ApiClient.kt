@@ -111,6 +111,15 @@ open class ApiClient() {
 			prettyPrint = true // TODO only for DEV
 		}
 
+		/**
+		 * Analytics request bodies omit unset optional fields: the proxy's
+		 * `ReportRequest` sets `additionalProperties: false`, so a sent `null`
+		 * would be rejected as an unknown property.
+		 */
+		val ANALYTICS_JSON = Json(DEFAULT_JSON) {
+			explicitNulls = false
+		}
+
 		const val METHOD_CREATE_IMMEDIATE_ABSENCE = "createImmediateAbsence2017"
 		const val METHOD_DELETE_ABSENCE = "deleteAbsence2017"
 		const val METHOD_GET_ABSENCES = "getStudentAbsences2017"

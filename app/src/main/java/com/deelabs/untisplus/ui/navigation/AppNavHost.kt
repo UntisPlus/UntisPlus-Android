@@ -26,6 +26,7 @@ import com.deelabs.untisplus.ui.pages.login.sso.SsoLogin
 import com.deelabs.untisplus.ui.pages.roomfinder.RoomFinder
 import com.deelabs.untisplus.ui.pages.settings.settingsNav
 import com.deelabs.untisplus.ui.pages.splash.Splash
+import com.deelabs.untisplus.ui.pages.teacherabsences.TeacherAbsences
 import com.deelabs.untisplus.ui.pages.timetable.Timetable
 import soup.compose.material.motion.animation.materialSharedAxisXIn
 import soup.compose.material.motion.animation.materialSharedAxisXOut
@@ -181,6 +182,23 @@ fun AppNavHost(
 			},
 		) {
 			RoomFinder()
+		}
+
+		composable<AppRoutes.TeacherAbsences>(
+			enterTransition = {
+				slideInVertically() { it / 2 } + fadeIn()
+			},
+			exitTransition = {
+				slideOutVertically() { it / 2 } + fadeOut()
+			},
+			popEnterTransition = {
+				slideInVertically() { it / 2 } + fadeIn()
+			},
+			popExitTransition = {
+				slideOutVertically() { it / 2 } + fadeOut()
+			},
+		) {
+			TeacherAbsences()
 		}
 
 		navigation<AppRoutes.Settings>(

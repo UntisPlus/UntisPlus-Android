@@ -5,6 +5,7 @@ import com.deelabs.untisplus.api.client.ClassRegApi
 import com.deelabs.untisplus.api.client.MessagesApi
 import com.deelabs.untisplus.api.client.OfficeHoursApi
 import com.deelabs.untisplus.api.client.ProxyAbsenceApi
+import com.deelabs.untisplus.api.client.ProxyAnalyticsApi
 import com.deelabs.untisplus.api.client.ProxyCalendarApi
 import com.deelabs.untisplus.api.client.ProxyCookieStorage
 import com.deelabs.untisplus.api.client.ProxyHomeworkApi
@@ -128,6 +129,17 @@ val jsonRpcApiClientModule = module {
 	single {
 		val cookies = get<CookiesStorage>()
 		ProxyAbsenceApi(
+			get(),
+			{
+				it.installCookieStorage(cookies)
+				it.expectSuccess = true
+			}
+		)
+	}
+
+	single {
+		val cookies = get<CookiesStorage>()
+		ProxyAnalyticsApi(
 			get(),
 			{
 				it.installCookieStorage(cookies)

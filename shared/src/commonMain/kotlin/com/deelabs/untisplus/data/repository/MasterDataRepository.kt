@@ -2,6 +2,7 @@ package com.deelabs.untisplus.data.repository
 
 import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
 import com.deelabs.untisplus.api.model.untis.timetable.PeriodElement
+import com.deelabs.untisplus.data.database.entities.SchoolYearEntity
 import com.deelabs.untisplus.data.database.entities.User
 import com.deelabs.untisplus.data.database.entities.UserWithData
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,6 +11,9 @@ import kotlinx.coroutines.flow.StateFlow
 interface MasterDataRepository {
 	val user: User?
 	val userData: UserWithData?
+
+	/** Reads the active user's school years directly, without waiting for the cached snapshot. */
+	suspend fun schoolYears(): List<SchoolYearEntity>
 
 	val allClasses: StateFlow<List<PeriodElement>>
 	val allTeachers: StateFlow<List<PeriodElement>>
@@ -33,6 +37,8 @@ interface MasterDataRepository {
 class DefaultMasterDataRepository : MasterDataRepository {
 	override val user: User? = null
 	override val userData: UserWithData? = null
+
+	override suspend fun schoolYears(): List<SchoolYearEntity> = emptyList()
 
 	override val allClasses: StateFlow<List<PeriodElement>> = MutableStateFlow(emptyList())
 	override val allTeachers: StateFlow<List<PeriodElement>> = MutableStateFlow(emptyList())

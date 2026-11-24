@@ -2,7 +2,9 @@ package com.deelabs.untisplus.api.client
 
 import com.deelabs.untisplus.api.model.proxy.ProxyHealth
 import com.deelabs.untisplus.api.model.proxy.ProxyMe
+import com.deelabs.untisplus.api.model.proxy.ProxyMePreferences
 import com.deelabs.untisplus.api.model.proxy.ProxyStatus
+import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngineFactory
@@ -16,15 +18,16 @@ import kotlinx.serialization.json.Json
  * [baseUrl] is the proxy origin (`scheme://authority`, no `/WebUntis`, no
  * trailing slash) — see `docs/PROXY-API.md` §1.
  */
-open class ProxyStatusApi(
-	engineFactory: HttpClientEngineFactory<*>,
-	config: ((HttpClientConfig<*>) -> Unit)? = null,
-	jsonBlock: Json = ApiClient.DEFAULT_JSON
-) : ApiClient(
-	httpClientEngineFactory = engineFactory,
-	httpClientConfig = config,
-	jsonBlock = jsonBlock
-) {
+open class ProxyStatusApi : ApiClient {
+	constructor(
+		engineFactory: HttpClientEngineFactory<*>,
+		config: ((HttpClientConfig<*>) -> Unit)? = null,
+		jsonBlock: Json = ApiClient.DEFAULT_JSON
+	) : super(engineFactory, config, jsonBlock)
+
+	/** Builds on an already-configured client (used by tests). */
+	constructor(httpClient: HttpClient) : super(httpClient)
+
 	open suspend fun status(baseUrl: String): ProxyStatus =
 		get("$baseUrl/status").body()
 
@@ -33,4 +36,10 @@ open class ProxyStatusApi(
 
 	open suspend fun me(baseUrl: String): ProxyMe =
 		get("$baseUrl/me").body()
+
+	/** Updates the caller's own capability opt-ins; the proxy returns the new `/me`. */
+	open suspend fun updatePreferences(
+		baseUrl: String,
+		preferences: Map<String, Boolean>
+	): ProxyMe = patch("$baseUrl/me", ProxyMePreferences(preferences)).body()
 }

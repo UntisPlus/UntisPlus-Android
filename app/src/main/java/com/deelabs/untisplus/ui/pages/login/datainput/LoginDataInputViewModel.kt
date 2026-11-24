@@ -27,8 +27,10 @@ import com.deelabs.untisplus.api.model.untis.masterdata.TimeGrid
 import com.deelabs.untisplus.data.cache.ApiCacheCleaner
 import com.deelabs.untisplus.data.database.entities.User
 import com.deelabs.untisplus.data.database.entities.UNTISPLUS_API_HOST
+import com.deelabs.untisplus.data.database.entities.UNTISPLUS_BETA_API_HOST
 import com.deelabs.untisplus.data.database.entities.buildApiUrl
 import com.deelabs.untisplus.data.database.entities.buildJsonRpcApiUrl
+import com.deelabs.untisplus.data.database.entities.isUntisPlusBetaApiHost
 import com.deelabs.untisplus.data.database.entities.jsonRpcApiUrl
 import com.deelabs.untisplus.data.database.entities.normalizeApiEndpoint
 import com.deelabs.untisplus.data.database.entities.UserDao
@@ -58,6 +60,7 @@ const val DEMO_API_URL = "https://api.sapuseven.com/untis/testing"
 enum class ApiProvider {
 	OFFICIAL,
 	UNTISPLUS,
+	UNTISPLUS_BETA,
 	CUSTOM
 }
 
@@ -174,6 +177,7 @@ class LoginDataInputViewModel constructor(
 				existingUser = it
 				loginData.loadFromUser(it)
 				apiProvider = when {
+					isUntisPlusBetaApiHost(it.customApiHost) || isUntisPlusBetaApiHost(it.apiHost) -> ApiProvider.UNTISPLUS_BETA
 					it.customApiHost?.isNotBlank() == true -> ApiProvider.CUSTOM
 					it.useUntisPlusApi -> ApiProvider.UNTISPLUS
 					else -> ApiProvider.OFFICIAL
@@ -324,6 +328,7 @@ class LoginDataInputViewModel constructor(
 		return when (apiProvider) {
 			ApiProvider.OFFICIAL -> null
 			ApiProvider.UNTISPLUS -> "https://$UNTISPLUS_API_HOST"
+			ApiProvider.UNTISPLUS_BETA -> "https://$UNTISPLUS_BETA_API_HOST"
 			ApiProvider.CUSTOM -> normalizeApiEndpoint(loginData.apiUrl.value.orEmpty())
 				?.let { (scheme, authority) -> "$scheme://$authority" }
 		}
@@ -344,8 +349,9 @@ class LoginDataInputViewModel constructor(
 			if (loginData.anonymous.value != true) loginData.username.value else null,
 			if (loginData.anonymous.value != true) appSharedSecret else null,
 			loginData.anonymous.value == true,
-			apiProvider == ApiProvider.UNTISPLUS,
-			if (apiProvider == ApiProvider.CUSTOM) apiHost.takeIf { it.isNotEmpty() } else null,
+			apiProvider == ApiProvider.UNTISPLUS || apiProvider == ApiProvider.UNTISPLUS_BETA,
+			if (apiProvider == ApiProvider.CUSTOM || apiProvider == ApiProvider.UNTISPLUS_BETA)
+				apiHost.takeIf { it.isNotEmpty() } else null,
 			userData.masterData.timeGrid ?: TimeGrid.generateDefault(),
 			userData.masterData.timeStamp,
 			userData.userData,

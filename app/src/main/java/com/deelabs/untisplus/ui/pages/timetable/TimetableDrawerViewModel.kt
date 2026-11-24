@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.deelabs.untisplus.activities.main.NavItemNavigation
 import com.deelabs.untisplus.api.model.untis.timetable.PeriodElement
 import com.deelabs.untisplus.data.repository.MasterDataRepository
+import com.deelabs.untisplus.data.repository.ProxyRepository
 import com.deelabs.untisplus.data.repository.UserSettingsRepository
 import com.deelabs.untisplus.data.settings.model.TimetableElement
 import com.deelabs.untisplus.ui.navigation.AppNavigator
@@ -21,8 +22,13 @@ class TimetableDrawerViewModel constructor(
 	private val userSettingsRepository: UserSettingsRepository,
 	private val navigator: AppNavigator,
 	private val masterDataRepository: MasterDataRepository,
+	private val proxyRepository: ProxyRepository,
 ) : ViewModel() {
 	var enableDrawerGestures: Boolean = true
+		private set
+
+	/** Only proxies answering `/me` expose the teacher-absences report tab. */
+	var teacherAbsencesAvailable by mutableStateOf(false)
 		private set
 
 	var bookmarkDeleteDialog by mutableStateOf<PeriodElement?>(null)
@@ -37,6 +43,9 @@ class TimetableDrawerViewModel constructor(
 				it.themeColor
 				_bookmarks.value = it.bookmarksList
 			}
+		}
+		viewModelScope.launch {
+			teacherAbsencesAvailable = proxyRepository.isTeacherAbsencesSupported()
 		}
 	}
 

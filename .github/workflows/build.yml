@@ -33,9 +33,9 @@ jobs:
           # Use the MIT-licensed cache implementation; the default "enhanced"
           # provider is backed by a proprietary library.
           cache-provider: basic
-          # Only write to the cache for builds on the default branch.
-          # Builds on other branches will only read existing entries from the cache.
-          cache-read-only: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+          # Pull requests only read the cache; trusted branch/dispatch builds can
+          # populate it so later dev runs start from warm outputs.
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
 
       - name: Verify FOSS dependency tree
         shell: bash
@@ -66,5 +66,5 @@ jobs:
         with:
           name: untisplus-${{ matrix.variant }}
           path: |
-            app/build/outputs/apk/*/${{ matrix.variant }}/*.apk
-            app/build/outputs/apk/*/${{ matrix.variant }}/output-metadata.json
+            app/build/outputs/apk/${{ matrix.variant }}/*.apk
+            app/build/outputs/apk/${{ matrix.variant }}/output-metadata.json

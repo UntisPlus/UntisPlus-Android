@@ -178,6 +178,12 @@
     <string name="logindatainput_delete">Delete profile</string>
     <string name="logindatainput_dialog_qrcodeinvalid_text">The scanned QR code either has an invalid format or is not supported by UntisPlus.</string>
     <string name="logindatainput_dialog_qrcodeinvalid_title">Invalid QR code</string>
+    <string name="profile_qr_export_title">Login QR code</string>
+    <string name="profile_qr_export_warning_title">Show login QR code?</string>
+    <string name="profile_qr_export_warning">This QR contains your app login key. Anyone who scans it can access your timetable data. Only show it to a device you trust.</string>
+    <string name="profile_qr_export_show">Show QR code</string>
+    <string name="profile_qr_export_image_description">Login QR code</string>
+    <string name="profile_qr_export_error">Could not generate the QR code.</string>
     <string name="logindatainput_error_field_empty">This field cannot be empty!</string>
     <string name="logindatainput_error_invalid_format">Invalid format!</string>
     <string name="logindatainput_error_invalid_school">Invalid school ID!</string>

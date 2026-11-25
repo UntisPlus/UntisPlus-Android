@@ -2,6 +2,7 @@ package com.deelabs.untisplus.ui.dialogs
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,6 +13,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DividerDefaults
@@ -55,6 +57,7 @@ fun ProfileManagementDialog(
 	val scope = rememberCoroutineScope()
 
 	var deleteDialog by rememberSaveable { mutableStateOf<User?>(null) }
+	var qrExportDialog by remember { mutableStateOf<User?>(null) }
 
 	fun dismiss() {
 		onDismiss()
@@ -115,13 +118,23 @@ fun ProfileManagementDialog(
 						)
 					},
 					trailingContent = {
-						IconButton(onClick = {
-							deleteDialog = user
-						}) {
-							Icon(
-								imageVector = Icons.Outlined.Delete,
-								contentDescription = stringResource(id = R.string.logindatainput_delete)
-							)
+						Row {
+							IconButton(onClick = {
+								qrExportDialog = user
+							}) {
+								Icon(
+									imageVector = Icons.Outlined.Share,
+									contentDescription = stringResource(id = R.string.profile_qr_export_title)
+								)
+							}
+							IconButton(onClick = {
+								deleteDialog = user
+							}) {
+								Icon(
+									imageVector = Icons.Outlined.Delete,
+									contentDescription = stringResource(id = R.string.logindatainput_delete)
+								)
+							}
 						}
 					},
 					modifier = Modifier.clickable {
@@ -182,6 +195,13 @@ fun ProfileManagementDialog(
 						Text(stringResource(id = R.string.all_cancel))
 					}
 				}
+			)
+		}
+
+		qrExportDialog?.let { user ->
+			ProfileQrExportDialog(
+				user = user,
+				onDismiss = { qrExportDialog = null }
 			)
 		}
 	}

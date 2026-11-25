@@ -238,6 +238,12 @@
     <string name="notifications_channel_breakinfo_desc">Shows information about the current break and the following lesson</string>
 	<string name="notifications_channel_firstlesson">First lesson</string>
 	<string name="notifications_channel_firstlesson_desc">Shows information about the first lesson and daily messages</string>
+	<string name="notifications_channel_eventreminders">Homework and exam reminders</string>
+	<string name="notifications_channel_eventreminders_desc">Local reminders from Info Center homework and exams stored on this device</string>
+	<string name="notifications_event_reminder_homework_title">Homework due tomorrow</string>
+	<string name="notifications_event_reminder_homework_text">%1$s is due on %2$s</string>
+	<string name="notifications_event_reminder_exam_title">Exam tomorrow</string>
+	<string name="notifications_event_reminder_exam_text">%1$s starts on %2$s</string>
 	<string name="notifications_channel_timetablechanges">Timetable changes</string>
 	<string name="notifications_channel_timetablechanges_desc">Shows notifications when substitutions or other timetable changes are published</string>
 	<string name="notifications_timetable_changes_title">Timetable changed</string>
@@ -345,6 +351,9 @@
     <string name="preference_marker">Time indicator</string>
     <string name="preference_notifications_clear">Clear all notifications</string>
     <string name="preference_notifications_enable">Enable break notifications</string>
+    <string name="preference_category_notifications_events">Homework and exams</string>
+    <string name="preference_notifications_event_reminders">Local due-date reminders</string>
+    <string name="preference_notifications_event_reminders_desc">Reminds you the day before homework is due or an exam starts, using Info Center data already stored on this device.</string>
     <string name="preference_notifications_timetable_changes">Timetable change notifications</string>
     <string name="preference_notifications_timetable_changes_desc">Get notified when your school publishes substitution changes</string>
     <string name="preference_notifications_timetable_changes_wifi_only">Only on Wi-Fi</string>

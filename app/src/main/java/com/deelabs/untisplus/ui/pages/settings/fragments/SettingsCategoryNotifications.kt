@@ -40,6 +40,7 @@ import com.deelabs.untisplus.ui.common.disabled
 import com.deelabs.untisplus.ui.dialogs.ElementPickerDialogFullscreen
 import com.deelabs.untisplus.ui.navigation.AppRoutes
 import com.deelabs.untisplus.ui.pages.settings.SettingsScreenViewModel
+import com.deelabs.untisplus.workers.EventReminderSyncWorker
 import com.deelabs.untisplus.workers.NotificationSetupWorker
 import com.deelabs.untisplus.workers.TimetableChangeWorker
 import kotlinx.coroutines.delay
@@ -82,6 +83,12 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 		WorkManager.getInstance(context).apply {
 			enqueue(OneTimeWorkRequestBuilder<NotificationSetupWorker>().build())
 		}
+	}
+
+	fun refreshEventReminders() = scope.launch {
+		delay(1000) // Let protostore persist the opt-in before the worker reads it.
+		EventReminderSyncWorker.schedule(context)
+		EventReminderSyncWorker.syncNow(context)
 	}
 
 	fun restartTimetableStream() = scope.launch {
@@ -137,6 +144,7 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 					if (notificationPermissionGranted) {
 						notificationsMessageVisible = false
 						enqueueNotificationSetup()
+						if (this.eventRemindersEnabled) refreshEventReminders() else EventReminderSyncWorker.schedule(context)
 						true
 					} else {
 						notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
@@ -144,6 +152,7 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 					}
 				} else {
 					clearNotifications()
+					EventReminderSyncWorker.cancel(context)
 					TimetableChangeWorker.cancel(context)
 					TimetableChangeService.stop(context)
 					false
@@ -184,6 +193,20 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 			onValueChange = {
 				notificationsBeforeFirstTime = it
 				enqueueNotificationSetup()
+			}
+		)
+	}
+
+	PreferenceGroup(stringResource(R.string.preference_category_notifications_events)) {
+		SwitchPreference(
+			title = { Text(stringResource(R.string.preference_notifications_event_reminders)) },
+			summary = { Text(stringResource(R.string.preference_notifications_event_reminders_desc)) },
+			enabledCondition = { it.notificationsEnable },
+			settingsRepository = viewModel.userSettingsRepository,
+			value = { it.eventRemindersEnabled },
+			onValueChange = {
+				eventRemindersEnabled = it
+				if (it) refreshEventReminders() else EventReminderSyncWorker.cancel(context)
 			}
 		)
 	}

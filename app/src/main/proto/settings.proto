@@ -88,6 +88,7 @@ message UserSettings {
   bool proxyCompatibilityChecked = 65;
   bool proxyCompatibilitySupported = 66;
   string proxyMeJson = 67;
+  bool eventRemindersEnabled = 68;
 }
 
 message GlobalSettings {

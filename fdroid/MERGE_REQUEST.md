@@ -9,7 +9,7 @@ home screen widgets.
 ## Freedom and licensing
 
 - Source: https://github.com/UntisPlus/UntisPlus-Android
-- License: GPL-3.0-or-later
+- License: GPL-3.0-only
 - Issue tracker: https://github.com/UntisPlus/UntisPlus-Android/issues
 - No Google Play Services, Firebase, ML Kit, ads, in-app purchases, or
   third-party analytics/crash-reporting SDKs.

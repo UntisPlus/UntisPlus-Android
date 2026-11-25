@@ -246,6 +246,11 @@
 	<string name="notifications_channel_timetablechanges_service_desc">Keeps a connection open so timetable changes are detected within seconds</string>
 	<string name="notifications_timetable_changes_service_title">Watching for timetable changes</string>
 	<string name="notifications_timetable_changes_service_text">You\'ll be notified about substitutions as soon as they are published</string>
+	<string name="notifications_channel_infocenter">Info Center messages</string>
+	<string name="notifications_channel_infocenter_desc">Shows notifications for new or updated Info Center messages</string>
+	<string name="notifications_infocenter_title">New Info Center message</string>
+	<string name="notifications_infocenter_text">%1$d new message(s)</string>
+	<string name="notifications_infocenter_entry_fallback">New message</string>
 	<string name="notifications_text_error_message">You won\'t get any notifications today.</string>
     <string name="notifications_text_error_title">Failed to load timetable</string>
     <string name="notifications_text_first_title">School starts at %1$s</string>
@@ -345,6 +350,9 @@
     <string name="preference_marker">Time indicator</string>
     <string name="preference_notifications_clear">Clear all notifications</string>
     <string name="preference_notifications_enable">Enable break notifications</string>
+	<string name="preference_category_notifications_infocenter">Info Center</string>
+	<string name="preference_notifications_infocenter">Info Center message notifications</string>
+	<string name="preference_notifications_infocenter_desc">Get a local notification when an Info Center message is new or changes during a refresh</string>
     <string name="preference_notifications_timetable_changes">Timetable change notifications</string>
     <string name="preference_notifications_timetable_changes_desc">Get notified when your school publishes substitution changes</string>
     <string name="preference_notifications_timetable_changes_wifi_only">Only on Wi-Fi</string>

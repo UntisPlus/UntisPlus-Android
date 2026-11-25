@@ -25,6 +25,9 @@ import com.deelabs.untisplus.domain.GetMessagesUseCase
 import com.deelabs.untisplus.domain.GetOfficeHourRegistrationsUseCase
 import com.deelabs.untisplus.domain.GetOfficeHoursUseCase
 import com.deelabs.untisplus.model.rest.Message
+import com.deelabs.untisplus.notifications.InfoCenterNotificationController
+import com.deelabs.untisplus.notifications.toMessageNotificationEntries
+import com.deelabs.untisplus.notifications.toMessageOfDayNotificationEntries
 import com.deelabs.untisplus.ui.navigation.AppNavigator
 import com.deelabs.untisplus.ui.pages.infocenter.fragments.AbsencesUiState
 import com.deelabs.untisplus.ui.pages.infocenter.fragments.EventItem
@@ -44,6 +47,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -67,6 +71,7 @@ class InfoCenterViewModel constructor(
 	private val proxyRepository: ProxyRepository,
 	private val childSelectionRepository: ChildSelectionRepository,
 	private val timetableRepository: TimetableRepository,
+	private val infoCenterNotificationController: InfoCenterNotificationController,
 ) : ViewModel() {
 	private val excuseStatuses = masterDataRepository.userData?.excuseStatuses ?: emptyList()
 
@@ -164,7 +169,15 @@ class InfoCenterViewModel constructor(
 		else
 			getMessages(),
 		MessagesUiState::Success
-	).stateIn(
+	).onEach { state ->
+		if (state.messagesOfDay.isFailure && state.messages.isFailure) return@onEach
+		val userId = userRepository.currentUser?.id ?: return@onEach
+		val entries = buildList {
+			state.messagesOfDay.getOrNull()?.let { addAll(it.toMessageOfDayNotificationEntries()) }
+			state.messages.getOrNull()?.let { addAll(it.toMessageNotificationEntries()) }
+		}
+		infoCenterNotificationController.onMessagesRefreshed(userId, entries)
+	}.stateIn(
 		scope = viewModelScope,
 		started = SharingStarted.WhileSubscribed(5_000),
 		initialValue = MessagesUiState.Loading

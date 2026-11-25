@@ -38,6 +38,7 @@ import com.deelabs.untisplus.data.settings.model.NotificationVisibility
 import com.deelabs.untisplus.services.TimetableChangeService
 import com.deelabs.untisplus.ui.common.disabled
 import com.deelabs.untisplus.ui.dialogs.ElementPickerDialogFullscreen
+import com.deelabs.untisplus.notifications.InfoCenterNotifications
 import com.deelabs.untisplus.ui.navigation.AppRoutes
 import com.deelabs.untisplus.ui.pages.settings.SettingsScreenViewModel
 import com.deelabs.untisplus.workers.NotificationSetupWorker
@@ -146,6 +147,12 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 					clearNotifications()
 					TimetableChangeWorker.cancel(context)
 					TimetableChangeService.stop(context)
+					scope.launch {
+						viewModel.userSettingsRepository.updateSettings {
+							clearInfocenterMessageNotificationsSeen()
+							infocenterMessageNotificationsInitialized = false
+						}
+					}
 					false
 				}
 			}
@@ -184,6 +191,29 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 			onValueChange = {
 				notificationsBeforeFirstTime = it
 				enqueueNotificationSetup()
+			}
+		)
+	}
+
+	PreferenceGroup(stringResource(R.string.preference_category_notifications_infocenter)) {
+		SwitchPreference(
+			title = { Text(stringResource(R.string.preference_notifications_infocenter)) },
+			summary = { Text(stringResource(R.string.preference_notifications_infocenter_desc)) },
+			enabledCondition = { it.notificationsEnable },
+			settingsRepository = viewModel.userSettingsRepository,
+			value = { it.infocenterMessageNotifications },
+			onValueChange = { enabled ->
+				scope.launch {
+					viewModel.userSettingsRepository.updateSettings {
+						infocenterMessageNotifications = enabled
+						if (!enabled) {
+							clearInfocenterMessageNotificationsSeen()
+							infocenterMessageNotificationsInitialized = false
+						}
+					}
+					if (enabled) InfoCenterNotifications.ensureChannels(context)
+					else InfoCenterNotifications.cancel(context)
+				}
 			}
 		)
 	}

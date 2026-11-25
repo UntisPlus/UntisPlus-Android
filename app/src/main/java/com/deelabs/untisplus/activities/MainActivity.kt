@@ -16,6 +16,7 @@ import com.deelabs.untisplus.data.database.entities.ImportedCalendarEntity
 import com.deelabs.untisplus.data.repository.ImportedCalendarRepository
 import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.data.repository.UserSettingsRepository
+import com.deelabs.untisplus.notifications.InfoCenterNotifications
 import com.deelabs.untisplus.services.TimetableChangeService
 import com.deelabs.untisplus.ui.navigation.AppNavigator
 import com.deelabs.untisplus.ui.navigation.AppRoutes
@@ -196,7 +197,10 @@ class MainActivity : ComponentActivity(), KoinComponent {
 
 		val userId = intent.getLongExtra(EXTRA_LONG_USER_ID, -1L)
 		lifecycleScope.launch {
-			if (userId != -1L) userRepository.switchUser(userId)
+			if (userId != -1L) {
+				InfoCenterNotifications.cancel(this@MainActivity)
+				userRepository.switchUser(userId)
+			}
 			appNavigator.navigate(AppRoutes.Timetable(element))
 		}
 	}

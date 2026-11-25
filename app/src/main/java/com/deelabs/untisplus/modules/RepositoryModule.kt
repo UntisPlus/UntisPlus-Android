@@ -24,6 +24,12 @@ import com.deelabs.untisplus.data.repository.UntisTimetableRepository
 import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.data.repository.UserSettingsRepository
 import com.deelabs.untisplus.mappers.TimetableMapper
+import com.deelabs.untisplus.notifications.AndroidInfoCenterNotifier
+import com.deelabs.untisplus.notifications.DefaultInfoCenterNotificationController
+import com.deelabs.untisplus.notifications.InfoCenterNotificationController
+import com.deelabs.untisplus.notifications.InfoCenterNotificationStore
+import com.deelabs.untisplus.notifications.InfoCenterNotifier
+import com.deelabs.untisplus.notifications.ProtoInfoCenterNotificationStore
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -48,6 +54,12 @@ val repositoryModule = module {
 	factory<UserSettingsRepository> { UserSettingsRepository(get(), get()) }
 
 	factory { GlobalSettingsRepository(get()) }
+
+	factory<InfoCenterNotificationStore> { ProtoInfoCenterNotificationStore(get()) }
+
+	single<InfoCenterNotifier> { AndroidInfoCenterNotifier(androidContext()) }
+
+	factory<InfoCenterNotificationController> { DefaultInfoCenterNotificationController(get(), get()) }
 
 	factory<MasterDataRepository> { UntisMasterDataRepository(get(), get()) }
 

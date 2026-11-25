@@ -463,15 +463,21 @@ class TimetableViewModel constructor(
 		navigator.navigate(AppRoutes.Settings.Timetable(highlightTitle = R.string.preference_timetable_personal_timetable))
 	}
 
-	fun getTitle(context: Context) = requestedElement?.let {
-		if (it == _personalElement.value) null // Use Profile name for personal timetable
-		else if (it.type == ElementType.STUDENT) {
-			// Parent accounts select children directly from the persisted user data.
-			currentUser.userData.children.firstOrNull { child -> child?.id == it.id }?.fullName()
-				?: masterDataRepository.getLongName(it)
-		} else masterDataRepository.getLongName(it)
+	fun getTitle(context: Context): String {
+		val elementTitle = requestedElement?.let {
+			if (it == _personalElement.value) null // Use Profile name for personal timetable
+			else if (it.type == ElementType.STUDENT) {
+				// Parent accounts select children directly from the persisted user data.
+				currentUser.userData.children.firstOrNull { child -> child?.id == it.id }?.fullName()
+					?: masterDataRepository.getLongName(it, default = "")
+			} else masterDataRepository.getLongName(it, default = "")
+		}
+
+		// Never show the "unknown element" sentinel as a screen title. If the
+		// element's name isn't available locally, fall back to the profile name.
+		return elementTitle?.takeIf { it.isNotBlank() && it != MasterDataRepository.ELEMENT_NAME_UNKNOWN }
+			?: (currentUser.getDisplayedName(context) + (if (isDebug) " (${currentUser.id})" else ""))
 	}
-		?: (currentUser.getDisplayedName(context) + (if (isDebug) " (${currentUser.id})" else ""))
 
 	fun showElement(element: PeriodElement?) {
 		if (requestedElement != element)

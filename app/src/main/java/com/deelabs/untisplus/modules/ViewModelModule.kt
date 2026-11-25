@@ -41,6 +41,7 @@ val viewModelModule = module {
 			weekLogicService = get(),
 			buildConfigFieldsProvider = get(),
 			savedStateHandle = params.get<SavedStateHandle>(),
+			infoCenterNotificationController = get(),
 		)
 	}
 

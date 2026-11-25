@@ -34,6 +34,7 @@ import com.deelabs.untisplus.mappers.TimetableMapper
 import com.deelabs.untisplus.models.PeriodItem
 import com.deelabs.untisplus.models.ImportedCalendarEventItem
 import com.deelabs.untisplus.models.TimetableItem
+import com.deelabs.untisplus.notifications.InfoCenterNotificationController
 import com.deelabs.untisplus.services.WeekLogicService
 import com.deelabs.untisplus.ui.navigation.AppNavigator
 import com.deelabs.untisplus.ui.navigation.AppRoutes
@@ -85,6 +86,7 @@ class TimetableViewModel constructor(
 	internal val weekLogicService: WeekLogicService,
 	buildConfigFieldsProvider: BuildConfigFieldsProvider,
 	savedStateHandle: SavedStateHandle,
+	private val infoCenterNotificationController: InfoCenterNotificationController,
 ) : ViewModel() {
 	private val args = savedStateHandle.toRoute<AppRoutes.Timetable>()
 
@@ -273,6 +275,7 @@ class TimetableViewModel constructor(
 	}
 
 	fun switchUser(user: User) {
+		infoCenterNotificationController.cancel()
 		userRepository.switchUser(user)
 	}
 

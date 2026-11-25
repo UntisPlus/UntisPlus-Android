@@ -10,12 +10,22 @@ import kotlinx.coroutines.flow.map
 
 class UserSettingsRepository constructor(
 	private val userRepository: UserRepository,
-	dataStore: DataStore<Settings>
+	private val dataStore: DataStore<Settings>
 ) : MultiUserSettingsRepository<Settings, Settings.Builder, UserSettings, UserSettings.Builder>(
 	dataStore
 ) {
 	fun getSettings(userId: Long): Flow<UserSettings> {
 		return getAllSettings().map { userSettings -> userSettings.userSettingsMap.getOrDefault(userId, UserSettings.getDefaultInstance()) }
+	}
+
+	/** Updates one profile's settings, even when it is not the active profile. */
+	suspend fun updateSettingsForUser(userId: Long, transform: UserSettings.Builder.() -> Unit) {
+		dataStore.updateData { currentData ->
+			val userSettings = getUserSettings(currentData, userId)
+			currentData.toBuilder()
+				.putUserSettings(userId, userSettings.toBuilder().apply(transform).build())
+				.build()
+		}
 	}
 
 	private fun getUserSettings(dataStore: Settings, userId: Long?): UserSettings {

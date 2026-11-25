@@ -33,5 +33,14 @@ MaintainerNotes: |-
   from versionName; stable releases add 99, so v1.4.0 is 1040099. Do not
   enable tag-based auto updates unless a static version code source is added.
   Re-run ./scripts/check-foss.sh before packaging future updates.
+  Auto-update reads `fdroid/version.txt`; every release tag must update that
+  file and keep it in sync with versionNameValue/deriveVersionCode() in
+  app/build.gradle.kts. Tracking is declared deliberately because the default
+  provider relays credentials and timetable requests through the
+  developer-operated proxy and probes /me. There is no analytics SDK;
+  maintainers may decide whether NonFreeNet alone is sufficient.
 CurrentVersion: v1.4.0
 CurrentVersionCode: 1040099
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
+UpdateCheckData: 'fdroid/version.txt|versionCode=(\d+)|.|versionName=(v[0-9]+\.[0-9]+\.[0-9]+)'

@@ -10,8 +10,10 @@ Easily add multiple profiles with separate settings and timetables.
 
 UntisPlus contains no Google Play Services, Firebase, ads or in-app
 purchases. New accounts use the developer-operated UntisPlus proxy by
-default; choose the official school endpoint or a custom endpoint if you do
-not want traffic relayed through it. QR scanning uses an embedded scanner.
+default. In the Advanced login options you can connect directly to your
+school's official WebUntis server, point the app at your own self-hosted
+UntisPlus proxy, or use any other custom endpoint. The proxy API contract is
+documented in the source repository. QR scanning uses an embedded scanner.
 
 Use notifications to show information about the next lesson.
 

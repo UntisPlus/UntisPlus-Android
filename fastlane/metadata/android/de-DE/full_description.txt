@@ -11,9 +11,11 @@ Stundenplänen.
 
 UntisPlus enthält keine Google Play Dienste, kein Firebase, keine Werbung
 und keine In-App-Käufe. Neue Konten nutzen standardmäßig den vom Entwickler
-betriebenen UntisPlus-Proxy; wähle den offiziellen Schul-Server oder einen
-eigenen Endpunkt, wenn du keine Weiterleitung über diesen Proxy möchtest.
-QR-Scannen nutzt einen eingebauten Scanner.
+betriebenen UntisPlus-Proxy. In den erweiterten Login-Optionen kannst du
+direkt mit dem offiziellen WebUntis-Server deiner Schule verbinden, einen
+eigenen UntisPlus-Proxy selbst hosten oder einen anderen benutzerdefinierten
+Endpunkt angeben. Die Proxy-API ist im Quellcode dokumentiert. QR-Scannen
+nutzt einen eingebauten Scanner.
 
 Lass dir über Benachrichtigungen Details zur nächsten Stunde anzeigen.
 

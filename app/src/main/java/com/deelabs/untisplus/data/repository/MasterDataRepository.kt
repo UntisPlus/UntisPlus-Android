@@ -80,32 +80,14 @@ class UntisMasterDataRepository constructor(
 	private fun <T : ElementEntity> prepareElements(elements: List<T>) =
 		elements.filter { it.active }.sortedBy { it.name }.associateBy { it.id }
 
-	override fun getShortName(id: Long, type: ElementType?, default: String): String {
-		return when (type) {
-			ElementType.STUDENT -> _userData.value?.user?.userData?.children
-				?.firstOrNull { it?.id == id }?.fullName()
-			ElementType.CLASS -> _allClasses.value[id]?.name
-			ElementType.TEACHER -> _allTeachers.value[id]?.name
-			ElementType.SUBJECT -> _allSubjects.value[id]?.name
-			ElementType.ROOM -> _allRooms.value[id]?.name
-			else -> null
-		} ?: default
-	}
+	override fun getShortName(id: Long, type: ElementType?, default: String): String =
+		ElementDisplayName.shortName(id, type, _userData.value) ?: default
 
 	override fun getShortName(periodElement: PeriodElement, default: String) =
 		getShortName(periodElement.id, periodElement.type, default)
 
-	override fun getLongName(id: Long, type: ElementType, default: String): String {
-		return when (type) {
-			ElementType.STUDENT -> _userData.value?.user?.userData?.children
-				?.firstOrNull { it?.id == id }?.fullName()
-			ElementType.CLASS -> _allClasses.value[id]?.longName
-			ElementType.TEACHER -> _allTeachers.value[id]?.run { "$firstName $lastName" }
-			ElementType.SUBJECT -> _allSubjects.value[id]?.longName
-			ElementType.ROOM -> _allRooms.value[id]?.longName
-			else -> null
-		} ?: default
-	}
+	override fun getLongName(id: Long, type: ElementType, default: String): String =
+		ElementDisplayName.longName(id, type, _userData.value) ?: default
 
 	override fun getLongName(periodElement: PeriodElement, default: String) =
 		getLongName(periodElement.id, periodElement.type, default)

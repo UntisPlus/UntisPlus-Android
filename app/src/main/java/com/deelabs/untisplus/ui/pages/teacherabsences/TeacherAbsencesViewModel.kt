@@ -109,9 +109,16 @@ class TeacherAbsencesViewModel constructor(
 
 	init {
 		viewModelScope.launch {
-			val supported = proxyRepository.isTeacherAbsencesSupported()
-			_state.update { it.copy(supported = supported) }
-			if (supported) loadOptions() else _state.update { it.copy(loadingOptions = false) }
+			var optionsLoaded = false
+			proxyRepository.teacherAbsencesSupported.collect { supported ->
+				_state.update { it.copy(supported = supported) }
+				if (supported && !optionsLoaded) {
+					optionsLoaded = true
+					loadOptions()
+				} else if (!supported) {
+					_state.update { it.copy(loadingOptions = false) }
+				}
+			}
 		}
 	}
 

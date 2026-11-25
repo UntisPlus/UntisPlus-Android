@@ -34,6 +34,7 @@ import com.deelabs.untisplus.data.database.entities.isUntisPlusBetaApiHost
 import com.deelabs.untisplus.data.database.entities.jsonRpcApiUrl
 import com.deelabs.untisplus.data.database.entities.normalizeApiEndpoint
 import com.deelabs.untisplus.data.database.entities.UserDao
+import com.deelabs.untisplus.data.repository.ProxyRepository
 import com.deelabs.untisplus.data.repository.TimetableRepository
 import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.services.WeekLogicService
@@ -72,6 +73,7 @@ class LoginDataInputViewModel constructor(
 	private val weekLogicService: WeekLogicService,
 	private val navigator: AppNavigator,
 	private val userRepository: UserRepository,
+	private val proxyRepository: ProxyRepository,
 	private val codeScanService: CodeScanService,
 	private val cacheDir: Path,
 	private val savedStateHandle: SavedStateHandle
@@ -294,6 +296,14 @@ class LoginDataInputViewModel constructor(
 				val userId = saveUser(user, userData.masterData)
 				// The login call above already minted a fresh proxy session; keep it.
 				userRepository.switchUser(userId, clearProxySession = false)
+
+				// Probe /me once here, while the fresh session is available. All
+				// feature gates reuse the persisted result; failures never block login.
+				if (user.usesUntisPlusProxy) {
+					runCatching { proxyRepository.checkCompatibility(user) }
+						.onFailure { Log.d(LoginDataInputViewModel::class.simpleName, "Proxy compatibility probe failed", it) }
+				}
+
 				preloadTimetable()
 				navigator.navigate(AppRoutes.Timetable()) {
 					popUpTo(0) // Pop all previous routes

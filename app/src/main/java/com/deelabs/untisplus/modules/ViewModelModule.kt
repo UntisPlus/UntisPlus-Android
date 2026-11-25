@@ -72,6 +72,7 @@ val viewModelModule = module {
 			weekLogicService = get(),
 			navigator = get(),
 			userRepository = get(),
+			proxyRepository = get(),
 			codeScanService = get(),
 			cacheDir = get(named("cacheDir")),
 			savedStateHandle = params.get<SavedStateHandle>(),

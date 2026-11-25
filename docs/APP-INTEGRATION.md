@@ -231,9 +231,10 @@ Rules:
 
 Endpoint: `GET {base}/me` (requires `JSESSIONID` cookie from login).
 
-Client done: `ProxyStatusApi.me()` → `ProxyMe` (`:api`), reachable via
-`ProxyRepository.refreshMe()`, which records the tier in
-`ProxyRepository.permissions` (refreshed when Settings opens).
+Client done: `ProxyStatusApi.me()` → `ProxyMe` (`:api`). The probe runs once
+during login via `ProxyRepository.checkCompatibility(user)`; its result (including
+the `/me` payload) is persisted per user in proto settings. `ProxyRepository.permissions`
+and `ProxyRepository.me` are cached flows; opening Settings does not re-probe.
 
 **No editor-tier gating is applied, deliberately.** The proxy gates forwarded
 WebUntis *write* methods (`rest.go`/`jsonrpc*.go` → `isEditor`), but the app's
@@ -255,7 +256,7 @@ is already visible as reconstructed timetables via §6).
 **`level` values**: `basic` | `recon` | `boosted` | `editor` | `boosted+editor`
 
 **Use in app**:
-- Call `/me` once after login (or cache briefly) to know the tier.
+- Call `/me` once after login to know the tier; reuse the cached result.
 - Hide edit buttons (absence, lesson-topic) when `editor` is `false`.
 - Show "Boosted" badge / feature when `boosted` is `true`.
 - Could gate UI for reconstructed timetables on `recon` / `boosted`.

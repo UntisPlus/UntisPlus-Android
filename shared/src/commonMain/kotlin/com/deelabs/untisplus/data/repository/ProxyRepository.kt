@@ -34,12 +34,15 @@ import com.deelabs.untisplus.data.database.entities.proxyBaseUrlString
 import com.deelabs.untisplus.data.database.entities.proxySchoolNameValue
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 /**
  * Entry point for the `untis-proxy`'s own endpoints (`/status`, `/me`, and the
@@ -60,19 +63,35 @@ class ProxyRepository constructor(
 	private val proxyCalendarApi: ProxyCalendarApi,
 	private val proxySubscriptionsApi: ProxySubscriptionsApi,
 	private val proxyTimetableApi: ProxyTimetableApi,
+	private val compatibilityStore: ProxyCompatibilityStore,
 ) {
-	private val _permissions = MutableStateFlow<ProxyPermissionsState>(ProxyPermissionsState.Unknown)
-	private val _me = MutableStateFlow<ProxyMe?>(null)
+	private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+	/**
+	 * Compatibility is probed once at login and persisted per user, so these
+	 * flows simply reflect the active user's cached `/me` payload.
+	 */
+	val compatibility: StateFlow<ProxyCompatibilitySnapshot>
+		get() = compatibilityStore.snapshot
 
 	/** Last known proxy tier/permissions for the active user, or unknown. */
-	val permissions: StateFlow<ProxyPermissionsState> = _permissions
+	val permissions: StateFlow<ProxyPermissionsState> = compatibilityStore.snapshot
+		.map { snapshot ->
+			snapshot.me?.permissions
+				?.let(ProxyPermissionsState::Known)
+				?: ProxyPermissionsState.Unknown
+		}
+		.stateIn(repositoryScope, SharingStarted.Eagerly, ProxyPermissionsState.Unknown)
 
-	/** Full last known `/me` payload, including v2 capabilities. */
-	val me: StateFlow<ProxyMe?> = _me
+	/** Full cached `/me` payload, including v2 capabilities. */
+	val me: StateFlow<ProxyMe?> = compatibilityStore.snapshot
+		.map { it.me }
+		.stateIn(repositoryScope, SharingStarted.Eagerly, null)
 
-	private val compatibilityMutex = Mutex()
-	private var compatibilityUserId: Long? = null
-	private var teacherAbsencesSupported = false
+	/** Cached compatibility gate for proxy-only features; no network involved. */
+	val teacherAbsencesSupported: StateFlow<Boolean> = compatibilityStore.snapshot
+		.map { it.supported }
+		.stateIn(repositoryScope, SharingStarted.Eagerly, false)
 
 	/** Whether proxy-only features apply to the current user. */
 	val isAvailable: Boolean
@@ -101,45 +120,55 @@ class ProxyRepository constructor(
 
 	suspend fun health(): ProxyHealth = withSession { base, _ -> proxyStatusApi.health(base) }
 
-	/** Fetches `/me` and records the permissions/capabilities for feature gating. */
-	suspend fun refreshMe(): ProxyMe = withSession { base, _ -> proxyStatusApi.me(base) }.also { recordMe(it) }
+	/**
+	 * Probes `/me` once for the user that just logged in. The result is stored
+	 * per user and reused by all feature gates; a failed probe never fails login.
+	 */
+	suspend fun checkCompatibility(user: User): Boolean {
+		if (!user.usesUntisPlusProxy) {
+			compatibilityStore.save(user.id, ProxyCompatibilitySnapshot(checked = true, supported = false))
+			return false
+		}
+
+		val me = try {
+			withSession(user) { base, _ -> proxyStatusApi.me(base) }
+		} catch (e: Exception) {
+			null
+		}
+
+		compatibilityStore.save(
+			user.id,
+			ProxyCompatibilitySnapshot(checked = true, supported = me != null, me = me)
+		)
+		return me != null
+	}
+
+	/** Fetches `/me` explicitly (settings refresh/diagnostics) and updates the cache. */
+	suspend fun refreshMe(): ProxyMe {
+		val me = withSession { base, _ -> proxyStatusApi.me(base) }
+		recordMe(me)
+		return me
+	}
 
 	/**
 	 * Changes one of the active user's own capability opt-ins. The proxy
 	 * validates the ceiling, so an enabled request can never grant access that
 	 * the server or admin has not allowed.
 	 */
-	suspend fun updateCapability(capability: String, enabled: Boolean): ProxyMe =
-		withSession { base, _ -> proxyStatusApi.updatePreferences(base, mapOf(capability to enabled)) }
-			.also { recordMe(it) }
-
-	private fun recordMe(me: ProxyMe) {
-		_me.value = me
-		_permissions.value = ProxyPermissionsState.Known(me.permissions)
+	suspend fun updateCapability(capability: String, enabled: Boolean): ProxyMe {
+		val me = withSession { base, _ ->
+			proxyStatusApi.updatePreferences(base, mapOf(capability to enabled))
+		}
+		recordMe(me)
+		return me
 	}
 
-	/**
-	 * Whether the active user's API host is a proxy that implements the
-	 * `/me` endpoint. A successful JSON response is the compatibility signal;
-	 * official Untis servers and old/custom proxies fail this probe.
-	 *
-	 * The result is cached per user so opening the drawer does not issue a
-	 * request on every recomposition.
-	 */
-	suspend fun isTeacherAbsencesSupported(): Boolean = compatibilityMutex.withLock {
-		val user = currentUserProvider.currentUser ?: return@withLock false
-		if (!user.usesUntisPlusProxy) return@withLock false
-		if (compatibilityUserId == user.id) return@withLock teacherAbsencesSupported
-
-		val supported = try {
-			refreshMe()
-			true
-		} catch (e: Exception) {
-			false
-		}
-		compatibilityUserId = user.id
-		teacherAbsencesSupported = supported
-		supported
+	private suspend fun recordMe(me: ProxyMe) {
+		val userId = currentUserProvider.currentUser?.id ?: return
+		compatibilityStore.save(
+			userId,
+			ProxyCompatibilitySnapshot(checked = true, supported = true, me = me)
+		)
 	}
 
 	// --- teacher cancellation analytics ---
@@ -271,6 +300,13 @@ class ProxyRepository constructor(
 	private suspend fun <T> withSession(block: suspend (baseUrl: String, school: String?) -> T): T {
 		val user = currentUserProvider.currentUser
 			?: throw IllegalStateException("No active user")
+		return withSession(user, block)
+	}
+
+	private suspend fun <T> withSession(
+		user: User,
+		block: suspend (baseUrl: String, school: String?) -> T
+	): T {
 		check(user.usesUntisPlusProxy) { "UntisPlus proxy is not configured for this user" }
 		val baseUrl = user.proxyBaseUrlString
 		val school = user.proxySchoolNameValue

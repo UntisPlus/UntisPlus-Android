@@ -2,10 +2,12 @@ package com.deelabs.untisplus.modules
 
 import com.deelabs.untisplus.data.repository.GlobalSettingsRepository
 import com.deelabs.untisplus.data.repository.CurrentUserProvider
+import com.deelabs.untisplus.data.repository.DataStoreProxyCompatibilityStore
 import com.deelabs.untisplus.data.repository.ImportedCalendarRepository
 import com.deelabs.untisplus.data.repository.InfoCenterRepository
 import com.deelabs.untisplus.data.repository.MasterDataRepository
 import com.deelabs.untisplus.data.repository.MessagesRepository
+import com.deelabs.untisplus.data.repository.ProxyCompatibilityStore
 import com.deelabs.untisplus.data.repository.ProxyRepository
 import com.deelabs.untisplus.data.repository.TimetableChangeBus
 import com.deelabs.untisplus.data.repository.TimetableRepository
@@ -29,8 +31,10 @@ val repositoryModule = module {
 		ImportedCalendarRepository(get(), get(), get(named("ics")), androidContext())
 	}
 
+	single<ProxyCompatibilityStore> { DataStoreProxyCompatibilityStore(get(), get()) }
+
 	single {
-		ProxyRepository(get(), get(), get(), get(), get(), get(), get(), get(), get())
+		ProxyRepository(get(), get(), get(), get(), get(), get(), get(), get(), get(), get())
 	}
 
 	single { TimetableChangeBus() }

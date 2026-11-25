@@ -45,7 +45,7 @@ class TimetableDrawerViewModel constructor(
 			}
 		}
 		viewModelScope.launch {
-			teacherAbsencesAvailable = proxyRepository.isTeacherAbsencesSupported()
+			proxyRepository.teacherAbsencesSupported.collect { teacherAbsencesAvailable = it }
 		}
 	}
 

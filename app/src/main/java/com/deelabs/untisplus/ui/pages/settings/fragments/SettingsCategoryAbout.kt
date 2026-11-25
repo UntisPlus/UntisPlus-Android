@@ -345,8 +345,9 @@ private fun ProxyCapabilitiesDialog(viewModel: SettingsScreenViewModel, onDismis
 	val scope = rememberCoroutineScope()
 	var error by remember { mutableStateOf<String?>(null) }
 
-	LaunchedEffect(Unit) {
-		viewModel.refreshProxyMe()
+	// The payload is cached at login. Only retry if that probe did not produce one.
+	LaunchedEffect(me) {
+		if (me == null) viewModel.refreshProxyMe()
 	}
 
 	AlertDialog(

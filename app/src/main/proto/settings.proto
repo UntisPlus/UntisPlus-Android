@@ -85,6 +85,9 @@ message UserSettings {
   bool timetableShowImportedCalendars = 62 [default = true];
   string timetableChangeStreamTargetType = 63 [default = "PERSONAL"];
   int64 timetableChangeStreamTargetId = 64;
+  bool proxyCompatibilityChecked = 65;
+  bool proxyCompatibilitySupported = 66;
+  string proxyMeJson = 67;
 }
 
 message GlobalSettings {

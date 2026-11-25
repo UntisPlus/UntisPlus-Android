@@ -470,9 +470,10 @@ Cookie: JSESSIONID=…
   "permissions": { "recon": false, "boosted": true, "editor": false } }
 ```
 `level` ∈ `basic` | `recon` | `boosted` | `boosted+editor`. `401`
-`{"error":"not logged in"}` without a session → re-login. Use it after login to
-gate UI: hide edit affordances unless `permissions.editor`, show a "boosted"
-badge when `permissions.boosted`, etc. (detail: `APP-INTEGRATION.md` §9.)
+`{"error":"not logged in"}` without a session → re-login. The app probes `/me`
+once at login and persists the result per user; feature gates read that cache
+instead of re-probing. Hide edit affordances unless `permissions.editor`, show a
+"boosted" badge when `permissions.boosted`, etc. (detail: `APP-INTEGRATION.md` §9.)
 
 ### 8.2 `GET /status` (public)
 

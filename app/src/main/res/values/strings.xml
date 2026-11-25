@@ -184,6 +184,7 @@
     <string name="profile_qr_export_show">Show QR code</string>
     <string name="profile_qr_export_image_description">Login QR code</string>
     <string name="profile_qr_export_error">Could not generate the QR code.</string>
+    <string name="profile_qr_export_extras_note">This code includes UntisPlus-specific options. The official Untis app may not accept it.</string>
     <string name="logindatainput_error_field_empty">This field cannot be empty!</string>
     <string name="logindatainput_error_invalid_format">Invalid format!</string>
     <string name="logindatainput_error_invalid_school">Invalid school ID!</string>

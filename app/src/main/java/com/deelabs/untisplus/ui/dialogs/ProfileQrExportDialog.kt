@@ -2,6 +2,7 @@ package com.deelabs.untisplus.ui.dialogs
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
@@ -29,6 +30,10 @@ import com.journeyapps.barcodescanner.BarcodeEncoder
  * Warns before revealing the app login key encoded in a QR code. The payload is
  * generated only after confirmation and lives only in this composition; it is
  * never logged or stored in navigation/saved state.
+ *
+ * Standard profiles use the official dashboard parameter order. Extra
+ * UntisPlus-only parameters are added only when needed and may make the code
+ * unacceptable to the official Untis app.
  */
 @Composable
 fun ProfileQrExportDialog(
@@ -37,16 +42,19 @@ fun ProfileQrExportDialog(
 ) {
 	var confirmed by remember { mutableStateOf(false) }
 
-	val qrBitmap = remember(user, confirmed) {
+	val apiUrl = user.customApiHost?.takeIf { it.isNotBlank() }
+	val hasExtras = user.anonymous || apiUrl != null
+
+	val qrBitmap = remember(user, confirmed, apiUrl) {
 		if (!confirmed) return@remember null
-		val key = user.key
 		val payload = ProfileQrExport.buildUri(
+			url = user.qrSchoolUrl(),
 			school = user.qrSchoolName(),
 			user = user.user,
-			key = key,
+			key = user.key,
+			schoolNumber = user.qrSchoolNumber(),
 			anonymous = user.anonymous,
-			apiUrl = user.customApiHost?.takeIf { it.isNotBlank() },
-			skipAppSecret = !key.isNullOrBlank(),
+			apiUrl = apiUrl,
 		)
 		runCatching {
 			BarcodeEncoder()
@@ -79,14 +87,22 @@ fun ProfileQrExportDialog(
 		title = { Text(stringResource(R.string.profile_qr_export_title)) },
 		text = {
 			if (qrBitmap != null) {
-				Image(
-					bitmap = qrBitmap,
-					contentDescription = stringResource(R.string.profile_qr_export_image_description),
-					modifier = Modifier
-						.size(256.dp)
-						.padding(8.dp)
-						.background(Color.White, MaterialTheme.shapes.small)
-				)
+				Column {
+					Image(
+						bitmap = qrBitmap,
+						contentDescription = stringResource(R.string.profile_qr_export_image_description),
+						modifier = Modifier
+							.size(256.dp)
+							.padding(8.dp)
+							.background(Color.White, MaterialTheme.shapes.small)
+					)
+					if (hasExtras) {
+						Text(
+							text = stringResource(R.string.profile_qr_export_extras_note),
+							style = MaterialTheme.typography.bodySmall,
+						)
+					}
+				}
 			} else {
 				Text(stringResource(R.string.profile_qr_export_error))
 			}
@@ -103,3 +119,26 @@ fun ProfileQrExportDialog(
 @Suppress("DEPRECATION")
 private fun User.qrSchoolName(): String? =
 	proxySchoolNameValue ?: schoolId?.takeIf { it.isNotBlank() }
+
+private fun User.qrSchoolNumber(): String? =
+	schoolInfo?.schoolId?.takeIf { it > 0 }?.toString()
+
+/** Official `url` is the school server host, not the UntisPlus proxy host. */
+private fun User.qrSchoolUrl(): String? =
+	listOfNotNull(
+		schoolInfo?.server?.takeIf { it.isNotBlank() },
+		schoolInfo?.serverUrl?.takeIf { it.isNotBlank() },
+		schoolInfo?.mobileServiceUrl?.takeIf { it.isNotBlank() },
+		apiHost.takeIf { it.isNotBlank() },
+	).firstNotNullOfOrNull { authorityOf(it) }
+
+private fun authorityOf(raw: String): String? {
+	val value = raw.trim()
+	if (value.isBlank()) return null
+	val withoutScheme = value.substringAfter("://", value)
+	val authority = withoutScheme
+		.substringBefore('/')
+		.substringBefore('?')
+		.substringBefore('#')
+	return authority.takeIf { it.isNotBlank() }
+}

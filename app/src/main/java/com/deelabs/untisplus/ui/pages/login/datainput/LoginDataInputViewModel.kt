@@ -39,6 +39,7 @@ import com.deelabs.untisplus.data.repository.TimetableRepository
 import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.services.WeekLogicService
 import com.deelabs.untisplus.helpers.ErrorMessageDictionary
+import com.deelabs.untisplus.helpers.ProfileQrExport
 import com.deelabs.untisplus.helpers.SerializationUtils.getJSON
 import com.deelabs.untisplus.services.CodeScanService
 import com.deelabs.untisplus.ui.navigation.AppNavigator
@@ -245,28 +246,29 @@ class LoginDataInputViewModel constructor(
 
 	private fun loadFromData(data: String?) {
 		if (data == null) return
-		val appLinkData = data.toUri()
-
-		if (appLinkData.isHierarchical && appLinkData.scheme == "untis" && appLinkData.host == "setschool") {
-			// Untis-native values
-			loginData.schoolName.value = appLinkData.getQueryParameter("school")
-			loginData.username.value = appLinkData.getQueryParameter("user")
-			loginData.password.value = appLinkData.getQueryParameter("key")
-
-			// Custom values
-			loginData.anonymous.value = appLinkData.getBooleanQueryParameter("anonymous", false)
-			loginData.apiUrl.value = appLinkData.getQueryParameter("apiUrl")?.takeIf { it.isNotEmpty() }
-			loginData.skipAppSecret.value = appLinkData.getBooleanQueryParameter("skipAppSecret", false)
-
-			if (loginData.apiUrl.value?.isNotEmpty() == true) {
-				apiProvider = ApiProvider.CUSTOM
-				advanced = true
-			}
-
-			loadData()
-		} else {
+		val payload = ProfileQrExport.parseUri(data)
+		if (payload == null) {
 			showQrCodeErrorDialog = true
+			return
 		}
+
+		// Official dashboard values (`url`, `schoolNumber`) are accepted in
+		// addition to the UntisPlus-only `apiUrl`/`skipAppSecret` path.
+		loginData.schoolName.value = payload.school ?: payload.schoolNumber
+		loginData.username.value = payload.user
+		loginData.password.value = payload.key
+		loginData.schoolServer.value = payload.url
+		loginData.schoolNumber.value = payload.schoolNumber
+		loginData.anonymous.value = payload.anonymous
+		loginData.apiUrl.value = payload.apiUrl?.takeIf { it.isNotEmpty() }
+		loginData.skipAppSecret.value = ProfileQrExport.shouldSkipAppSecret(payload)
+
+		if (loginData.apiUrl.value?.isNotEmpty() == true) {
+			apiProvider = ApiProvider.CUSTOM
+			advanced = true
+		}
+
+		loadData()
 	}
 
 	private fun loadData() = viewModelScope.launch {
@@ -419,7 +421,26 @@ class LoginDataInputViewModel constructor(
 			)
 			else {
 				val school = loginData.schoolName.value.orEmpty()
-				val schoolId = school.toLongOrNull()
+				val schoolId = loginData.schoolNumber.value?.toLongOrNull() ?: school.toLongOrNull()
+				val schoolServer = loginData.schoolServer.value
+
+				// Official dashboard QR codes carry the school server directly.
+				if (!schoolServer.isNullOrBlank()) {
+					val (scheme, authority) = normalizeApiEndpoint(schoolServer)
+						?: ("https" to schoolServer.trim().substringBefore('/'))
+					val serverUrl = "$scheme://$authority"
+					return@run SchoolInfo(
+						server = authority,
+						useMobileServiceUrlAndroid = true,
+						useMobileServiceUrlIos = true,
+						address = "",
+						displayName = school,
+						loginName = school,
+						schoolId = schoolId ?: 0,
+						serverUrl = serverUrl,
+						mobileServiceUrl = serverUrl,
+					)
+				}
 
 				val schoolSearchResult = schoolId?.let {
 					schoolSearchApi.searchSchools(schoolId = it)
@@ -560,6 +581,8 @@ class LoginDataInputViewModel constructor(
 		val password = mutableStateOf<String?>(null)
 		val secondFactor = mutableStateOf<String?>(null)
 		val apiUrl = mutableStateOf(initialApiUrl)
+		val schoolServer = mutableStateOf<String?>(null)
+		val schoolNumber = mutableStateOf<String?>(null)
 		val skipAppSecret = mutableStateOf<Boolean?>(null)
 		var storedPassword: String? = null
 

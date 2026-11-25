@@ -1,0 +1,26 @@
+UntisPlus is a free and open source Android client for the Untis timetable
+system. It is a hard fork of BetterUntis with its own application ID, so it
+can be installed side by side with the original app.
+
+Features:
+- Modern Material 3 interface built with Jetpack Compose
+- Fast timetable loading with smart caching
+- Multiple separate accounts and profiles
+- RoomFinder to find free rooms
+- Info Center for events, contact hours, messages and your own absences
+- Parent/guardian views with tabs for all children and each child
+- Teacher class tools such as absence checking and lesson topic editing
+- Break notifications and automatic muting during lessons
+- Home screen widgets
+
+UntisPlus can also open read-only details for office hour registrations. It
+never books or changes registrations.
+
+Untis is proprietary timetable software provided by schools. To use
+UntisPlus, your school must use Untis and give you an account unless
+anonymous access is available.
+
+UntisPlus contains no Google Play Services, Firebase, ads, tracking or
+in-app purchases. QR scanning uses an embedded open source scanner.
+
+The official Untis service is not free software; see the Anti-Features note.

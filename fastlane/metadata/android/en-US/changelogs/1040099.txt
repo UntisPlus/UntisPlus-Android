@@ -1,0 +1,8 @@
+- Add teacher class tools: absence checking, lesson topic editing, class
+  register details and office hours
+- Add parent/guardian accounts with child-specific Events and Absences tabs
+  and read-only registration details
+- Add custom links and cache the UntisPlus compatibility check at login
+- Fix office hour handling
+- Keep the build fully FOSS, with no Google Play Services, Firebase or
+  tracking

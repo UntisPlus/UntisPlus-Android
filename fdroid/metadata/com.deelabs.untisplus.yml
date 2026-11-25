@@ -1,0 +1,35 @@
+Categories:
+  - Internet
+  - Calendar & Agenda
+License: GPL-3.0-or-later
+AuthorName: deelabs
+AuthorEmail: info@deelabs.tech
+SourceCode: https://github.com/UntisPlus/UntisPlus-Android
+IssueTracker: https://github.com/UntisPlus/UntisPlus-Android/issues
+Changelog: https://github.com/UntisPlus/UntisPlus-Android/releases
+AntiFeatures:
+  NonFreeNet:
+    en-US: The Untis service itself is not libre.
+AutoName: UntisPlus
+RepoType: git
+Repo: https://github.com/UntisPlus/UntisPlus-Android
+Builds:
+  - versionName: v1.4.0
+    versionCode: 1040099
+    commit: 2f04eb7d121bd96312b78f697c3f4099b6180286
+    sudo:
+      - apt-get update
+      - apt-get install -y openjdk-21-jdk-headless
+      - update-java-alternatives -a
+    gradle:
+      - yes
+    output: app/build/outputs/apk/release/app-release-unsigned.apk
+MaintainerNotes: |-
+  The pinned commit is the stable v1.4.0 source with F-Droid store metadata.
+  The upstream v1.4.0 tag is intentionally not used because it predates the
+  final FOSS manifest cleanup and CI fixes. versionCode is derived in Gradle
+  from versionName; stable releases add 99, so v1.4.0 is 1040099. Do not
+  enable tag-based auto updates unless a static version code source is added.
+  Re-run ./scripts/check-foss.sh before packaging future updates.
+CurrentVersion: v1.4.0
+CurrentVersionCode: 1040099

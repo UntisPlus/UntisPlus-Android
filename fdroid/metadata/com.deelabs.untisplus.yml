@@ -1,7 +1,7 @@
 Categories:
   - Internet
   - Calendar & Agenda
-License: GPL-3.0-or-later
+License: GPL-3.0-only
 AuthorName: deelabs
 AuthorEmail: info@deelabs.tech
 SourceCode: https://github.com/UntisPlus/UntisPlus-Android
@@ -18,7 +18,7 @@ Repo: https://github.com/UntisPlus/UntisPlus-Android
 Builds:
   - versionName: v1.4.0
     versionCode: 1040099
-    commit: 1ffdf474ce7485e2e759c29a627930d0cc82aa3e
+    commit: 46bfc743582c45a38225c7e88e7be069a7513db3
     sudo:
       - apt-get update
       - apt-get install -y openjdk-21-jdk-headless

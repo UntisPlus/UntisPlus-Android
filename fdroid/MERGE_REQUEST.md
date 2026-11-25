@@ -3,8 +3,8 @@
 UntisPlus is a hard fork of BetterUntis with its own application ID
 (`com.deelabs.untisplus`), so it installs side by side with the original app.
 It is an Android client for the Untis timetable system with teacher class
-tools, parent/guardian views, RoomFinder, an Info Center, notifications and
-home screen widgets.
+tools, parent/guardian views, RoomFinder, an Info Center, notifications,
+official-style login QR export and home screen widgets.
 
 ## Freedom and licensing
 
@@ -26,7 +26,8 @@ are relayed through it, and a `/me` compatibility probe is made once at login.
 In the Advanced login options, users can instead connect directly to their
 school's official WebUntis server, point the app at their own self-hosted
 UntisPlus proxy, or use another custom endpoint. The backend contract is
-documented in `docs/PROXY-API.md`.
+documented in `docs/PROXY-API.md`. The full privacy policy is published at
+https://untisplus.github.io/UntisPlus-Android/privacy/ and linked from the app.
 
 The metadata therefore declares both `NonFreeNet` and `Tracking`, with reasons
 in the build metadata. There is no analytics or crash-reporting SDK, and
@@ -38,19 +39,24 @@ sufficient and to remove `Tracking` on merge if they agree.
 
 ## Build
 
-The build is pinned to the stable v1.4.0 source with Fastlane metadata. The
-upstream `v1.4.0` tag is not used because it predates the final FOSS manifest
-cleanup and CI fixes.
+The build is pinned to the v1.4.1 source with Fastlane metadata. The old
+`v1.4.0` tag is intentionally untouched; v1.4.1 is the shared release version
+for GitHub, F-Droid and Google Play.
 
 Verified locally:
 
 - `./scripts/check-foss.sh` passed on the pinned commit.
-- `./gradlew :app:assembleRelease` built the release APK with JDK 21 and SDK 35.
+- `./gradlew assembleRelease bundleRelease` built a signed APK and AAB with
+  JDK 21 and SDK 36.
+- `./gradlew :app:testDebugUnitTest` passed.
+- No Google dependency-info block is present in the APK or AAB.
 
 `versionCode` is derived in Gradle from `versionName`; stable releases add 99,
-so `v1.4.0` is `1040099`. Auto-update is enabled: `UpdateCheckMode: Tags`
-watches `vX.Y.Z` tags and `UpdateCheckData` reads `fdroid/version.txt` for the
-name and code. Release tags must update that file in the same commit.
+so `v1.4.1` is `1040199`. The metadata has a `prebuild` step that installs
+SDK 36 if the build image does not already provide it. Auto-update is enabled:
+`UpdateCheckMode: Tags` watches `vX.Y.Z` tags and `UpdateCheckData` reads
+`fdroid/version.txt` for the name and code. Release tags must update that file
+in the same commit.
 
 ## Store metadata
 

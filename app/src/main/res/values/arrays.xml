@@ -44,6 +44,26 @@
 		<item>2</item>
 	</string-array>
 
+	<string-array name="preference_notifications_stream_target">
+		<item>@string/stream_target_personal</item>
+		<item>@string/stream_target_class</item>
+		<item>@string/stream_target_person</item>
+		<item>@string/stream_target_teacher</item>
+		<item>@string/stream_target_room</item>
+		<item>@string/stream_target_subject</item>
+		<item>@string/stream_target_school</item>
+	</string-array>
+
+	<string-array name="preference_notifications_stream_target_values" translatable="false">
+		<item>PERSONAL</item>
+		<item>CLASS</item>
+		<item>PERSON</item>
+		<item>TEACHER</item>
+		<item>ROOM</item>
+		<item>SUBJECT</item>
+		<item>SCHOOL</item>
+	</string-array>
+
 	<string-array name="preference_schoolcolors">
 		<item>@string/preference_schoolcolors_regular</item>
 		<item>@string/preference_schoolcolors_exam</item>

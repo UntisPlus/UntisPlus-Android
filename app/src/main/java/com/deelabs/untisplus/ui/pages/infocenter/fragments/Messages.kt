@@ -56,10 +56,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.text.HtmlCompat
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImagePainter
-import coil.compose.rememberAsyncImagePainter
+import coil3.compose.AsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.api.model.untis.Attachment
 import com.deelabs.untisplus.api.model.untis.MessageOfDay
@@ -72,15 +72,15 @@ import io.github.fornewid.placeholder.foundation.placeholder
 import io.github.fornewid.placeholder.foundation.shimmer
 import io.github.fornewid.placeholder.material3.color
 import io.github.fornewid.placeholder.material3.shimmerHighlightColor
+import kotlinx.datetime.toJavaLocalDateTime
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun InfoCenterMessages(viewModel: InfoCenterViewModel = hiltViewModel()) {
+fun InfoCenterMessages(viewModel: InfoCenterViewModel = koinViewModel()) {
 	val uiState by viewModel.messagesState.collectAsStateWithLifecycle()
 	val selectedMessage by viewModel.selectedMessage.collectAsStateWithLifecycle()
 	val selectedMessageContent by viewModel.selectedMessageContent.collectAsStateWithLifecycle()
@@ -162,7 +162,7 @@ fun InfoCenterMessages(viewModel: InfoCenterViewModel = hiltViewModel()) {
 													body = message.contentPreview ?: "",
 													sender = message.sender?.displayName,
 													imageUrl = message.sender?.imageUrl,
-													time = message.sentDateTime,
+													time = message.sentDateTime?.toJavaLocalDateTime(),
 													read = message.isMessageRead ?: true,
 													attachments = null // TODO: Support attachments (message.hasAttachments)
 												)
@@ -202,7 +202,6 @@ fun InfoCenterMessages(viewModel: InfoCenterViewModel = hiltViewModel()) {
 		AttachmentsDialog(attachments = attachments, onDismiss = { attachmentsDialog = null })
 	}
 }
-
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -249,7 +248,7 @@ private fun SharedTransitionScope.MessageDetails(
 									subject = targetMessage.subject ?: "",
 									sender = targetMessage.sender?.displayName,
 									imageUrl = targetMessage.sender?.imageUrl,
-									time = targetMessage.sentDateTime,
+									time = targetMessage.sentDateTime?.toJavaLocalDateTime(),
 									read = targetMessage.isMessageRead ?: true,
 									attachments = null
 								)

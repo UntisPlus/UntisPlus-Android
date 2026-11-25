@@ -1,26 +1,29 @@
 package com.deelabs.untisplus.activities
 
 import android.app.Application
-import android.util.Log
-import androidx.hilt.work.HiltWorkerFactory
-import androidx.work.Configuration
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.deelabs.untisplus.modules.appModules
 import com.deelabs.untisplus.workers.DailyWorker
 import com.deelabs.untisplus.workers.DailyWorker.Companion.TAG_DAILY_WORK
-import dagger.hilt.android.HiltAndroidApp
+import com.deelabs.untisplus.workers.ImportedCalendarSyncWorker
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.workmanager.koin.workManagerFactory
+import org.koin.core.context.startKoin
 
-@HiltAndroidApp
-class App : Application(), Configuration.Provider {
-	@Inject lateinit var workerFactory: HiltWorkerFactory;
-
+class App : Application() {
 	@OptIn(DelicateCoroutinesApi::class)
 	override fun onCreate() {
 		super.onCreate()
+
+		startKoin {
+			androidContext(this@App)
+			workManagerFactory()
+			modules(appModules)
+		}
 
 		GlobalScope.launch {
 			WorkManager.getInstance(applicationContext).apply {
@@ -28,11 +31,7 @@ class App : Application(), Configuration.Provider {
 				enqueue(OneTimeWorkRequestBuilder<DailyWorker>().build())
 			}
 		}
-	}
 
-	override val workManagerConfiguration: Configuration
-		get() = Configuration.Builder()
-			.setMinimumLoggingLevel(Log.VERBOSE)
-			.setWorkerFactory(workerFactory)
-			.build()
+		ImportedCalendarSyncWorker.schedule(applicationContext)
+	}
 }

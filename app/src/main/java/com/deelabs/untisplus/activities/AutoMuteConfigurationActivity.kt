@@ -7,9 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.Text
 import com.deelabs.untisplus.helpers.AppTheme
 import com.deelabs.untisplus.ui.pages.settings.automute.AutoMuteSettings
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
 class AutoMuteConfigurationActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)

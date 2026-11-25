@@ -30,7 +30,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sapuseven.compose.protostore.ui.preferences.PreferenceGroup
 import com.deelabs.untisplus.R
@@ -41,7 +41,7 @@ import com.deelabs.untisplus.ui.pages.settings.CalendarSubscriptionsViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsCategoryCalendar(viewModel: CalendarSubscriptionsViewModel = hiltViewModel()) {
+fun SettingsCategoryCalendar(viewModel: CalendarSubscriptionsViewModel = koinViewModel()) {
 	val context = LocalContext.current
 	val uriHandler = LocalUriHandler.current
 	val scope = rememberCoroutineScope()
@@ -56,6 +56,7 @@ fun SettingsCategoryCalendar(viewModel: CalendarSubscriptionsViewModel = hiltVie
 	var createdUrl by remember { mutableStateOf<String?>(null) }
 	var activeToken by remember { mutableStateOf<ProxyCalendarToken?>(null) }
 	var revokeToken by remember { mutableStateOf<ProxyCalendarToken?>(null) }
+	var rotateToken by remember { mutableStateOf<ProxyCalendarToken?>(null) }
 	var editToken by remember { mutableStateOf<ProxyCalendarToken?>(null) }
 
 	fun copyToClipboard(link: String) {
@@ -205,6 +206,14 @@ fun SettingsCategoryCalendar(viewModel: CalendarSubscriptionsViewModel = hiltVie
 				activeToken = null
 				editToken = token
 			},
+			onRotate = {
+				activeToken = null
+				rotateToken = token
+			},
+			onExportCsv = {
+				viewModel.csvUrl(token.token)?.let { uriHandler.openUri(it) }
+				activeToken = null
+			},
 			onRevoke = {
 				activeToken = null
 				revokeToken = token
@@ -227,6 +236,45 @@ fun SettingsCategoryCalendar(viewModel: CalendarSubscriptionsViewModel = hiltVie
 								Toast.LENGTH_SHORT
 							).show()
 						}
+				}
+			}
+		)
+	}
+
+	rotateToken?.let { token ->
+		AlertDialog(
+			onDismissRequest = { rotateToken = null },
+			title = { Text(stringResource(R.string.preference_timetable_calendar_rotate)) },
+			text = { Text(stringResource(R.string.preference_timetable_calendar_rotate_desc)) },
+			confirmButton = {
+				TextButton(
+					onClick = {
+						rotateToken = null
+						scope.launch {
+							viewModel.rotate(token.token)
+								.onSuccess {
+									Toast.makeText(
+										context,
+										context.getString(R.string.preference_timetable_calendar_rotated),
+										Toast.LENGTH_SHORT
+									).show()
+								}
+								.onFailure {
+									Toast.makeText(
+										context,
+										context.getString(R.string.preference_timetable_calendar_error),
+										Toast.LENGTH_SHORT
+									).show()
+								}
+						}
+					}
+				) {
+					Text(stringResource(R.string.preference_timetable_calendar_rotate))
+				}
+			},
+			dismissButton = {
+				TextButton(onClick = { rotateToken = null }) {
+					Text(stringResource(R.string.all_cancel))
 				}
 			}
 		)
@@ -285,6 +333,8 @@ private fun CalendarActionsDialog(
 	onShare: () -> Unit,
 	onOpen: () -> Unit,
 	onEditDays: () -> Unit,
+	onRotate: () -> Unit,
+	onExportCsv: () -> Unit,
 	onRevoke: () -> Unit
 ) {
 	AlertDialog(
@@ -307,6 +357,12 @@ private fun CalendarActionsDialog(
 				Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
 					TextButton(onClick = onEditDays) {
 						Text(stringResource(R.string.all_edit))
+					}
+					TextButton(onClick = onExportCsv) {
+						Text(stringResource(R.string.preference_timetable_calendar_export_csv))
+					}
+					TextButton(onClick = onRotate) {
+						Text(stringResource(R.string.preference_timetable_calendar_rotate))
 					}
 					TextButton(
 						onClick = onRevoke,

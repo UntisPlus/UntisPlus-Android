@@ -1,15 +1,15 @@
 package com.deelabs.untisplus.modules
 
+import com.deelabs.untisplus.data.database.entities.jsonRpcApiUrl
+import com.deelabs.untisplus.data.database.entities.restApiUrl
+
 import com.deelabs.untisplus.api.client.UserDataApi
 import com.deelabs.untisplus.api.client.installCookieStorage
 import com.deelabs.untisplus.api.rest.MessagesApi
+import com.deelabs.untisplus.api.rest.UserApi
 import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.exceptions.UntisRestApiException
 import com.deelabs.untisplus.model.rest.ErrorResponse
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.plugins.ClientRequestException
@@ -18,27 +18,23 @@ import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.CookiesStorage
 import io.ktor.serialization.kotlinx.json.json
-import javax.inject.Inject
+import org.koin.dsl.module
 import kotlin.reflect.KProperty
 
-@Module
-@InstallIn(SingletonComponent::class)
-object RestApiClientModule {
-	@Provides
-	fun provideMessagesApiFactory(
-		userRepository: UserRepository,
-		userDataApi: UserDataApi,
-		httpClientEngineFactory: HttpClientEngineFactory<*>,
-		cookiesStorage: CookiesStorage
-	): MessagesApiFactory =
-		DefaultMessagesApiFactory(userRepository, userDataApi, httpClientEngineFactory, cookiesStorage)
+val restApiClientModule = module {
+	single<MessagesApiFactory> {
+		DefaultMessagesApiFactory(get(), get(), get(), get())
+	}
+	single<UserApiFactory> {
+		DefaultUserApiFactory(get(), get(), get(), get())
+	}
 }
 
 interface MessagesApiFactory {
 	suspend fun create(): MessagesApi
 }
 
-class DefaultMessagesApiFactory @Inject constructor(
+class DefaultMessagesApiFactory constructor(
 	private val userRepository: UserRepository,
 	private val userDataApi: UserDataApi,
 	private val httpClientEngineFactory: HttpClientEngineFactory<*>,
@@ -73,6 +69,48 @@ class DefaultMessagesApiFactory @Inject constructor(
 	override suspend fun create(): MessagesApi = messagesApi.apply {
 		val user = userRepository.currentUser!!
 		// TODO: Only fetch token if missing or expired
+		val token = userDataApi.getAuthToken(user.jsonRpcApiUrl.toString(), user.user, user.key)
+		setBearerToken(token)
+	}
+}
+
+interface UserApiFactory {
+	suspend fun create(): UserApi
+}
+
+/** REST client for the official app's home/integration links. */
+class DefaultUserApiFactory constructor(
+	private val userRepository: UserRepository,
+	private val userDataApi: UserDataApi,
+	private val httpClientEngineFactory: HttpClientEngineFactory<*>,
+	private val cookiesStorage: CookiesStorage
+) : UserApiFactory {
+	val userApi by keyedLazy({ userRepository.currentUser!!.id }) {
+		UserApi(
+			baseUrl = userRepository.currentUser!!.restApiUrl.toString(),
+			httpClientEngine = httpClientEngineFactory.create()
+		) {
+			it.expectSuccess = true
+			it.installCookieStorage(cookiesStorage)
+			it.install(ContentNegotiation) {
+				json()
+			}
+			it.install(HttpRequestRetry) {
+				retryOnServerErrors(maxRetries = 3)
+				retryOnException(maxRetries = 3)
+				exponentialDelay()
+			}
+			it.HttpResponseValidator {
+				handleResponseExceptionWithRequest { exception, request ->
+					val clientException = exception as? ClientRequestException ?: return@handleResponseExceptionWithRequest
+					throw UntisRestApiException(clientException.response.body<ErrorResponse>())
+				}
+			}
+		}
+	}
+
+	override suspend fun create(): UserApi = userApi.apply {
+		val user = userRepository.currentUser!!
 		val token = userDataApi.getAuthToken(user.jsonRpcApiUrl.toString(), user.user, user.key)
 		setBearerToken(token)
 	}

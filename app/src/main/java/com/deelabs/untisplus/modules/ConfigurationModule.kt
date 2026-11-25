@@ -1,34 +1,22 @@
 package com.deelabs.untisplus.modules
 
-import android.content.Context
 import com.deelabs.untisplus.helpers.ApplicationBuildConfigFieldsProvider
 import com.deelabs.untisplus.helpers.BuildConfigFieldsProvider
 import crocodile8.universal_cache.time.SystemTimeProvider
 import crocodile8.universal_cache.time.TimeProvider
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import java.io.File
+import okio.Path
+import okio.Path.Companion.toOkioPath
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 import java.time.Clock
-import javax.inject.Named
 
-@Module
-@InstallIn(SingletonComponent::class)
-object ConfigurationModule {
-	@Provides
-	@Named("cacheDir")
-	fun provideCacheDir(
-		@ApplicationContext appContext: Context,
-	): File = appContext.cacheDir
+val configurationModule = module {
+	single<Path>(named("cacheDir")) { androidContext().cacheDir.toOkioPath() }
 
-	@Provides
-	fun provideClock(): Clock = Clock.systemDefaultZone()
+	single { Clock.systemDefaultZone() }
 
-	@Provides
-	fun provideTimeProvider(): TimeProvider = SystemTimeProvider
+	single<TimeProvider> { SystemTimeProvider }
 
-	@Provides
-	fun provideBuildConfigFieldsProvider(): BuildConfigFieldsProvider = ApplicationBuildConfigFieldsProvider()
+	single<BuildConfigFieldsProvider> { ApplicationBuildConfigFieldsProvider() }
 }

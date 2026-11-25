@@ -13,7 +13,6 @@ import com.deelabs.untisplus.models.RoomFinderHour
 import com.deelabs.untisplus.models.RoomFinderItem
 import com.deelabs.untisplus.ui.navigation.AppNavigator
 import com.deelabs.untisplus.ui.navigation.AppRoutes
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,12 +20,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.datetime.toJavaLocalTime
 import java.time.Clock
 import java.time.LocalDateTime
-import javax.inject.Inject
 
-@HiltViewModel
-class RoomFinderViewModel @Inject constructor(
+class RoomFinderViewModel constructor(
 	private val userRepository: UserRepository,
 	internal val masterDataRepository: MasterDataRepository,
 	private val roomFinderDao: RoomFinderDao,
@@ -68,7 +66,7 @@ class RoomFinderViewModel @Inject constructor(
 			_hourList.collect { hourList ->
 				_selectedHourIndex.value = hourList.indexOfFirst {
 					it.timeGridDay.day == currentDateTime.dayOfWeek
-						&& currentDateTime.toLocalTime().isBefore(it.timeGridUnit.endTime)
+						&& currentDateTime.toLocalTime().isBefore(it.timeGridUnit.endTime.toJavaLocalTime())
 				}.coerceAtLeast(0)
 			}
 		}

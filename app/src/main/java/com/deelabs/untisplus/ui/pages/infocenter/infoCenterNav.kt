@@ -2,11 +2,15 @@ package com.deelabs.untisplus.ui.pages.infocenter
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.deelabs.untisplus.ui.navigation.AppRoutes
+import com.deelabs.untisplus.ui.pages.infocenter.fragments.EventsUiState
 import com.deelabs.untisplus.ui.pages.infocenter.fragments.InfoCenterAbsences
 import com.deelabs.untisplus.ui.pages.infocenter.fragments.InfoCenterEvents
 import com.deelabs.untisplus.ui.pages.infocenter.fragments.InfoCenterMessages
@@ -44,9 +48,13 @@ fun NavGraphBuilder.infoCenterNav(
         popEnterTransition = { slideIntoContainer(slideDirection()) },
         popExitTransition = { slideOutOfContainer(slideDirection()) }
     ) {
-		val eventsState by viewModel.eventsState.collectAsStateWithLifecycle()
+		val eventsPages by viewModel.eventsPages.collectAsStateWithLifecycle()
+		var selectedEventChildId by remember { mutableStateOf<Long?>(null) }
         InfoCenterEvents(
-            uiState = eventsState,
+            uiState = eventsPages[selectedEventChildId] ?: EventsUiState.Loading,
+            children = viewModel.children,
+            selectedChildId = selectedEventChildId,
+            onSelectChild = { selectedEventChildId = it },
             proxyAvailable = viewModel.proxyAvailable,
             onSetHomeworkDone = viewModel::setHomeworkDone
         )
@@ -62,6 +70,7 @@ fun NavGraphBuilder.infoCenterNav(
         InfoCenterAbsences(
             uiState = absencesState,
             proxyAvailable = viewModel.proxyAvailable,
+            children = viewModel.children,
             onSetNote = viewModel::setAbsenceNote
         )
     }
@@ -73,6 +82,14 @@ fun NavGraphBuilder.infoCenterNav(
         popExitTransition = { slideOutOfContainer(slideDirection()) }
     ) {
 		val officeHoursState by viewModel.officeHoursState.collectAsStateWithLifecycle()
-        InfoCenterOfficeHours(officeHoursState)
+		val officeHourRegistrationState by viewModel.officeHourRegistrationState.collectAsStateWithLifecycle()
+		val selectedOfficeHour by viewModel.selectedOfficeHour.collectAsStateWithLifecycle()
+        InfoCenterOfficeHours(
+            uiState = officeHoursState,
+            registrationState = officeHourRegistrationState,
+            selectedOfficeHour = selectedOfficeHour,
+            onSelectOfficeHour = viewModel::onOfficeHourSelected,
+            onDismissOfficeHour = viewModel::onOfficeHourDismiss
+        )
     }
 }

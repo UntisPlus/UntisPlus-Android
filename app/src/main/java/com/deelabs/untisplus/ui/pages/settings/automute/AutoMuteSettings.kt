@@ -1,5 +1,7 @@
 package com.deelabs.untisplus.ui.pages.settings.automute
 
+import com.deelabs.untisplus.data.database.entities.getDisplayedName
+
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
@@ -31,7 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sapuseven.compose.protostore.ui.preferences.SliderPreference
 import com.sapuseven.compose.protostore.ui.preferences.SwitchPreference
@@ -44,7 +46,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AutoMuteSettings(
-	viewModel: AutoMuteSettingsViewModel = hiltViewModel(),
+	viewModel: AutoMuteSettingsViewModel = koinViewModel(),
 	onNavigateBack: () -> Unit = {}
 ) {
 	AppScaffold(

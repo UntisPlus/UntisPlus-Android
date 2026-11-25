@@ -15,16 +15,18 @@ import com.deelabs.untisplus.data.repository.withDefault
 import com.deelabs.untisplus.data.settings.model.UserSettings
 import com.deelabs.untisplus.helpers.BuildConfigFieldsProvider
 import com.deelabs.untisplus.models.PeriodItem
+import com.deelabs.untisplus.models.TimetableItem
 import com.deelabs.untisplus.ui.weekview.DefaultLessonColors
 import com.deelabs.untisplus.ui.weekview.Event
 import com.deelabs.untisplus.ui.weekview.EventStyle
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toJavaLocalTime
 import java.time.DayOfWeek
 import java.time.temporal.ChronoUnit
-import javax.inject.Inject
 
-class TimetableMapper @Inject constructor(
+class TimetableMapper constructor(
 	private val userRepository: UserRepository,
 	private val userSettingsRepository: UserSettingsRepository,
 	private val masterDataRepository: MasterDataRepository,
@@ -49,7 +51,7 @@ class TimetableMapper @Inject constructor(
 	suspend fun mapTimetablePeriodsToWeekViewEvents(
 		items: List<Period>,
 		contextType: ElementType
-	): List<Event<PeriodItem>> {
+	): List<Event<TimetableItem>> {
 		val settings = waitForSettings()
 		return preparePeriods(items, settings.timetableHideCancelled)
 			.mapToPeriodItems()
@@ -84,7 +86,7 @@ class TimetableMapper @Inject constructor(
 		userSettings: UserSettings,
 		contextType: ElementType,
 		includeOrgIds: Boolean = true,
-	): List<Event<PeriodItem>> {
+	): List<Event<TimetableItem>> {
 		return map { periodItem ->
 			Event(
 				title = periodItem.getShort(ElementType.SUBJECT),
@@ -113,8 +115,8 @@ class TimetableMapper @Inject constructor(
 						)
 					),
 				eventStyle = getColorScheme(userSettings, periodItem),
-				start = periodItem.originalPeriod.startDateTime,
-				end = periodItem.originalPeriod.endDateTime,
+				start = periodItem.originalPeriod.startDateTime.toJavaLocalDateTime(),
+				end = periodItem.originalPeriod.endDateTime.toJavaLocalDateTime(),
 				data = periodItem
 			)
 		}
@@ -178,13 +180,13 @@ class TimetableMapper @Inject constructor(
 			if (day < 0 || day >= days.size) return@forEach
 
 			val thisUnitStartIndex = days[day].units.indexOfFirst {
-				it.startTime.truncatedTo(ChronoUnit.MINUTES)
-					.equals(startDateTime.toLocalTime().truncatedTo(ChronoUnit.MINUTES))
+				it.startTime.toJavaLocalTime().truncatedTo(ChronoUnit.MINUTES)
+					.equals(startDateTime.toJavaLocalDateTime().toLocalTime().truncatedTo(ChronoUnit.MINUTES))
 			}
 
 			val thisUnitEndIndex = days[day].units.indexOfFirst {
-				it.endTime.truncatedTo(ChronoUnit.MINUTES)
-					.equals(endDateTime.toLocalTime().truncatedTo(ChronoUnit.MINUTES))
+				it.endTime.toJavaLocalTime().truncatedTo(ChronoUnit.MINUTES)
+					.equals(endDateTime.toJavaLocalDateTime().toLocalTime().truncatedTo(ChronoUnit.MINUTES))
 			}
 
 			if (thisUnitStartIndex != -1 && thisUnitEndIndex != -1) itemGrid[day][thisUnitStartIndex].add(

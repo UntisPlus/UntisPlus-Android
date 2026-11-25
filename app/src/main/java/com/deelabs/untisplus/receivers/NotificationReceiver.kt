@@ -20,19 +20,16 @@ import com.deelabs.untisplus.data.settings.model.UserSettings
 import com.deelabs.untisplus.domain.GetMessagesOfDayUseCase
 import com.deelabs.untisplus.workers.NotificationSetupWorker.Companion.CHANNEL_ID_BREAKINFO
 import com.deelabs.untisplus.workers.NotificationSetupWorker.Companion.CHANNEL_ID_FIRSTLESSON
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.time.LocalTime
-import javax.inject.Inject
 
-@AndroidEntryPoint
-class NotificationReceiver : BroadcastReceiver() {
-	@Inject
-	lateinit var userSettingsRepository: UserSettingsRepository
+class NotificationReceiver : BroadcastReceiver(), KoinComponent {
+	private val userSettingsRepository: UserSettingsRepository by inject()
 
-	@Inject
-	lateinit var getMessages: GetMessagesOfDayUseCase
+	private val getMessages: GetMessagesOfDayUseCase by inject()
 
 	companion object {
 		private const val LOG_TAG = "NotificationReceiver"

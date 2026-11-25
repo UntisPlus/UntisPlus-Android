@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.absoluteValue
 import kotlin.math.sign
 
-
 @Composable
 fun HorizontalPagerIndicator(
 	pagerState: PagerState,

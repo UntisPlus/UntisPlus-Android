@@ -4,9 +4,8 @@ import androidx.datastore.core.DataStore
 import com.sapuseven.compose.protostore.data.MultiUserSettingsRepository
 import com.deelabs.untisplus.data.settings.model.GlobalSettings
 import com.deelabs.untisplus.data.settings.model.Settings
-import javax.inject.Inject
 
-class GlobalSettingsRepository @Inject constructor(
+class GlobalSettingsRepository constructor(
 	dataStore: DataStore<Settings>
 ) : MultiUserSettingsRepository<Settings, Settings.Builder, GlobalSettings, GlobalSettings.Builder>(
 	dataStore

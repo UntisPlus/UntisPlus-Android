@@ -3,7 +3,6 @@ package com.deelabs.untisplus.services
 import java.time.Clock
 import java.time.DayOfWeek
 import java.time.LocalDate
-import javax.inject.Inject
 
 interface WeekLogicService {
 	val weekLength: Int
@@ -11,7 +10,7 @@ interface WeekLogicService {
 	fun currentWeekStartDate(): LocalDate
 }
 
-class WeekLogicServiceImpl @Inject constructor(
+class WeekLogicServiceImpl constructor(
 	val clock: Clock
 ) : WeekLogicService {
 	override val weekLength: Int

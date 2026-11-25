@@ -19,6 +19,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
+import com.deelabs.untisplus.ui.pages.classregister.ClassRegister
+import com.deelabs.untisplus.ui.pages.classregister.StudentAbsences
 import com.deelabs.untisplus.ui.pages.infocenter.InfoCenter
 import com.deelabs.untisplus.ui.pages.login.Login
 import com.deelabs.untisplus.ui.pages.login.datainput.LoginDataInput
@@ -26,6 +28,7 @@ import com.deelabs.untisplus.ui.pages.login.sso.SsoLogin
 import com.deelabs.untisplus.ui.pages.roomfinder.RoomFinder
 import com.deelabs.untisplus.ui.pages.settings.settingsNav
 import com.deelabs.untisplus.ui.pages.splash.Splash
+import com.deelabs.untisplus.ui.pages.teacherabsences.TeacherAbsences
 import com.deelabs.untisplus.ui.pages.timetable.Timetable
 import soup.compose.material.motion.animation.materialSharedAxisXIn
 import soup.compose.material.motion.animation.materialSharedAxisXOut
@@ -181,6 +184,57 @@ fun AppNavHost(
 			},
 		) {
 			RoomFinder()
+		}
+
+		composable<AppRoutes.TeacherAbsences>(
+			enterTransition = {
+				slideInVertically() { it / 2 } + fadeIn()
+			},
+			exitTransition = {
+				slideOutVertically() { it / 2 } + fadeOut()
+			},
+			popEnterTransition = {
+				slideInVertically() { it / 2 } + fadeIn()
+			},
+			popExitTransition = {
+				slideOutVertically() { it / 2 } + fadeOut()
+			},
+		) {
+			TeacherAbsences()
+		}
+
+		composable<AppRoutes.StudentAbsences>(
+			enterTransition = {
+				slideInVertically() { it / 2 } + fadeIn()
+			},
+			exitTransition = {
+				slideOutVertically() { it / 2 } + fadeOut()
+			},
+			popEnterTransition = {
+				slideInVertically() { it / 2 } + fadeIn()
+			},
+			popExitTransition = {
+				slideOutVertically() { it / 2 } + fadeOut()
+			},
+		) {
+			StudentAbsences()
+		}
+
+		composable<AppRoutes.ClassRegister>(
+			enterTransition = {
+				slideInVertically() { it / 2 } + fadeIn()
+			},
+			exitTransition = {
+				slideOutVertically() { it / 2 } + fadeOut()
+			},
+			popEnterTransition = {
+				slideInVertically() { it / 2 } + fadeIn()
+			},
+			popExitTransition = {
+				slideOutVertically() { it / 2 } + fadeOut()
+			},
+		) {
+			ClassRegister()
 		}
 
 		navigation<AppRoutes.Settings>(

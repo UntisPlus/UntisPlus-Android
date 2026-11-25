@@ -17,11 +17,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.ui.common.AppScaffold
 import com.deelabs.untisplus.ui.functional.bottomInsets
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,9 +30,9 @@ fun SettingsScreen(
 	navController: NavHostController,
 	title: String?,
 	colorScheme: ColorScheme = MaterialTheme.colorScheme,
-	viewModel: SettingsScreenViewModel = hiltViewModel<SettingsScreenViewModel, SettingsScreenViewModel.Factory>(
-		creationCallback = { factory -> factory.create(colorScheme) }
-	),
+	viewModel: SettingsScreenViewModel = koinViewModel {
+		parametersOf(colorScheme)
+	},
 	content: @Composable (SettingsScreenViewModel) -> Unit
 ) {
 	AppScaffold(

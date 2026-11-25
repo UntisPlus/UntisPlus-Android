@@ -21,6 +21,9 @@ import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
 import com.deelabs.untisplus.api.model.untis.timetable.Period
 import com.deelabs.untisplus.api.model.untis.timetable.PeriodElement
 import com.deelabs.untisplus.data.database.entities.User
+import com.deelabs.untisplus.data.database.entities.getDisplayedName
+import com.deelabs.untisplus.data.database.entities.ImportedCalendarEventEntity
+import com.deelabs.untisplus.data.repository.ImportedCalendarRepository
 import com.deelabs.untisplus.data.repository.MasterDataRepository
 import com.deelabs.untisplus.data.repository.TimetableChangeBus
 import com.deelabs.untisplus.data.repository.TimetableRepository
@@ -29,6 +32,8 @@ import com.deelabs.untisplus.data.repository.UserSettingsRepository
 import com.deelabs.untisplus.helpers.BuildConfigFieldsProvider
 import com.deelabs.untisplus.mappers.TimetableMapper
 import com.deelabs.untisplus.models.PeriodItem
+import com.deelabs.untisplus.models.ImportedCalendarEventItem
+import com.deelabs.untisplus.models.TimetableItem
 import com.deelabs.untisplus.services.WeekLogicService
 import com.deelabs.untisplus.ui.navigation.AppNavigator
 import com.deelabs.untisplus.ui.navigation.AppRoutes
@@ -42,7 +47,6 @@ import com.deelabs.untisplus.ui.weekview.WeekViewHour
 import com.deelabs.untisplus.ui.weekview.startDateForPageIndex
 import crocodile8.universal_cache.CachedSourceResult
 import crocodile8.universal_cache.FromCache
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
@@ -59,17 +63,20 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toJavaLocalTime
+import kotlinx.datetime.toKotlinLocalDate
 import java.time.Clock
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
-import javax.inject.Inject
 
-@HiltViewModel
-class TimetableViewModel @Inject constructor(
+class TimetableViewModel constructor(
 	private val navigator: AppNavigator,
 	private val userSettingsRepository: UserSettingsRepository,
 	private val timetableMapper: TimetableMapper,
+	private val importedCalendarRepository: ImportedCalendarRepository,
 	internal val userRepository: UserRepository,
 	internal val timetableRepository: TimetableRepository,
 	internal val masterDataRepository: MasterDataRepository,
@@ -84,7 +91,7 @@ class TimetableViewModel @Inject constructor(
 	val requestedElement = args.getElement()
 
 	var profileManagementDialog by mutableStateOf(false)
-	var timetableItemDetailsDialog by mutableStateOf<Pair<List<Event<PeriodItem>>, Int>?>(null)
+	var timetableItemDetailsDialog by mutableStateOf<Pair<List<Event<TimetableItem>>, Int>?>(null)
 	var loading by mutableStateOf(true)
 
 	/** True when a load failed due to invalid/expired credentials. */
@@ -108,8 +115,8 @@ class TimetableViewModel @Inject constructor(
 	private val _hourList = MutableStateFlow<List<WeekViewHour>>(emptyList())
 	val hourList: StateFlow<List<WeekViewHour>> = _hourList
 
-	private val _events = MutableStateFlow<Map<LocalDate, List<Event<PeriodItem>>>>(emptyMap())
-	val events: StateFlow<Map<LocalDate, List<Event<PeriodItem>>>> = _events
+	private val _events = MutableStateFlow<Map<LocalDate, List<Event<TimetableItem>>>>(emptyMap())
+	val events: StateFlow<Map<LocalDate, List<Event<TimetableItem>>>> = _events
 
 	private val _holidays = MutableStateFlow<List<Holiday>>(emptyList())
 	val holidays: StateFlow<List<Holiday>> = _holidays
@@ -128,6 +135,15 @@ class TimetableViewModel @Inject constructor(
 
 	private val _weekViewEventStyle = MutableStateFlow(WeekViewEventStyle.default())
 	val weekViewEventStyle: StateFlow<WeekViewEventStyle> = _weekViewEventStyle
+
+	/** Whether imported `.ics` calendar events are overlaid on the timetable. */
+	val showImportedCalendars: StateFlow<Boolean> = userSettingsRepository.getSettings()
+		.map { it.timetableShowImportedCalendars }
+		.stateIn(
+			scope = viewModelScope,
+			started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5_000),
+			initialValue = true
+		)
 
 	val numDays: StateFlow<Int> = userSettingsRepository.getSettings().map { userSettings ->
 		val customRangeDays = userSettings.weekCustomRangeList
@@ -159,6 +175,9 @@ class TimetableViewModel @Inject constructor(
 
 	private var currentPage = 0
 
+	@Volatile
+	private var showImportedEvents = true
+
 	companion object {
 		// Error codes that indicate the stored credentials/session are no longer valid
 		private val SESSION_ERROR_CODES = setOf(
@@ -187,12 +206,13 @@ class TimetableViewModel @Inject constructor(
 		viewModelScope.launch {
 			_userSettings.collect { userSettings ->
 				// All properties that are based on preferences are set here
+				showImportedEvents = userSettings.timetableShowImportedCalendars
 				userSettings.timetablePersonalTimetable?.toPeriodElement()?.let {
 					_personalElement.value = it
 					_needsPersonalTimetable.emit(false)
 					//_currentElement.update { prev -> prev ?: it } // Update only if null
 			} ?: run {
-				_personalElement.value = currentUser.userData.getPeriodElement()
+				_personalElement.value = currentUser.userData.getUsablePeriodElement()
 					?: currentUser.userData.getFallbackPeriodElements().firstOrNull()?.also {
 						Log.i(
 							"TimetableViewModel",
@@ -244,8 +264,8 @@ class TimetableViewModel @Inject constructor(
 					Holiday(
 						title = holiday.name,
 						colorScheme = EventStyle.Transparent,
-						start = holiday.startDate!!,
-						end = holiday.endDate!!,
+						start = holiday.startDate!!.toJavaLocalDate(),
+						end = holiday.endDate!!.toJavaLocalDate(),
 					)
 				}
 			_holidays.emit(holidays)
@@ -316,8 +336,21 @@ class TimetableViewModel @Inject constructor(
 		}
 	}
 
-	fun onItemClick(itemsWithIndex: Pair<List<Event<PeriodItem>>, Int>) {
+	fun onItemClick(itemsWithIndex: Pair<List<Event<TimetableItem>>, Int>) {
+		// Imported calendar events have no lesson details; only open the dialog
+		// when at least one native lesson was tapped.
+		if (itemsWithIndex.first.none { it.data is PeriodItem }) return
 		timetableItemDetailsDialog = itemsWithIndex
+	}
+
+	/** Toggles the imported-calendar overlay and reloads the visible week. */
+	fun toggleImportedCalendars() {
+		val next = !showImportedCalendars.value
+		showImportedEvents = next
+		viewModelScope.launch {
+			userSettingsRepository.updateSettings { timetableShowImportedCalendars = next }
+			onPageReload(currentPage)
+		}
 	}
 
 	suspend fun onZoom(zoomLevel: Float) {
@@ -335,7 +368,7 @@ class TimetableViewModel @Inject constructor(
 				params = TimetableRepository.TimetableParams(
 					elementId = it.id,
 					elementType = it.type,
-					startDate = startDate,
+					startDate = startDate.toKotlinLocalDate(),
 				),
 				fromCache = fromCache,
 				additionalKey = currentUser.id
@@ -343,7 +376,7 @@ class TimetableViewModel @Inject constructor(
 		} ?: emptyFlow()
 	}
 
-	private fun emitEvents(events: Map<LocalDate, List<Event<PeriodItem>>>) {
+	private fun emitEvents(events: Map<LocalDate, List<Event<TimetableItem>>>) {
 		_events.update {
 			val newEvents = it.toMutableMap()
 			events.forEach { (date, events) ->
@@ -353,8 +386,8 @@ class TimetableViewModel @Inject constructor(
 		}
 	}
 
-	private fun groupEventsByDate(events: List<Event<PeriodItem>>): Map<LocalDate, List<Event<PeriodItem>>> {
-		val groupedEvents = mutableMapOf<LocalDate, MutableList<Event<PeriodItem>>>()
+	private fun groupEventsByDate(events: List<Event<TimetableItem>>): Map<LocalDate, List<Event<TimetableItem>>> {
+		val groupedEvents = mutableMapOf<LocalDate, MutableList<Event<TimetableItem>>>()
 
 		for (event in events) {
 			val eventDate = event.start.toLocalDate()
@@ -363,6 +396,41 @@ class TimetableViewModel @Inject constructor(
 
 		// Convert the map to an immutable version if needed
 		return groupedEvents.mapValues { it.value.toList() }
+	}
+
+	/** Loads imported `.ics` events for the week starting at [startDate]. */
+	private suspend fun loadImportedEvents(startDate: LocalDate): List<Event<TimetableItem>> {
+		if (!showImportedEvents) return emptyList()
+		val days = maxOf(numDays.value, 7)
+		return importedCalendarRepository.events(
+			startDate.toKotlinLocalDate(),
+			startDate.plusDays(days.toLong()).toKotlinLocalDate(),
+		)
+			.mapNotNull { it.toWeekViewEvent() }
+	}
+
+	private fun ImportedCalendarEventEntity.toWeekViewEvent(): Event<TimetableItem>? {
+		val start = ImportedCalendarEventEntity.parse(this.start)?.toJavaLocalDateTime() ?: return null
+		val end = ImportedCalendarEventEntity.parse(this.end)?.toJavaLocalDateTime() ?: start
+		val item = ImportedCalendarEventItem(
+			calendarId = calendarId,
+			summary = summary,
+			description = description,
+			location = location,
+			start = start,
+			end = end,
+			allDay = allDay,
+			color = color,
+		)
+		return Event<TimetableItem>(
+			title = summary,
+			top = location.orEmpty(),
+			bottom = "",
+			eventStyle = EventStyle.Custom(Color(color)),
+			start = start,
+			end = end,
+			data = item,
+		).apply { this.allDay = this@toWeekViewEvent.allDay }
 	}
 
 	// TODO: Extract to usecase
@@ -382,7 +450,7 @@ class TimetableViewModel @Inject constructor(
 				hour.label.ifEmpty { (index + 1).toString() }
 			}
 
-			hourList.add(WeekViewHour(hour.startTime, hour.endTime, label))
+			hourList.add(WeekViewHour(hour.startTime.toJavaLocalTime(), hour.endTime.toJavaLocalTime(), label))
 		}
 
 		return hourList
@@ -394,7 +462,11 @@ class TimetableViewModel @Inject constructor(
 
 	fun getTitle(context: Context) = requestedElement?.let {
 		if (it == _personalElement.value) null // Use Profile name for personal timetable
-		else masterDataRepository.getLongName(it)
+		else if (it.type == ElementType.STUDENT) {
+			// Parent accounts select children directly from the persisted user data.
+			currentUser.userData.children.firstOrNull { child -> child?.id == it.id }?.fullName()
+				?: masterDataRepository.getLongName(it)
+		} else masterDataRepository.getLongName(it)
 	}
 		?: (currentUser.getDisplayedName(context) + (if (isDebug) " (${currentUser.id})" else ""))
 
@@ -411,7 +483,8 @@ class TimetableViewModel @Inject constructor(
 		startDate: LocalDate,
 		updateLastRefresh: Boolean = true
 	) = collect { result ->
-		val events = timetableMapper.mapTimetablePeriodsToWeekViewEvents(result.value, requestedElement?.type ?: ElementType.STUDENT)
+		val events = timetableMapper.mapTimetablePeriodsToWeekViewEvents(result.value, requestedElement?.type ?: ElementType.STUDENT) +
+			loadImportedEvents(startDate)
 		val refreshTimestamp = result.originTimeStamp?.let { Instant.ofEpochMilli(it) } ?: Instant.now()
 		emitEvents(mapOf(startDate to events))
 		if (updateLastRefresh) {

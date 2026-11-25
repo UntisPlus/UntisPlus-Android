@@ -10,19 +10,16 @@ import com.deelabs.untisplus.api.model.proxy.ProxySubscriptionTest
 import com.deelabs.untisplus.api.model.proxy.ProxyWebhook
 import com.deelabs.untisplus.api.model.proxy.ProxyWebhookRequest
 import com.deelabs.untisplus.data.repository.ProxyRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * State for the self-service webhook/ntfy subscription screen
  * (`docs/PROXY-API.md` §5). Targets come from `/api/notifications/options`;
  * the two lists are server-backed and show only the caller's own rows.
  */
-@HiltViewModel
-class ChangeSubscriptionsViewModel @Inject constructor(
+class ChangeSubscriptionsViewModel constructor(
 	private val proxyRepository: ProxyRepository
 ) : ViewModel() {
 	private val _options = MutableStateFlow<ProxyCalendarOptions?>(null)

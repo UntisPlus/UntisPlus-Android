@@ -14,17 +14,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.api.model.untis.SchoolInfo
 import kotlinx.serialization.ExperimentalSerializationApi
-
 
 @OptIn(ExperimentalSerializationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SchoolSearch(
 	modifier: Modifier,
-	viewModel: SchoolSearchViewModel = hiltViewModel(),
+	viewModel: SchoolSearchViewModel = koinViewModel(),
 	searchText: String,
 	onSchoolSelected: (SchoolInfo) -> Unit
 ) {

@@ -15,11 +15,11 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.toRoute
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.api.model.untis.SchoolInfo
+import com.deelabs.untisplus.data.database.entities.buildApiUrl
 import com.deelabs.untisplus.data.database.entities.User
 import com.deelabs.untisplus.helpers.SerializationUtils.getJSON
 import com.deelabs.untisplus.ui.navigation.AppNavigator
 import com.deelabs.untisplus.ui.navigation.AppRoutes
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -30,10 +30,8 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.net.HttpURLConnection
 import java.net.URL
-import javax.inject.Inject
 
-@HiltViewModel
-class SsoLoginViewModel @Inject constructor(
+class SsoLoginViewModel constructor(
 	private val navigator: AppNavigator,
 	savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -48,7 +46,7 @@ class SsoLoginViewModel @Inject constructor(
 	val schoolInfo: SchoolInfo? = getJSON().decodeFromString<SchoolInfo?>(args.schoolInfoSerialized)
 
 	/** The official school server root, e.g. https://schuldorf.webuntis.com/WebUntis */
-	private val serverRoot: String = User.buildApiUrl("", schoolInfo).toString()
+	private val serverRoot: String = buildApiUrl("", schoolInfo).toString()
 
 	val startUrl: String = computeStartUrl()
 

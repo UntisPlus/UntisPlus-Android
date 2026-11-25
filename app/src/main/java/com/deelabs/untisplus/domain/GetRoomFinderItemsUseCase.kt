@@ -18,13 +18,13 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
-import javax.inject.Inject
+import kotlinx.datetime.toKotlinLocalDate
 
 interface GetRoomFinderItemsUseCase {
 	operator fun invoke(): Flow<List<RoomFinderItem>>
 }
 
-class GetRoomFinderItemsUseCaseImpl @Inject constructor(
+class GetRoomFinderItemsUseCaseImpl constructor(
 	private val userRepository: UserRepository,
 	private val roomFinderDao: RoomFinderDao,
 	private val timetableRepository: TimetableRepository,
@@ -72,7 +72,7 @@ class GetRoomFinderItemsUseCaseImpl @Inject constructor(
 			params = TimetableRepository.TimetableParams(
 				room.id,
 				ElementType.ROOM,
-				startDate
+				startDate.toKotlinLocalDate()
 			),
 			fromCache = FromCache.IF_HAVE, // Use a conservative caching strategy to reduce API request count
 			maxAge = ONE_HOUR,
@@ -86,8 +86,8 @@ class GetRoomFinderItemsUseCaseImpl @Inject constructor(
 				periods.any { period ->
 					!period.`is`(PeriodState.CANCELLED) &&
 						period.startDateTime.dayOfWeek == day.day &&
-						unit.endTime.isAfter(period.startDateTime.toLocalTime()) &&
-						unit.startTime.isBefore(period.endDateTime.toLocalTime())
+						unit.endTime > period.startDateTime.time &&
+						unit.startTime < period.endDateTime.time
 				}
 			}
 		}

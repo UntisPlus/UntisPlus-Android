@@ -7,9 +7,8 @@ import com.deelabs.untisplus.data.settings.model.Settings
 import com.deelabs.untisplus.data.settings.model.UserSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
-class UserSettingsRepository @Inject constructor(
+class UserSettingsRepository constructor(
 	private val userRepository: UserRepository,
 	dataStore: DataStore<Settings>
 ) : MultiUserSettingsRepository<Settings, Settings.Builder, UserSettings, UserSettings.Builder>(

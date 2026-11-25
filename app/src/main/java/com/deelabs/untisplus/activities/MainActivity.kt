@@ -1,6 +1,7 @@
 package com.deelabs.untisplus.activities
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,8 +9,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.lifecycleScope
+import com.deelabs.untisplus.data.database.entities.ImportedCalendarEntity
+import com.deelabs.untisplus.data.repository.ImportedCalendarRepository
 import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.data.repository.UserSettingsRepository
 import com.deelabs.untisplus.services.TimetableChangeService
@@ -18,27 +20,26 @@ import com.deelabs.untisplus.ui.navigation.AppRoutes
 import com.deelabs.untisplus.ui.pages.main.MainAppContent
 import com.deelabs.untisplus.ui.pages.main.MainViewModel
 import com.deelabs.untisplus.workers.TimetableChangeWorker
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-@AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), KoinComponent {
 	companion object {
 		const val MESSENGER_PACKAGE_NAME = "com.untis.chat"
 
 		const val EXTRA_STRING_PERIOD_ELEMENT = "com.deelabs.untisplus.activities.main.element"
 	}
 
-	@Inject
-	lateinit var appNavigator: AppNavigator
+	private val appNavigator: AppNavigator by inject()
 
-	@Inject
-	lateinit var userRepository: UserRepository
+	private val userRepository: UserRepository by inject()
 
-	@Inject
-	lateinit var userSettingsRepository: UserSettingsRepository
+	private val importedCalendarRepository: ImportedCalendarRepository by inject()
+
+	private val userSettingsRepository: UserSettingsRepository by inject()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		enableEdgeToEdge()
@@ -60,7 +61,7 @@ class MainActivity : ComponentActivity() {
 
 		setContent {
 			// ViewModel (or other injector) that exposes current userState + settings
-			val viewModel: MainViewModel = hiltViewModel()
+			val viewModel: MainViewModel = koinViewModel()
 			val userState by viewModel.userState.collectAsState()
 			val currentIntentData by viewModel.pendingIntentData.collectAsState()
 
@@ -162,6 +163,32 @@ class MainActivity : ComponentActivity() {
 		when {
 			Intent.ACTION_VIEW == intent.action && intent.data?.host == "setschool" -> {
 				appNavigator.navigate(AppRoutes.LoginDataInput(autoLoginData = intent.data.toString()))
+			}
+			isCalendarImport(intent) -> handleCalendarImport(intent)
+		}
+	}
+
+	private fun isCalendarImport(intent: Intent): Boolean {
+		if (intent.action != Intent.ACTION_VIEW && intent.action != Intent.ACTION_SEND) return false
+		if (intent.type == "text/calendar") return true
+		val raw = calendarUri(intent)?.toString() ?: return false
+		return raw.startsWith("webcal", ignoreCase = true) || raw.endsWith(".ics", ignoreCase = true)
+	}
+
+	@Suppress("DEPRECATION")
+	private fun calendarUri(intent: Intent): Uri? =
+		intent.data ?: intent.clipData?.getItemAt(0)?.uri ?: intent.getParcelableExtra(Intent.EXTRA_STREAM)
+
+	private fun handleCalendarImport(intent: Intent) {
+		val uri = calendarUri(intent) ?: return
+		val raw = uri.toString()
+		val name = intent.getStringExtra(Intent.EXTRA_SUBJECT)
+			?: raw.substringAfterLast('/').substringBefore('?').ifBlank { raw }
+		lifecycleScope.launch {
+			if (raw.startsWith("http", ignoreCase = true) || raw.startsWith("webcal", ignoreCase = true)) {
+				importedCalendarRepository.addUrl(name, raw, ImportedCalendarEntity.DEFAULT_COLOR)
+			} else {
+				importedCalendarRepository.importFile(name, uri, ImportedCalendarEntity.DEFAULT_COLOR)
 			}
 		}
 	}

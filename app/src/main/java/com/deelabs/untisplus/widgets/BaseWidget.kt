@@ -1,6 +1,5 @@
 package com.deelabs.untisplus.widgets
 
-
 /*open class BaseWidget : AppWidgetProvider() {
 	private var user: UserDatabase.User? = null
 	private lateinit var userDatabase: UserDatabase

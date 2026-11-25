@@ -34,7 +34,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import com.journeyapps.barcodescanner.ScanContract
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.ui.common.AppScaffold
@@ -44,7 +44,7 @@ import kotlinx.coroutines.flow.collectLatest
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Login(
-	viewModel: LoginViewModel = hiltViewModel()
+	viewModel: LoginViewModel = koinViewModel()
 ) {
 	val focusManager = LocalFocusManager.current
 	viewModel.setCodeScanLauncher(rememberLauncherForActivityResult(ScanContract()) { viewModel.codeScanResultHandler(it.contents) })

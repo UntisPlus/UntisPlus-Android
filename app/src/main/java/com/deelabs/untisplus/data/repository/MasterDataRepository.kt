@@ -6,12 +6,12 @@ import com.deelabs.untisplus.api.model.untis.timetable.PeriodElement
 import com.deelabs.untisplus.data.database.entities.ElementEntity
 import com.deelabs.untisplus.data.database.entities.KlasseEntity
 import com.deelabs.untisplus.data.database.entities.RoomEntity
+import com.deelabs.untisplus.data.database.entities.SchoolYearEntity
 import com.deelabs.untisplus.data.database.entities.SubjectEntity
 import com.deelabs.untisplus.data.database.entities.TeacherEntity
 import com.deelabs.untisplus.data.database.entities.User
 import com.deelabs.untisplus.data.database.entities.UserDao
 import com.deelabs.untisplus.data.database.entities.UserWithData
-import com.deelabs.untisplus.models.PeriodItem.Companion.ELEMENT_NAME_UNKNOWN
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,50 +22,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import javax.inject.Singleton
+import kotlinx.coroutines.withContext
 
-interface MasterDataRepository {
-	val user: User?
-	val userData: UserWithData?
-
-	val allClasses: StateFlow<List<PeriodElement>>
-	val allTeachers: StateFlow<List<PeriodElement>>
-	val allSubjects: StateFlow<List<PeriodElement>>
-	val allRooms: StateFlow<List<PeriodElement>>
-
-	fun getShortName(id: Long, type: ElementType? = null, default: String = ELEMENT_NAME_UNKNOWN): String
-	fun getShortName(periodElement: PeriodElement, default: String = ELEMENT_NAME_UNKNOWN): String
-
-	fun getLongName(id: Long, type: ElementType, default: String = ELEMENT_NAME_UNKNOWN): String
-	fun getLongName(periodElement: PeriodElement, default: String = ELEMENT_NAME_UNKNOWN): String
-
-	fun isAllowed(id: Long, type: ElementType? = null): Boolean
-	fun isAllowed(periodElement: PeriodElement): Boolean
-}
-
-@Singleton
-class DefaultMasterDataRepository : MasterDataRepository {
-	override val user: User? = null
-	override val userData: UserWithData? = null
-
-	override val allClasses: StateFlow<List<PeriodElement>> = MutableStateFlow(emptyList())
-	override val allTeachers: StateFlow<List<PeriodElement>> = MutableStateFlow(emptyList())
-	override val allSubjects: StateFlow<List<PeriodElement>> = MutableStateFlow(emptyList())
-	override val allRooms: StateFlow<List<PeriodElement>> = MutableStateFlow(emptyList())
-
-	override fun getShortName(id: Long, type: ElementType?, default: String): String = "$type:$id"
-	override fun getShortName(periodElement: PeriodElement, default: String) = getShortName(periodElement.id, periodElement.type, default)
-
-	override fun getLongName(id: Long, type: ElementType, default: String): String = "$type:$id"
-	override fun getLongName(periodElement: PeriodElement, default: String) = getLongName(periodElement.id, periodElement.type)
-
-	override fun isAllowed(id: Long, type: ElementType?): Boolean = true
-	override fun isAllowed(periodElement: PeriodElement): Boolean = true
-}
-
-@Singleton
-class UntisMasterDataRepository @Inject constructor(
+class UntisMasterDataRepository constructor(
 	private val userDao: UserDao,
 	private val userRepository: UserRepository
 ) : MasterDataRepository {
@@ -77,6 +36,12 @@ class UntisMasterDataRepository @Inject constructor(
 	private val _userData = MutableStateFlow<UserWithData?>(null)
 	override val userData: UserWithData?
 		get() = _userData.value
+
+	override suspend fun schoolYears(): List<SchoolYearEntity> = withContext(Dispatchers.IO) {
+		val userId = (userRepository.userState.value as? UserRepository.UserState.User)?.user?.id
+			?: return@withContext emptyList()
+		userDao.getByIdWithData(userId)?.schoolYears.orEmpty()
+	}
 
 	private val _allClasses = MutableStateFlow<Map<Long, KlasseEntity>>(emptyMap())
 	override val allClasses: StateFlow<List<PeriodElement>> = _allClasses.mapToPeriodElements(scope, ElementType.CLASS)
@@ -117,6 +82,8 @@ class UntisMasterDataRepository @Inject constructor(
 
 	override fun getShortName(id: Long, type: ElementType?, default: String): String {
 		return when (type) {
+			ElementType.STUDENT -> _userData.value?.user?.userData?.children
+				?.firstOrNull { it?.id == id }?.fullName()
 			ElementType.CLASS -> _allClasses.value[id]?.name
 			ElementType.TEACHER -> _allTeachers.value[id]?.name
 			ElementType.SUBJECT -> _allSubjects.value[id]?.name
@@ -130,6 +97,8 @@ class UntisMasterDataRepository @Inject constructor(
 
 	override fun getLongName(id: Long, type: ElementType, default: String): String {
 		return when (type) {
+			ElementType.STUDENT -> _userData.value?.user?.userData?.children
+				?.firstOrNull { it?.id == id }?.fullName()
 			ElementType.CLASS -> _allClasses.value[id]?.longName
 			ElementType.TEACHER -> _allTeachers.value[id]?.run { "$firstName $lastName" }
 			ElementType.SUBJECT -> _allSubjects.value[id]?.longName

@@ -24,16 +24,13 @@ import com.deelabs.untisplus.data.repository.MasterDataRepository
 import com.deelabs.untisplus.helpers.AppTheme
 import com.deelabs.untisplus.ui.common.ProfileSelectorAction
 import com.deelabs.untisplus.ui.dialogs.ElementPickerDialogFullscreen
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-@AndroidEntryPoint
-class ShortcutConfigureActivity : ComponentActivity() {
-	@Inject
-	lateinit var userDao: UserDao
+class ShortcutConfigureActivity : ComponentActivity(), KoinComponent {
+	private val userDao: UserDao by inject()
 
-	@Inject
-	lateinit var masterDataRepository: MasterDataRepository
+	private val masterDataRepository: MasterDataRepository by inject()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)

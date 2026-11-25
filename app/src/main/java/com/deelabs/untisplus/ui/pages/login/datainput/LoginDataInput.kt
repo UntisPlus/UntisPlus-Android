@@ -72,7 +72,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import com.journeyapps.barcodescanner.ScanContract
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.ui.common.AppScaffold
@@ -89,7 +89,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun LoginDataInput(
-	viewModel: LoginDataInputViewModel = hiltViewModel()
+	viewModel: LoginDataInputViewModel = koinViewModel()
 ) {
 	viewModel.setCodeScanLauncher(rememberLauncherForActivityResult(ScanContract()) { viewModel.codeScanResultHandler(it.contents) })
 
@@ -386,6 +386,12 @@ fun LoginDataInput(
 								title = stringResource(id = R.string.logindatainput_api_untisplus),
 								subtitle = stringResource(id = R.string.logindatainput_api_untisplus_desc),
 								onClick = { viewModel.apiProvider = ApiProvider.UNTISPLUS }
+							)
+							ProviderRow(
+								selected = viewModel.apiProvider == ApiProvider.UNTISPLUS_BETA,
+								title = stringResource(id = R.string.logindatainput_api_untisplus_beta),
+								subtitle = stringResource(id = R.string.logindatainput_api_untisplus_beta_desc),
+								onClick = { viewModel.apiProvider = ApiProvider.UNTISPLUS_BETA }
 							)
 							ProviderRow(
 								selected = viewModel.apiProvider == ApiProvider.CUSTOM,

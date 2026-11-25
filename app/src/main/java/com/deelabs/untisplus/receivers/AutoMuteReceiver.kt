@@ -9,19 +9,15 @@ import com.deelabs.untisplus.data.database.entities.UserDao
 import com.deelabs.untisplus.data.repository.UserSettingsRepository
 import com.deelabs.untisplus.services.AutoMuteService
 import com.deelabs.untisplus.services.AutoMuteServiceZenRuleImpl
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import javax.inject.Inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-@AndroidEntryPoint
-class AutoMuteReceiver : BroadcastReceiver() {
-	@Inject
-	lateinit var userSettingsRepository: UserSettingsRepository
-	@Inject
-	lateinit var userDao: UserDao
-	@Inject
-	lateinit var autoMuteService: AutoMuteService
+class AutoMuteReceiver : BroadcastReceiver(), KoinComponent {
+	private val userSettingsRepository: UserSettingsRepository by inject()
+	private val userDao: UserDao by inject()
+	private val autoMuteService: AutoMuteService by inject()
 
 	companion object {
 		const val EXTRA_BOOLEAN_MUTE = "com.deelabs.untisplus.automute.mute"

@@ -7,11 +7,9 @@ import androidx.activity.result.ActivityResultLauncher
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
 import com.deelabs.untisplus.R
-import dagger.hilt.android.qualifiers.ActivityContext
-import javax.inject.Inject
 
-class CodeScanServiceImpl @Inject constructor(
-	@ActivityContext val context: Context,
+class CodeScanServiceImpl constructor(
+	val context: Context,
 ) : CodeScanService {
 	private lateinit var scanCodeLauncher: ActivityResultLauncher<ScanOptions>
 

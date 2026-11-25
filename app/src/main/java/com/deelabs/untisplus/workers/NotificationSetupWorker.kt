@@ -10,7 +10,6 @@ import android.content.Context.ALARM_SERVICE
 import android.content.Intent
 import android.os.Build
 import android.util.Log
-import androidx.hilt.work.HiltWorker
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -42,9 +41,8 @@ import com.deelabs.untisplus.receivers.NotificationReceiver.Companion.EXTRA_STRI
 import com.deelabs.untisplus.receivers.NotificationReceiver.Companion.EXTRA_STRING_NEXT_TEACHER
 import com.deelabs.untisplus.receivers.NotificationReceiver.Companion.EXTRA_STRING_NEXT_TEACHER_LONG
 import crocodile8.universal_cache.FromCache
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
+import kotlinx.datetime.toJavaLocalDateTime
 import java.time.Clock
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -53,15 +51,14 @@ import java.time.format.FormatStyle
 /**
  * This worker schedules all break info notifications for the day.
  */
-@HiltWorker
-class NotificationSetupWorker @AssistedInject constructor(
+class NotificationSetupWorker constructor(
 	private val userSettingsRepository: UserSettingsRepository,
 	private val masterDataRepository: MasterDataRepository,
 	private val timetableMapper: TimetableMapper,
 	private val clock: Clock,
 	private val userDao: UserDao,
-	@Assisted context: Context,
-	@Assisted params: WorkerParameters,
+	context: Context,
+	params: WorkerParameters,
 	timetableRepository: TimetableRepository,
 ) : TimetableDependantWorker(context, params, timetableRepository) {
 	companion object {
@@ -128,13 +125,13 @@ class NotificationSetupWorker @AssistedInject constructor(
 				}
 
 				with(preparedItems.first().first) {
-					if (originalPeriod.startDateTime.isBefore(LocalDateTime.now(clock))) return@with
+					if (originalPeriod.startDateTime.toJavaLocalDateTime().isBefore(LocalDateTime.now(clock))) return@with
 
 					if (userSettings.notificationsBeforeFirst && preparedItems.isNotEmpty()) {
 						scheduleNotification(
 							applicationContext,
 							user.id,
-							originalPeriod.startDateTime.minusMinutes(userSettings.notificationsBeforeFirstTime.toLong()),
+							originalPeriod.startDateTime.toJavaLocalDateTime().minusMinutes(userSettings.notificationsBeforeFirstTime.toLong()),
 							this,
 							true
 						)
@@ -142,7 +139,7 @@ class NotificationSetupWorker @AssistedInject constructor(
 					} else {
 						clearNotification(
 							applicationContext,
-							originalPeriod.startDateTime.minusMinutes(userSettings.notificationsBeforeFirstTime.toLong())
+							originalPeriod.startDateTime.toJavaLocalDateTime().minusMinutes(userSettings.notificationsBeforeFirstTime.toLong())
 						)
 					}
 				}
@@ -154,18 +151,18 @@ class NotificationSetupWorker @AssistedInject constructor(
 					if (item.first.equalsIgnoreTime(item.second) && !userSettings.notificationsInMultiple) {
 						clearNotification(
 							applicationContext,
-							item.first.originalPeriod.endDateTime
+							item.first.originalPeriod.endDateTime.toJavaLocalDateTime()
 						)
 						return@forEach // multi-hour lesson
 					}
 
-					if (item.second.originalPeriod.startDateTime.isBefore(LocalDateTime.now()))
+					if (item.second.originalPeriod.startDateTime.toJavaLocalDateTime().isBefore(LocalDateTime.now()))
 						return@forEach // lesson is in the past
 
 					scheduleNotification(
 						applicationContext,
 						user.id,
-						item.first.originalPeriod.endDateTime,
+						item.first.originalPeriod.endDateTime.toJavaLocalDateTime(),
 						item.second
 					)
 					scheduledNotifications++
@@ -197,11 +194,11 @@ class NotificationSetupWorker @AssistedInject constructor(
 			.putExtra(EXTRA_LONG_USER_ID, userId)
 			.putExtra(
 				EXTRA_INT_BREAK_END_TIME,
-				notificationEndPeriodItem.originalPeriod.startDateTime.toLocalTime().toSecondOfDay()
+				notificationEndPeriodItem.originalPeriod.startDateTime.toJavaLocalDateTime().toLocalTime().toSecondOfDay()
 			)
 			.putExtra(
 				EXTRA_STRING_BREAK_END_TIME,
-				notificationEndPeriodItem.originalPeriod.startDateTime.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
+				notificationEndPeriodItem.originalPeriod.startDateTime.toJavaLocalDateTime().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
 			)
 			.putExtra(
 				EXTRA_STRING_NEXT_SUBJECT,
@@ -261,7 +258,7 @@ class NotificationSetupWorker @AssistedInject constructor(
 			FLAG_IMMUTABLE
 		)
 		alarmManager.setBest(
-			notificationEndPeriodItem.originalPeriod.startDateTime,
+			notificationEndPeriodItem.originalPeriod.startDateTime.toJavaLocalDateTime(),
 			deletingPendingIntent
 		)
 		Log.d(

@@ -60,6 +60,17 @@ object AppRoutes {
 	data object RoomFinder
 
 	@Serializable
+	data object TeacherAbsences
+
+	/** Teacher-facing list of absences in the current user's lessons. */
+	@Serializable
+	data object StudentAbsences
+
+	/** Teacher-facing class register entries in the current user's lessons. */
+	@Serializable
+	data object ClassRegister
+
+	@Serializable
 	data object Settings {
 
 		@Serializable
@@ -73,6 +84,9 @@ object AppRoutes {
 
 		@Serializable
 		data object Calendar
+
+		@Serializable
+		data object ImportedCalendars
 
 		@Serializable
 		data class Timetable(@StringRes val highlightTitle: Int = -1)

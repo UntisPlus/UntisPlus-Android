@@ -26,8 +26,15 @@ import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
 import com.deelabs.untisplus.api.model.untis.masterdata.TimeGrid
 import com.deelabs.untisplus.data.cache.ApiCacheCleaner
 import com.deelabs.untisplus.data.database.entities.User
-import com.deelabs.untisplus.data.database.entities.User.Companion.buildApiUrl
+import com.deelabs.untisplus.data.database.entities.UNTISPLUS_API_HOST
+import com.deelabs.untisplus.data.database.entities.UNTISPLUS_BETA_API_HOST
+import com.deelabs.untisplus.data.database.entities.buildApiUrl
+import com.deelabs.untisplus.data.database.entities.buildJsonRpcApiUrl
+import com.deelabs.untisplus.data.database.entities.isUntisPlusBetaApiHost
+import com.deelabs.untisplus.data.database.entities.jsonRpcApiUrl
+import com.deelabs.untisplus.data.database.entities.normalizeApiEndpoint
 import com.deelabs.untisplus.data.database.entities.UserDao
+import com.deelabs.untisplus.data.repository.ProxyRepository
 import com.deelabs.untisplus.data.repository.TimetableRepository
 import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.services.WeekLogicService
@@ -40,27 +47,25 @@ import com.deelabs.untisplus.ui.pages.ActivityViewModel
 import com.deelabs.untisplus.ui.pages.login.sso.SsoLoginResultBus
 import com.deelabs.untisplus.ui.pages.login.sso.SsoProvider
 import crocodile8.universal_cache.FromCache
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
+import kotlinx.datetime.toKotlinLocalDate
+import okio.Path
 import java.net.HttpURLConnection
 import java.net.URL
-import javax.inject.Inject
-import javax.inject.Named
 
 const val DEMO_API_URL = "https://api.sapuseven.com/untis/testing"
 
 enum class ApiProvider {
 	OFFICIAL,
 	UNTISPLUS,
+	UNTISPLUS_BETA,
 	CUSTOM
 }
 
-@HiltViewModel
-class LoginDataInputViewModel @Inject constructor(
+class LoginDataInputViewModel constructor(
 	private val userDao: UserDao,
 	private val schoolSearchApi: SchoolSearchApi,
 	private val userDataApi: UserDataApi,
@@ -68,8 +73,9 @@ class LoginDataInputViewModel @Inject constructor(
 	private val weekLogicService: WeekLogicService,
 	private val navigator: AppNavigator,
 	private val userRepository: UserRepository,
+	private val proxyRepository: ProxyRepository,
 	private val codeScanService: CodeScanService,
-	@Named("cacheDir") private val cacheDir: File,
+	private val cacheDir: Path,
 	private val savedStateHandle: SavedStateHandle
 ) : ActivityViewModel() {
 	private val args = savedStateHandle.toRoute<AppRoutes.LoginDataInput>()
@@ -134,11 +140,11 @@ class LoginDataInputViewModel @Inject constructor(
 
 	val customEndpointValid: Boolean
 		get() = apiProvider != ApiProvider.CUSTOM ||
-			User.normalizeApiEndpoint(loginData.apiUrl.value.orEmpty()) != null
+			normalizeApiEndpoint(loginData.apiUrl.value.orEmpty()) != null
 
 	val isHttpCustomEndpoint: Boolean
 		get() = apiProvider == ApiProvider.CUSTOM &&
-			User.normalizeApiEndpoint(loginData.apiUrl.value.orEmpty())?.first == "http"
+			normalizeApiEndpoint(loginData.apiUrl.value.orEmpty())?.first == "http"
 
 	private val schoolInfoFromSearch = args.schoolInfoSerialized?.let {
 		getJSON().decodeFromString<SchoolInfo>(it)
@@ -173,6 +179,7 @@ class LoginDataInputViewModel @Inject constructor(
 				existingUser = it
 				loginData.loadFromUser(it)
 				apiProvider = when {
+					isUntisPlusBetaApiHost(it.customApiHost) || isUntisPlusBetaApiHost(it.apiHost) -> ApiProvider.UNTISPLUS_BETA
 					it.customApiHost?.isNotBlank() == true -> ApiProvider.CUSTOM
 					it.useUntisPlusApi -> ApiProvider.UNTISPLUS
 					else -> ApiProvider.OFFICIAL
@@ -272,7 +279,7 @@ class LoginDataInputViewModel @Inject constructor(
 			}
 
 			val apiHost = resolveEndpointOrigin().orEmpty()
-			val untisApiUrl = User.buildJsonRpcApiUrl(
+			val untisApiUrl = buildJsonRpcApiUrl(
 				buildApiUrl(apiHost, schoolInfo),
 				schoolInfo.loginName
 			).toString()
@@ -289,6 +296,14 @@ class LoginDataInputViewModel @Inject constructor(
 				val userId = saveUser(user, userData.masterData)
 				// The login call above already minted a fresh proxy session; keep it.
 				userRepository.switchUser(userId, clearProxySession = false)
+
+				// Probe /me once here, while the fresh session is available. All
+				// feature gates reuse the persisted result; failures never block login.
+				if (user.usesUntisPlusProxy) {
+					runCatching { proxyRepository.checkCompatibility(user) }
+						.onFailure { Log.d(LoginDataInputViewModel::class.simpleName, "Proxy compatibility probe failed", it) }
+				}
+
 				preloadTimetable()
 				navigator.navigate(AppRoutes.Timetable()) {
 					popUpTo(0) // Pop all previous routes
@@ -322,8 +337,9 @@ class LoginDataInputViewModel @Inject constructor(
 	private fun resolveEndpointOrigin(): String? {
 		return when (apiProvider) {
 			ApiProvider.OFFICIAL -> null
-			ApiProvider.UNTISPLUS -> "https://${User.UNTISPLUS_API_HOST}"
-			ApiProvider.CUSTOM -> User.normalizeApiEndpoint(loginData.apiUrl.value.orEmpty())
+			ApiProvider.UNTISPLUS -> "https://$UNTISPLUS_API_HOST"
+			ApiProvider.UNTISPLUS_BETA -> "https://$UNTISPLUS_BETA_API_HOST"
+			ApiProvider.CUSTOM -> normalizeApiEndpoint(loginData.apiUrl.value.orEmpty())
 				?.let { (scheme, authority) -> "$scheme://$authority" }
 		}
 	}
@@ -343,8 +359,9 @@ class LoginDataInputViewModel @Inject constructor(
 			if (loginData.anonymous.value != true) loginData.username.value else null,
 			if (loginData.anonymous.value != true) appSharedSecret else null,
 			loginData.anonymous.value == true,
-			apiProvider == ApiProvider.UNTISPLUS,
-			if (apiProvider == ApiProvider.CUSTOM) apiHost.takeIf { it.isNotEmpty() } else null,
+			apiProvider == ApiProvider.UNTISPLUS || apiProvider == ApiProvider.UNTISPLUS_BETA,
+			if (apiProvider == ApiProvider.CUSTOM || apiProvider == ApiProvider.UNTISPLUS_BETA)
+				apiHost.takeIf { it.isNotEmpty() } else null,
 			userData.masterData.timeGrid ?: TimeGrid.generateDefault(),
 			userData.masterData.timeStamp,
 			userData.userData,
@@ -357,14 +374,14 @@ class LoginDataInputViewModel @Inject constructor(
 		viewModelScope.launch {
 			try {
 				val user = userRepository.currentUser!!
-				val element = user.userData.getPeriodElement()
+				val element = user.userData.getUsablePeriodElement()
 					?: user.userData.getFallbackPeriodElements().firstOrNull() ?: return@launch
 				val startDate = weekLogicService.currentWeekStartDate()
 				timetableRepository.timetableSource().get(
 					params = TimetableRepository.TimetableParams(
 						elementId = element.id,
 						elementType = element.type,
-						startDate = startDate,
+						startDate = startDate.toKotlinLocalDate(),
 					),
 					fromCache = FromCache.CACHED_THEN_LOAD,
 					additionalKey = user.id
@@ -478,7 +495,7 @@ class LoginDataInputViewModel @Inject constructor(
 		anonymousSupportJob = viewModelScope.launch(Dispatchers.IO) {
 			anonymousSupported = try {
 				val apiHost = resolveEndpointOrigin().orEmpty()
-				val untisApiUrl = User.buildJsonRpcApiUrl(
+				val untisApiUrl = buildJsonRpcApiUrl(
 					buildApiUrl(apiHost, schoolInfo),
 					schoolInfo.loginName
 				).toString()

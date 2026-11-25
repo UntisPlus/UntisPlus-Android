@@ -1,7 +1,6 @@
 package com.deelabs.untisplus.domain
 
 import com.deelabs.untisplus.api.model.untis.absence.StudentAbsence
-import com.deelabs.untisplus.data.database.entities.SchoolYearEntity
 import com.deelabs.untisplus.data.repository.InfoCenterRepository
 import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.data.repository.UserSettingsRepository
@@ -12,18 +11,18 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import java.time.LocalDate
-import javax.inject.Inject
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.todayIn
 
-class GetAbsencesUseCase @Inject constructor(
+class GetAbsencesUseCase constructor(
 	private val userRepository: UserRepository,
 	private val infoCenterRepository: InfoCenterRepository,
 	private val userSettingsRepository: UserSettingsRepository,
-	getCurrentSchoolYear: GetCurrentSchoolYearUseCase
+	private val getCurrentSchoolYear: GetCurrentSchoolYearUseCase
 ) {
-	private val currentSchoolYear =
-		getCurrentSchoolYear() ?: SchoolYearEntity(startDate = LocalDate.now(), endDate = LocalDate.now())
-
 	companion object {
 		private const val ONE_HOUR: Long = 60 * 60 * 1000
 	}
@@ -39,10 +38,12 @@ class GetAbsencesUseCase @Inject constructor(
 				else -> 0
 			}
 
+			val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+			val schoolYear = getCurrentSchoolYear(today)
 			val timeRange = if (daysAgo > 0) {
-				LocalDate.now().minusDays(daysAgo) to LocalDate.now()
+				today.minus(daysAgo.toInt(), DateTimeUnit.DAY) to today
 			} else {
-				currentSchoolYear.startDate to currentSchoolYear.endDate
+				(schoolYear?.startDate ?: today) to (schoolYear?.endDate ?: today)
 			}
 
 			infoCenterRepository.absencesSource()

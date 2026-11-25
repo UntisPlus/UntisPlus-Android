@@ -23,7 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -37,11 +37,10 @@ import com.deelabs.untisplus.ui.common.NavigationBarInset
 import com.deelabs.untisplus.ui.navigation.AppRoutes
 import com.deelabs.untisplus.ui.pages.infocenter.fragments.AbsenceFilterDialog
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfoCenter(
-	bottomNavController: NavHostController = rememberNavController(), viewModel: InfoCenterViewModel = hiltViewModel()
+	bottomNavController: NavHostController = rememberNavController(), viewModel: InfoCenterViewModel = koinViewModel()
 ) {
 	var absenceFilterDialog by rememberSaveable { mutableStateOf(false) }
 

@@ -80,6 +80,8 @@ import com.deelabs.untisplus.ui.functional.bottomInsets
 import crocodile8.universal_cache.FromCache
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -279,12 +281,12 @@ private fun TimetableItemDetailsDialogPage(
 
 	val time = stringResource(
 		R.string.main_dialog_itemdetails_timeformat,
-		periodItem.originalPeriod.startDateTime.format(
+		periodItem.originalPeriod.startDateTime.toJavaLocalDateTime().format(
 			DateTimeFormatter.ofLocalizedTime(
 				FormatStyle.SHORT
 			)
 		),
-		periodItem.originalPeriod.endDateTime.format(
+		periodItem.originalPeriod.endDateTime.toJavaLocalDateTime().format(
 			DateTimeFormatter.ofLocalizedTime(
 				FormatStyle.SHORT
 			)
@@ -407,7 +409,7 @@ private fun TimetableItemDetailsDialogPage(
 
 			// Lesson homeworks
 			periodItem.originalPeriod.homeWorks?.forEach { homeWork ->
-				val endDate = homeWork.endDate
+				val endDate = homeWork.endDate.toJavaLocalDate()
 
 				ListItem(
 					headlineContent = {

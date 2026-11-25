@@ -13,15 +13,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class UserRepository @Inject constructor(
+class UserRepository constructor(
 	private val userDao: UserDao,
 	private val settingsDataStore: DataStore<Settings>,
 	private val cookieStorage: ProxyCookieStorage,
-) {
+) : CurrentUserProvider {
 	private val _userState = MutableStateFlow<UserState>(UserState.Loading)
 	val userState: StateFlow<UserState> = _userState
 
@@ -31,7 +28,7 @@ class UserRepository @Inject constructor(
 		initialValue = emptyList()
 	)
 
-	val currentUser: User?
+	override val currentUser: User?
 		get() = (_userState.value as? UserState.User)?.user
 
 	init {

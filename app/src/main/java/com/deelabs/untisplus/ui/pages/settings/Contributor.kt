@@ -15,8 +15,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImagePainter
-import coil.compose.rememberAsyncImagePainter
+import coil3.compose.AsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.data.model.github.GitHubUser
 import com.deelabs.untisplus.ui.common.ifNotNull

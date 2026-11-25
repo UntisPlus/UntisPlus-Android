@@ -31,9 +31,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.activities.MainActivity
@@ -52,7 +53,7 @@ import kotlinx.serialization.json.Json
 
 @Composable
 fun TimetableDrawer(
-	viewModel: TimetableDrawerViewModel = hiltViewModel(),
+	viewModel: TimetableDrawerViewModel = koinViewModel(),
 	drawerState: DrawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
 	masterDataRepository: MasterDataRepository,
 	displayedElement: PeriodElement? = null,
@@ -61,6 +62,8 @@ fun TimetableDrawer(
 ) {
 	val scope = rememberCoroutineScope()
 	val drawerScrollState = rememberScrollState()
+	val uriHandler = LocalUriHandler.current
+	val customLinks by viewModel.customLinks.collectAsStateWithLifecycle()
 
 	var showElementPicker by remember {
 		mutableStateOf<ElementType?>(
@@ -121,25 +124,54 @@ fun TimetableDrawer(
 			) {
 				Spacer(modifier = Modifier.height(24.dp))
 
+				if (viewModel.children.isNotEmpty()) {
+					DrawerText(
+						stringResource(
+							id = if (viewModel.children.size == 1) R.string.parent_child else R.string.parent_children
+						)
+					)
+					viewModel.children.forEach { child ->
+						val childElement = PeriodElement(ElementType.STUDENT, child.id)
+						NavigationDrawerItem(
+							icon = {
+								Icon(
+									painterResource(id = R.drawable.all_prefs_personal),
+									contentDescription = null
+								)
+							},
+							label = { Text(child.fullName()) },
+							selected = displayedElement == childElement,
+							onClick = {
+								scope.launch { drawerState.close() }
+								viewModel.onChildClick(child)
+							},
+							modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+						)
+					}
+				}
+
 				DrawerText(stringResource(id = R.string.all_favourites))
 
-				NavigationDrawerItem(
-					icon = {
-						Icon(
-							painterResource(id = R.drawable.all_prefs_personal),
-							contentDescription = null
-						)
-					},
-					label = { Text(stringResource(id = R.string.all_personal_timetable)) },
-					selected = displayedElement == null,
-					onClick = {
-						scope.launch {
-							drawerState.close()
-							onElementPicked(null)
-						}
-					},
-					modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-				)
+				val showPersonalTimetable by viewModel.showPersonalTimetable.collectAsStateWithLifecycle()
+				if (showPersonalTimetable) {
+					NavigationDrawerItem(
+						icon = {
+							Icon(
+								painterResource(id = R.drawable.all_prefs_personal),
+								contentDescription = null
+							)
+						},
+						label = { Text(stringResource(id = R.string.all_personal_timetable)) },
+						selected = displayedElement == null,
+						onClick = {
+							scope.launch {
+								drawerState.close()
+								onElementPicked(null)
+							}
+						},
+						modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+					)
+				}
 
 				val bookmarks by viewModel.bookmarks.collectAsStateWithLifecycle()
 				var isBookmarkSelected = bookmarks.mapNotNull(TimetableElement::toPeriodElement).any { bookmark ->
@@ -203,6 +235,9 @@ fun TimetableDrawer(
 				DrawerItems(
 					disableTypeSelection = displayedElement == null || isBookmarkSelected,
 					displayedElement = displayedElement,
+					showTeacherAbsences = viewModel.teacherAbsencesAvailable,
+					showClassTools = viewModel.showClassTools,
+					customLinks = customLinks,
 					onTimetableClick = { item ->
 						scope.launch { drawerState.close() }
 						showElementPicker = item.elementType
@@ -210,6 +245,10 @@ fun TimetableDrawer(
 					onNavigationClick = { item ->
 						scope.launch { drawerState.close() }
 						viewModel.onNavigationItemClick(item)
+					},
+					onCustomLinkClick = { link ->
+						scope.launch { drawerState.close() }
+						runCatching { uriHandler.openUri(link.url) }
 					}
 				)
 			}

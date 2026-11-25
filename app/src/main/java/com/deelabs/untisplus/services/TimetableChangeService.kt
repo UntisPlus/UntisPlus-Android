@@ -10,14 +10,17 @@ import android.util.Log
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.deelabs.untisplus.api.client.ProxyStreamEvent
+import com.deelabs.untisplus.api.model.proxy.ProxyStreamTarget
+import com.deelabs.untisplus.api.model.proxy.ProxyStreamTargetType
 import com.deelabs.untisplus.api.model.proxy.ProxyTimetableChangeRow
 import com.deelabs.untisplus.data.repository.ProxyRepository
 import com.deelabs.untisplus.data.repository.TimetableChangeBus
 import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.data.repository.UserSettingsRepository
+import com.deelabs.untisplus.helpers.isOnUnmeteredNetwork
+import com.deelabs.untisplus.helpers.isPowerSaveMode
 import com.deelabs.untisplus.workers.TimetableChangeNotifications
 import com.deelabs.untisplus.workers.TimetableChangeNotifications.NOTIFICATION_ID_SERVICE
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -27,7 +30,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
  * Keeps a live Server-Sent-Events connection to the untis-proxy
@@ -40,8 +44,7 @@ import javax.inject.Inject
  * backstop; both share the persisted change version, so nothing is announced
  * twice.
  */
-@AndroidEntryPoint
-class TimetableChangeService : Service() {
+class TimetableChangeService : Service(), KoinComponent {
 	companion object {
 		private const val LOG_TAG = "TimetableChangeService"
 		private const val RECONNECT_DELAY_MS = 15_000L
@@ -55,17 +58,13 @@ class TimetableChangeService : Service() {
 		}
 	}
 
-	@Inject
-	lateinit var userRepository: UserRepository
+	private val userRepository: UserRepository by inject()
 
-	@Inject
-	lateinit var userSettingsRepository: UserSettingsRepository
+	private val userSettingsRepository: UserSettingsRepository by inject()
 
-	@Inject
-	lateinit var proxyRepository: ProxyRepository
+	private val proxyRepository: ProxyRepository by inject()
 
-	@Inject
-	lateinit var changeBus: TimetableChangeBus
+	private val changeBus: TimetableChangeBus by inject()
 
 	private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 	private var watchJob: Job? = null
@@ -100,11 +99,23 @@ class TimetableChangeService : Service() {
 	private suspend fun watch() {
 		while (scope.isActive) {
 			val user = userRepository.currentUser
-			if (user == null || !user.usesUntisPlusProxy ||
-				!userSettingsRepository.getSettings(user.id).first().timetableChangeNotifications
-			) {
+			if (user == null || !user.usesUntisPlusProxy) {
 				stopSelf()
 				return
+			}
+			val settings = userSettingsRepository.getSettings(user.id).first()
+			if (!settings.timetableChangeNotifications) {
+				stopSelf()
+				return
+			}
+
+			// Battery/Wi-Fi-aware: a persistent socket is exactly what battery
+			// saver and metered connections try to avoid. When paused the
+			// 15-minute worker remains the backstop, so changes are still
+			// announced (just not within seconds).
+			if (!canHoldStream(settings.timetableChangeWifiOnly)) {
+				delay(RECONNECT_DELAY_MS)
+				continue
 			}
 
 			try {
@@ -112,7 +123,11 @@ class TimetableChangeService : Service() {
 					delay(RECONNECT_DELAY_MS)
 					continue
 				}
-				proxyRepository.timetableStream().collect { event ->
+				val streamTarget = ProxyStreamTarget(
+					type = ProxyStreamTargetType.fromStored(settings.timetableChangeStreamTargetType),
+					id = settings.timetableChangeStreamTargetId.takeIf { it > 0 }
+				).validated()
+				proxyRepository.timetableStream(streamTarget).collect { event ->
 					when (event) {
 						is ProxyStreamEvent.Snapshot -> persistVersions(event.current, event.eventVersion)
 						is ProxyStreamEvent.Change -> {
@@ -145,6 +160,13 @@ class TimetableChangeService : Service() {
 
 	private fun notify(changes: List<ProxyTimetableChangeRow>) {
 		TimetableChangeNotifications.postChanges(this, changes)
+	}
+
+	/** Whether the persistent SSE stream may run right now. */
+	private fun canHoldStream(wifiOnly: Boolean): Boolean {
+		if (isPowerSaveMode()) return false
+		if (wifiOnly && !isOnUnmeteredNetwork()) return false
+		return true
 	}
 
 	override fun onDestroy() {

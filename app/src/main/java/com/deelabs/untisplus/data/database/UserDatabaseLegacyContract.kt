@@ -2,7 +2,6 @@ package com.deelabs.untisplus.data.database
 
 import android.provider.BaseColumns
 
-
 object UserDatabaseLegacyContract {
 	object Users : BaseColumns {
 		const val TABLE_NAME = "users"

@@ -42,7 +42,7 @@ import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
@@ -54,6 +54,7 @@ import com.deelabs.untisplus.ui.common.AppScaffold
 import com.deelabs.untisplus.ui.common.SmallCircularProgressIndicator
 import com.deelabs.untisplus.ui.dialogs.ElementPickerDialogFullscreen
 import com.deelabs.untisplus.ui.functional.bottomInsets
+import kotlinx.datetime.toJavaLocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
@@ -62,7 +63,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoomFinder(
-	viewModel: RoomFinderViewModel = hiltViewModel()
+	viewModel: RoomFinderViewModel = koinViewModel()
 ) {
 	val roomList by viewModel.roomList.collectAsStateWithLifecycle()
 	var showElementPicker by rememberSaveable { mutableStateOf(false) }
@@ -228,8 +229,8 @@ fun RoomFinderHourSelector(
 				Text(
 					text = stringResource(
 						id = R.string.roomfinder_current_hour_time,
-						hour.timeGridUnit.startTime.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)),
-						hour.timeGridUnit.endTime.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
+						hour.timeGridUnit.startTime.toJavaLocalTime().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)),
+						hour.timeGridUnit.endTime.toJavaLocalTime().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
 					),
 					textAlign = TextAlign.Center,
 					modifier = Modifier.fillMaxWidth()

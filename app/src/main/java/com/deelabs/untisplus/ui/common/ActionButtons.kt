@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.data.database.entities.User
+import com.deelabs.untisplus.data.database.entities.getDisplayedName
 
 @Composable
 fun ProfileSelectorAction(

@@ -14,14 +14,12 @@
   <rect width="1080" height="180" fill="url(#fade)"/>
 
   <rect x="48" y="40" width="80" height="80" rx="20" fill="url(#mark)"/>
-  <g stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" fill="none">
-    <path d="M66 62H110"/>
-    <path d="M66 82H110"/>
-    <path d="M66 102H110"/>
-    <path d="M84 54V110"/>
-  </g>
-  <circle cx="104" cy="82" r="19" fill="#F8FAFC"/>
-  <path d="M104 72V92M94 82H114" stroke="#0F766E" stroke-width="7" stroke-linecap="round"/>
+  <path d="M70 58V84C70 100 78 110 88 110C98 110 106 100 106 84V58"
+        fill="none" stroke="#FFFFFF" stroke-width="10"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="110" cy="58" r="16" fill="#5EEAD4"/>
+  <path d="M110 50V66M102 58H118"
+        stroke="#0B132B" stroke-width="6" stroke-linecap="round"/>
 
   <g font-family="Inter, DejaVu Sans, sans-serif">
     <text x="152" y="82" font-size="48" font-weight="700" fill="#FFFFFF">UntisPlus</text>

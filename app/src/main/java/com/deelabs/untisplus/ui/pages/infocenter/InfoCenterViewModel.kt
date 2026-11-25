@@ -214,7 +214,7 @@ class InfoCenterViewModel constructor(
 	}
 
 	val officeHoursState: StateFlow<OfficeHoursUiState> =
-		(if (!shouldShowAbsences) emptyFlow() else getOfficeHours())
+		(if (!shouldShowOfficeHours) emptyFlow() else getOfficeHours())
 			.map(OfficeHoursUiState::Success)
 			.stateIn(
 				scope = viewModelScope,

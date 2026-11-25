@@ -31,6 +31,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
@@ -61,6 +62,8 @@ fun TimetableDrawer(
 ) {
 	val scope = rememberCoroutineScope()
 	val drawerScrollState = rememberScrollState()
+	val uriHandler = LocalUriHandler.current
+	val customLinks by viewModel.customLinks.collectAsStateWithLifecycle()
 
 	var showElementPicker by remember {
 		mutableStateOf<ElementType?>(
@@ -204,6 +207,8 @@ fun TimetableDrawer(
 					disableTypeSelection = displayedElement == null || isBookmarkSelected,
 					displayedElement = displayedElement,
 					showTeacherAbsences = viewModel.teacherAbsencesAvailable,
+					showClassTools = viewModel.showClassTools,
+					customLinks = customLinks,
 					onTimetableClick = { item ->
 						scope.launch { drawerState.close() }
 						showElementPicker = item.elementType
@@ -211,6 +216,10 @@ fun TimetableDrawer(
 					onNavigationClick = { item ->
 						scope.launch { drawerState.close() }
 						viewModel.onNavigationItemClick(item)
+					},
+					onCustomLinkClick = { link ->
+						scope.launch { drawerState.close() }
+						runCatching { uriHandler.openUri(link.url) }
 					}
 				)
 			}

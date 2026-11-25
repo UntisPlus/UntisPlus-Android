@@ -62,6 +62,14 @@ object AppRoutes {
 	@Serializable
 	data object TeacherAbsences
 
+	/** Teacher-facing list of absences in the current user's lessons. */
+	@Serializable
+	data object StudentAbsences
+
+	/** Teacher-facing class register entries in the current user's lessons. */
+	@Serializable
+	data object ClassRegister
+
 	@Serializable
 	data object Settings {
 

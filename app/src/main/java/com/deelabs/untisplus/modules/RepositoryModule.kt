@@ -2,13 +2,17 @@ package com.deelabs.untisplus.modules
 
 import com.deelabs.untisplus.data.repository.GlobalSettingsRepository
 import com.deelabs.untisplus.data.repository.CurrentUserProvider
+import com.deelabs.untisplus.data.repository.ClassRegisterRepository
+import com.deelabs.untisplus.data.repository.CustomLinksRepository
 import com.deelabs.untisplus.data.repository.DataStoreProxyCompatibilityStore
 import com.deelabs.untisplus.data.repository.ImportedCalendarRepository
+import com.deelabs.untisplus.data.repository.RestClassRegisterRepository
 import com.deelabs.untisplus.data.repository.InfoCenterRepository
 import com.deelabs.untisplus.data.repository.MasterDataRepository
 import com.deelabs.untisplus.data.repository.MessagesRepository
 import com.deelabs.untisplus.data.repository.ProxyCompatibilityStore
 import com.deelabs.untisplus.data.repository.ProxyRepository
+import com.deelabs.untisplus.data.repository.RestCustomLinksRepository
 import com.deelabs.untisplus.data.repository.TimetableChangeBus
 import com.deelabs.untisplus.data.repository.TimetableRepository
 import com.deelabs.untisplus.data.repository.UntisInfoCenterRepository
@@ -58,6 +62,10 @@ val repositoryModule = module {
 	factory<MessagesRepository> {
 		UntisMessagesRepository(get(), get(named("cacheDir")), get())
 	}
+
+	single<CustomLinksRepository> { RestCustomLinksRepository(get()) }
+
+	factory<ClassRegisterRepository> { RestClassRegisterRepository(get(), get(), get()) }
 
 	factory { TimetableMapper(get(), get(), get(), get()) }
 }

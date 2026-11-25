@@ -6,6 +6,7 @@ import com.deelabs.untisplus.data.database.entities.restApiUrl
 import com.deelabs.untisplus.api.client.UserDataApi
 import com.deelabs.untisplus.api.client.installCookieStorage
 import com.deelabs.untisplus.api.rest.MessagesApi
+import com.deelabs.untisplus.api.rest.UserApi
 import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.exceptions.UntisRestApiException
 import com.deelabs.untisplus.model.rest.ErrorResponse
@@ -23,6 +24,9 @@ import kotlin.reflect.KProperty
 val restApiClientModule = module {
 	single<MessagesApiFactory> {
 		DefaultMessagesApiFactory(get(), get(), get(), get())
+	}
+	single<UserApiFactory> {
+		DefaultUserApiFactory(get(), get(), get(), get())
 	}
 }
 
@@ -65,6 +69,48 @@ class DefaultMessagesApiFactory constructor(
 	override suspend fun create(): MessagesApi = messagesApi.apply {
 		val user = userRepository.currentUser!!
 		// TODO: Only fetch token if missing or expired
+		val token = userDataApi.getAuthToken(user.jsonRpcApiUrl.toString(), user.user, user.key)
+		setBearerToken(token)
+	}
+}
+
+interface UserApiFactory {
+	suspend fun create(): UserApi
+}
+
+/** REST client for the official app's home/integration links. */
+class DefaultUserApiFactory constructor(
+	private val userRepository: UserRepository,
+	private val userDataApi: UserDataApi,
+	private val httpClientEngineFactory: HttpClientEngineFactory<*>,
+	private val cookiesStorage: CookiesStorage
+) : UserApiFactory {
+	val userApi by keyedLazy({ userRepository.currentUser!!.id }) {
+		UserApi(
+			baseUrl = userRepository.currentUser!!.restApiUrl.toString(),
+			httpClientEngine = httpClientEngineFactory.create()
+		) {
+			it.expectSuccess = true
+			it.installCookieStorage(cookiesStorage)
+			it.install(ContentNegotiation) {
+				json()
+			}
+			it.install(HttpRequestRetry) {
+				retryOnServerErrors(maxRetries = 3)
+				retryOnException(maxRetries = 3)
+				exponentialDelay()
+			}
+			it.HttpResponseValidator {
+				handleResponseExceptionWithRequest { exception, request ->
+					val clientException = exception as? ClientRequestException ?: return@handleResponseExceptionWithRequest
+					throw UntisRestApiException(clientException.response.body<ErrorResponse>())
+				}
+			}
+		}
+	}
+
+	override suspend fun create(): UserApi = userApi.apply {
+		val user = userRepository.currentUser!!
 		val token = userDataApi.getAuthToken(user.jsonRpcApiUrl.toString(), user.user, user.key)
 		setBearerToken(token)
 	}

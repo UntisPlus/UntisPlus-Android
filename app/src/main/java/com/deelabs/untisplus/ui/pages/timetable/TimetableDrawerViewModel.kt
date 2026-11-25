@@ -6,9 +6,13 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deelabs.untisplus.activities.main.NavItemNavigation
+import com.deelabs.untisplus.api.model.untis.enumeration.Right
 import com.deelabs.untisplus.api.model.untis.timetable.PeriodElement
+import com.deelabs.untisplus.data.repository.CustomLink
+import com.deelabs.untisplus.data.repository.CustomLinksRepository
 import com.deelabs.untisplus.data.repository.MasterDataRepository
 import com.deelabs.untisplus.data.repository.ProxyRepository
+import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.data.repository.UserSettingsRepository
 import com.deelabs.untisplus.data.settings.model.TimetableElement
 import com.deelabs.untisplus.ui.navigation.AppNavigator
@@ -23,6 +27,8 @@ class TimetableDrawerViewModel constructor(
 	private val navigator: AppNavigator,
 	private val masterDataRepository: MasterDataRepository,
 	private val proxyRepository: ProxyRepository,
+	private val customLinksRepository: CustomLinksRepository,
+	private val userRepository: UserRepository,
 ) : ViewModel() {
 	var enableDrawerGestures: Boolean = true
 		private set
@@ -37,6 +43,13 @@ class TimetableDrawerViewModel constructor(
 	private val _bookmarks = MutableStateFlow<List<TimetableElement>>(emptyList())
 	val bookmarks: StateFlow<List<TimetableElement>> = _bookmarks
 
+	private val _customLinks = MutableStateFlow<List<CustomLink>>(emptyList())
+	val customLinks: StateFlow<List<CustomLink>> = _customLinks
+
+	/** Teacher-only class register tools, from the user's Untis rights. */
+	val showClassTools: Boolean
+		get() = Right.CLASSREGISTER in userRepository.currentUser?.userData?.rights.orEmpty()
+
 	init {
 		viewModelScope.launch {
 			userSettingsRepository.getSettings().collect {
@@ -46,6 +59,11 @@ class TimetableDrawerViewModel constructor(
 		}
 		viewModelScope.launch {
 			proxyRepository.teacherAbsencesSupported.collect { teacherAbsencesAvailable = it }
+		}
+		viewModelScope.launch {
+			customLinksRepository.load()
+				.onSuccess { _customLinks.value = it }
+				.onFailure { _customLinks.value = emptyList() }
 		}
 	}
 

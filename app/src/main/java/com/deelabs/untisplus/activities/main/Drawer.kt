@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
 import com.deelabs.untisplus.api.model.untis.timetable.PeriodElement
+import com.deelabs.untisplus.data.repository.CustomLink
 import com.deelabs.untisplus.ui.navigation.AppRoutes
 
 @Composable
@@ -23,8 +24,11 @@ fun DrawerItems(
 	disableTypeSelection: Boolean = false,
 	displayedElement: PeriodElement? = null,
 	showTeacherAbsences: Boolean = false,
+	showClassTools: Boolean = false,
+	customLinks: List<CustomLink> = emptyList(),
 	onTimetableClick: (item: NavItemTimetable) -> Unit,
 	onNavigationClick: (item: NavItemNavigation) -> Unit,
+	onCustomLinkClick: (link: CustomLink) -> Unit = {},
 ) {
 	val navItemsElementTypes = listOf(
 		NavItemTimetable(
@@ -59,6 +63,22 @@ fun DrawerItems(
 				route = AppRoutes.RoomFinder
 			)
 		)
+		if (showClassTools) {
+			add(
+				NavItemNavigation(
+					icon = painterResource(id = R.drawable.all_absences),
+					label = stringResource(id = R.string.activity_title_student_absences),
+					route = AppRoutes.StudentAbsences
+				)
+			)
+			add(
+				NavItemNavigation(
+					icon = painterResource(id = R.drawable.all_classes),
+					label = stringResource(id = R.string.activity_title_class_register),
+					route = AppRoutes.ClassRegister
+				)
+			)
+		}
 		if (showTeacherAbsences) {
 			add(
 				NavItemNavigation(
@@ -97,6 +117,20 @@ fun DrawerItems(
 			onClick = { onNavigationClick(item) },
 			modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
 		)
+	}
+
+	if (customLinks.isNotEmpty()) {
+		DrawerDivider()
+		DrawerText(stringResource(id = R.string.nav_custom_links))
+		customLinks.forEach { link ->
+			NavigationDrawerItem(
+				icon = { Icon(painterResource(id = R.drawable.all_infocenter), contentDescription = null) },
+				label = { Text(link.name) },
+				selected = false,
+				onClick = { onCustomLinkClick(link) },
+				modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+			)
+		}
 	}
 }
 

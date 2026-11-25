@@ -2,6 +2,8 @@ package com.deelabs.untisplus.modules
 
 import androidx.compose.material3.ColorScheme
 import androidx.lifecycle.SavedStateHandle
+import com.deelabs.untisplus.ui.pages.classregister.ClassRegisterViewModel
+import com.deelabs.untisplus.ui.pages.classregister.StudentAbsencesViewModel
 import com.deelabs.untisplus.ui.pages.infocenter.InfoCenterViewModel
 import com.deelabs.untisplus.ui.pages.login.LoginViewModel
 import com.deelabs.untisplus.ui.pages.login.datainput.LoginDataInputViewModel
@@ -46,7 +48,20 @@ val viewModelModule = module {
 
 	viewModelOf(::TeacherAbsencesViewModel)
 
-	viewModelOf(::TimetableDrawerViewModel)
+	viewModelOf(::StudentAbsencesViewModel)
+
+	viewModelOf(::ClassRegisterViewModel)
+
+	viewModel {
+		TimetableDrawerViewModel(
+			userSettingsRepository = get(),
+			navigator = get(),
+			masterDataRepository = get(),
+			proxyRepository = get(),
+			customLinksRepository = get(),
+			userRepository = get(),
+		)
+	}
 
 	viewModelOf(::ImportedCalendarsViewModel)
 

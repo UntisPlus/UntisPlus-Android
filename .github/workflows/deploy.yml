@@ -64,7 +64,7 @@ jobs:
           echo "Releasing UntisPlus $VERSION"
 
       - name: Assemble release APK and bundle
-        run: ./gradlew assembleRelease bundleRelease
+        run: ./gradlew assembleRelease bundleRelease --parallel --console=plain
 
       - name: Publish GitHub release
         env:

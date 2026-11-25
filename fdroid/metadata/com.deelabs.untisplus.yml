@@ -18,7 +18,7 @@ Repo: https://github.com/UntisPlus/UntisPlus-Android
 Builds:
   - versionName: v1.4.0
     versionCode: 1040099
-    commit: e72eca316be3ae76b5bca05d0d1c3fadb5e4c140
+    commit: baa2605a679a480a49363d5ba912b3093fa70db3
     sudo:
       - apt-get update
       - apt-get install -y openjdk-21-jdk-headless

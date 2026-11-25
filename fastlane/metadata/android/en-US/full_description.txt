@@ -29,8 +29,8 @@ your current timetable if no anonymous access is available.
 
 Why use this app when there is an official one?
 The official app is proprietary and includes tracking software and
-in-app purchases. UntisPlus is free and open source, feature-rich and
-respects your privacy.
+in-app purchases. UntisPlus is free and open source, feature-rich and lets
+you choose which endpoint handles your data.
 
 WebUntis is a proprietary network. The default proxy and the Untis service
 are listed under Anti-Features; no third-party tracking SDK is included.

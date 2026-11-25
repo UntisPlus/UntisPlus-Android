@@ -33,7 +33,7 @@ Stundenplan aufrufen kannst, sollte kein anonymer Zugang verfügbar sein.
 Warum solltest du noch diese App anstatt der offiziellen benutzen?
 Die offizielle App ist proprietär und beinhaltet Tracking-Software und
 In-App-Käufe. UntisPlus ist kostenlos und Open Source, funktionsreich und
-schützt deine Privatsphäre.
+lässt dich selbst wählen, welcher Endpunkt deine Daten verarbeitet.
 
 WebUntis ist ein propritäres Netzwerk. Der Standard-Proxy und der Untis-Dienst
 sind unter den Anti-Features aufgeführt; Tracking-SDKs sind nicht enthalten.

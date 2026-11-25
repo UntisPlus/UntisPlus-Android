@@ -5,4 +5,4 @@
 - Add custom links and cache the UntisPlus compatibility check at login
 - Fix office hour handling
 - Keep the build fully FOSS, with no Google Play Services, Firebase or
-  tracking
+  third-party tracking SDKs

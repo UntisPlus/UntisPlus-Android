@@ -48,5 +48,6 @@ static version-code source is added.
 ## Store metadata
 
 The icon, feature graphic, screenshots, locale descriptions, and historical
-changelogs were imported from the upstream BetterUntis `fdroid` branch and
-adapted for UntisPlus where needed.
+changelogs were imported from the upstream BetterUntis `fdroid` branch and then
+rebranded for UntisPlus. The remaining BetterUntis mentions are attribution for
+the fork's origin.

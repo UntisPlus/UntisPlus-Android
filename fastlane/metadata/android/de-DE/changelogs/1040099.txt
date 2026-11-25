@@ -5,4 +5,4 @@
 - Eigene Links und zwischengespeicherte UntisPlus-Kompatibilitätsprüfung
   beim Login
 - Sprechstunden-Fehler behoben
-- Komplett freier Build ohne Google Play Dienste, Firebase oder Tracking
+- Komplett freier Build ohne Google Play Dienste, Firebase oder Tracking-SDKs von Dritten

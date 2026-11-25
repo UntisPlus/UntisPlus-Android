@@ -4,6 +4,8 @@ import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Text
@@ -33,6 +35,10 @@ import org.koin.core.component.inject
 
 /** Configures a timetable widget with the active profile and a timetable element. */
 class ElementPickerWidgetConfigureActivity : ComponentActivity(), KoinComponent {
+	companion object {
+		private const val LOG_TAG = "WidgetConfigure"
+	}
+
 	private val userDao: UserDao by inject()
 	private val userRepository: UserRepository by inject()
 	private val masterDataRepository: MasterDataRepository by inject()
@@ -69,7 +75,7 @@ class ElementPickerWidgetConfigureActivity : ComponentActivity(), KoinComponent 
 					ElementPickerDialogFullscreen(
 						title = { Text(stringResource(R.string.widget_configuration)) },
 						masterDataRepository = masterDataRepository,
-						onDismiss = { finish() },
+						onDismiss = { success -> if (!success) finish() },
 						onSelect = { element -> saveConfiguration(appWidgetId, userId, element) }
 					)
 				}
@@ -78,18 +84,30 @@ class ElementPickerWidgetConfigureActivity : ComponentActivity(), KoinComponent 
 	}
 
 	private fun saveConfiguration(appWidgetId: Int, userId: Long, element: PeriodElement?) {
-		lifecycleScope.launch {
-			val glanceId = GlanceAppWidgetManager(this@ElementPickerWidgetConfigureActivity)
-				.getGlanceIdBy(appWidgetId)
-			WidgetConfigurationStore.write(this@ElementPickerWidgetConfigureActivity, glanceId, userId, element)
-			TimetableWidget().update(this@ElementPickerWidgetConfigureActivity, glanceId)
-			WidgetUpdateWorker.enqueue(WorkManager.getInstance(this@ElementPickerWidgetConfigureActivity))
+		// The launcher removes a widget when its configuration activity finishes
+		// with RESULT_CANCELED, so acknowledge the widget before doing suspend work.
+		setResult(
+			Activity.RESULT_OK,
+			Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+		)
 
-			setResult(
-				Activity.RESULT_OK,
-				Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-			)
-			finish()
+		lifecycleScope.launch {
+			try {
+				val glanceId = GlanceAppWidgetManager(this@ElementPickerWidgetConfigureActivity)
+					.getGlanceIdBy(appWidgetId)
+				WidgetConfigurationStore.write(this@ElementPickerWidgetConfigureActivity, glanceId, userId, element)
+				TimetableWidget().update(this@ElementPickerWidgetConfigureActivity, glanceId)
+				WidgetUpdateWorker.enqueue(WorkManager.getInstance(this@ElementPickerWidgetConfigureActivity))
+			} catch (t: Throwable) {
+				Log.e(LOG_TAG, "Failed to finish widget configuration", t)
+				Toast.makeText(
+					this@ElementPickerWidgetConfigureActivity,
+					R.string.widget_configuration_failed,
+					Toast.LENGTH_LONG
+				).show()
+			} finally {
+				finish()
+			}
 		}
 	}
 }

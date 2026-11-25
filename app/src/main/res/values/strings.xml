@@ -476,6 +476,7 @@
     <string name="widget_timetable_empty">No timetable available for today</string>
     <string name="widget_timetable_link">Create shortcut to…</string>
     <string name="widget_timetable_configure">Open UntisPlus to configure this widget.</string>
+    <string name="widget_configuration_failed">Widget added, but setup could not finish. Open UntisPlus to try again.</string>
     <string name="widget_timetable_no_profile">This widget\'s profile is no longer available. Open UntisPlus to configure it again.</string>
     <string name="widget_timetable_no_element">No timetable element is configured for this profile.</string>
     <string name="widget_timetable_load_error">Timetable could not be loaded. Tap to open UntisPlus.</string>

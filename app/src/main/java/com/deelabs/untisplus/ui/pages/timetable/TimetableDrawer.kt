@@ -124,25 +124,54 @@ fun TimetableDrawer(
 			) {
 				Spacer(modifier = Modifier.height(24.dp))
 
+				if (viewModel.children.isNotEmpty()) {
+					DrawerText(
+						stringResource(
+							id = if (viewModel.children.size == 1) R.string.parent_child else R.string.parent_children
+						)
+					)
+					viewModel.children.forEach { child ->
+						val childElement = PeriodElement(ElementType.STUDENT, child.id)
+						NavigationDrawerItem(
+							icon = {
+								Icon(
+									painterResource(id = R.drawable.all_prefs_personal),
+									contentDescription = null
+								)
+							},
+							label = { Text(child.fullName()) },
+							selected = displayedElement == childElement,
+							onClick = {
+								scope.launch { drawerState.close() }
+								viewModel.onChildClick(child)
+							},
+							modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+						)
+					}
+				}
+
 				DrawerText(stringResource(id = R.string.all_favourites))
 
-				NavigationDrawerItem(
-					icon = {
-						Icon(
-							painterResource(id = R.drawable.all_prefs_personal),
-							contentDescription = null
-						)
-					},
-					label = { Text(stringResource(id = R.string.all_personal_timetable)) },
-					selected = displayedElement == null,
-					onClick = {
-						scope.launch {
-							drawerState.close()
-							onElementPicked(null)
-						}
-					},
-					modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-				)
+				val showPersonalTimetable by viewModel.showPersonalTimetable.collectAsStateWithLifecycle()
+				if (showPersonalTimetable) {
+					NavigationDrawerItem(
+						icon = {
+							Icon(
+								painterResource(id = R.drawable.all_prefs_personal),
+								contentDescription = null
+							)
+						},
+						label = { Text(stringResource(id = R.string.all_personal_timetable)) },
+						selected = displayedElement == null,
+						onClick = {
+							scope.launch {
+								drawerState.close()
+								onElementPicked(null)
+							}
+						},
+						modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+					)
+				}
 
 				val bookmarks by viewModel.bookmarks.collectAsStateWithLifecycle()
 				var isBookmarkSelected = bookmarks.mapNotNull(TimetableElement::toPeriodElement).any { bookmark ->

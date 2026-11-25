@@ -20,6 +20,13 @@ data class UserData(
 		?.takeIf { elemId > 0 }
 		?.let { PeriodElement(it, elemId) }
 
+	/** Guardian/parent ids aren't usable timetable or Info Center elements. */
+	@Suppress("DEPRECATION")
+	fun getUsablePeriodElement(): PeriodElement? = getPeriodElement()
+		?.takeIf { it.type != ElementType.PARENT && it.type != ElementType.LEGAL_GUARDIAN }
+
+	fun isParentAccount(): Boolean = children.isNotEmpty() && getUsablePeriodElement() == null
+
 	fun getFallbackPeriodElements(): List<PeriodElement> = buildList {
 		children.filterNotNull().forEach {
 			add(PeriodElement(ElementType.STUDENT, it.id))

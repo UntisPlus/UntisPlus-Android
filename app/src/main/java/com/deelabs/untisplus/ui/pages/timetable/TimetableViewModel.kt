@@ -212,7 +212,7 @@ class TimetableViewModel constructor(
 					_needsPersonalTimetable.emit(false)
 					//_currentElement.update { prev -> prev ?: it } // Update only if null
 			} ?: run {
-				_personalElement.value = currentUser.userData.getPeriodElement()
+				_personalElement.value = currentUser.userData.getUsablePeriodElement()
 					?: currentUser.userData.getFallbackPeriodElements().firstOrNull()?.also {
 						Log.i(
 							"TimetableViewModel",
@@ -462,7 +462,11 @@ class TimetableViewModel constructor(
 
 	fun getTitle(context: Context) = requestedElement?.let {
 		if (it == _personalElement.value) null // Use Profile name for personal timetable
-		else masterDataRepository.getLongName(it)
+		else if (it.type == ElementType.STUDENT) {
+			// Parent accounts select children directly from the persisted user data.
+			currentUser.userData.children.firstOrNull { child -> child?.id == it.id }?.fullName()
+				?: masterDataRepository.getLongName(it)
+		} else masterDataRepository.getLongName(it)
 	}
 		?: (currentUser.getDisplayedName(context) + (if (isDebug) " (${currentUser.id})" else ""))
 

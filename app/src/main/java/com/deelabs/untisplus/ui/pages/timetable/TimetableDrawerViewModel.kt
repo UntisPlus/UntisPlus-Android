@@ -6,8 +6,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deelabs.untisplus.activities.main.NavItemNavigation
+import com.deelabs.untisplus.api.model.untis.Person
+import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
 import com.deelabs.untisplus.api.model.untis.enumeration.Right
 import com.deelabs.untisplus.api.model.untis.timetable.PeriodElement
+import com.deelabs.untisplus.data.repository.ChildSelectionRepository
 import com.deelabs.untisplus.data.repository.CustomLink
 import com.deelabs.untisplus.data.repository.CustomLinksRepository
 import com.deelabs.untisplus.data.repository.MasterDataRepository
@@ -29,6 +32,7 @@ class TimetableDrawerViewModel constructor(
 	private val proxyRepository: ProxyRepository,
 	private val customLinksRepository: CustomLinksRepository,
 	private val userRepository: UserRepository,
+	private val childSelectionRepository: ChildSelectionRepository,
 ) : ViewModel() {
 	var enableDrawerGestures: Boolean = true
 		private set
@@ -46,19 +50,36 @@ class TimetableDrawerViewModel constructor(
 	private val _customLinks = MutableStateFlow<List<CustomLink>>(emptyList())
 	val customLinks: StateFlow<List<CustomLink>> = _customLinks
 
-	/** Teacher-only class register tools, from the user's Untis rights. */
+	/** Children of a parent/guardian account, used as timetable targets. */
+	val children: List<Person>
+		get() = userRepository.currentUser?.userData?.children?.filterNotNull().orEmpty()
+
+	private val isParent: Boolean
+		get() = userRepository.currentUser?.userData?.isParentAccount() == true
+
+	val selectedChildId: StateFlow<Long?> = childSelectionRepository.selectedChildId
+
+	/** Parents only get the personal timetable shortcut once configured in settings. */
+	private val _showPersonalTimetable = MutableStateFlow(!isParent)
+	val showPersonalTimetable: StateFlow<Boolean> = _showPersonalTimetable
+
+	/** Teacher-only class register tools; parent/guardian accounts never get them. */
 	val showClassTools: Boolean
-		get() = Right.CLASSREGISTER in userRepository.currentUser?.userData?.rights.orEmpty()
+		get() = !isParent && Right.CLASSREGISTER in userRepository.currentUser?.userData?.rights.orEmpty()
 
 	init {
+		if (children.isNotEmpty() && selectedChildId.value !in children.map { it.id })
+			childSelectionRepository.selectChild(children.first().id)
+
 		viewModelScope.launch {
 			userSettingsRepository.getSettings().collect {
 				it.themeColor
 				_bookmarks.value = it.bookmarksList
+				_showPersonalTimetable.value = !isParent || it.hasTimetablePersonalTimetable()
 			}
 		}
 		viewModelScope.launch {
-			proxyRepository.teacherAbsencesSupported.collect { teacherAbsencesAvailable = it }
+			proxyRepository.teacherAbsencesSupported.collect { teacherAbsencesAvailable = !isParent && it }
 		}
 		viewModelScope.launch {
 			customLinksRepository.load()
@@ -73,6 +94,11 @@ class TimetableDrawerViewModel constructor(
 
 	fun onBookmarkClick(bookmark: PeriodElement) {
 		navigator.navigate(AppRoutes.Timetable(bookmark.type, bookmark.id))
+	}
+
+	fun onChildClick(child: Person) {
+		childSelectionRepository.selectChild(child.id)
+		navigator.navigate(AppRoutes.Timetable(ElementType.STUDENT, child.id))
 	}
 
 	fun addBookmark(item: PeriodElement) = viewModelScope.launch {

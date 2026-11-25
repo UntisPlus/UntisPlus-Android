@@ -697,4 +697,20 @@
 	<string name="class_register_search">Search entries</string>
 	<string name="class_register_all">All</string>
 	<string name="class_register_custom_range">Custom range</string>
+
+	<!-- Parent / guardian accounts -->
+	<string name="parent_child">Child</string>
+	<string name="parent_children">Children</string>
+	<string name="parent_all_children">All children</string>
+	<string name="parent_absence_student">%1$s · %2$s</string>
+	<string name="parent_event_student">%1$s · %2$s</string>
+	<string name="parent_office_hours_for">Contact hours for %1$s</string>
+	<string name="parent_office_hours_registration_title">Register for contact hours</string>
+	<string name="parent_office_hours_available_slots">Available timeslots</string>
+	<string name="parent_office_hours_no_slots">No timeslots available</string>
+	<string name="parent_office_hours_slot_time">%1$s–%2$s</string>
+	<string name="parent_office_hours_slot_free">Available</string>
+	<string name="parent_office_hours_slot_other">Unavailable</string>
+	<string name="parent_office_hours_slot_self">Your booking</string>
+	<string name="parent_office_hours_register">Register</string>
 </resources>

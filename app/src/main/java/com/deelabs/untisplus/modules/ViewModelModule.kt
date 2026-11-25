@@ -60,6 +60,7 @@ val viewModelModule = module {
 			proxyRepository = get(),
 			customLinksRepository = get(),
 			userRepository = get(),
+			childSelectionRepository = get(),
 		)
 	}
 

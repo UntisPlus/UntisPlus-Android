@@ -374,7 +374,7 @@ class LoginDataInputViewModel constructor(
 		viewModelScope.launch {
 			try {
 				val user = userRepository.currentUser!!
-				val element = user.userData.getPeriodElement()
+				val element = user.userData.getUsablePeriodElement()
 					?: user.userData.getFallbackPeriodElements().firstOrNull() ?: return@launch
 				val startDate = weekLogicService.currentWeekStartDate()
 				timetableRepository.timetableSource().get(

@@ -8,6 +8,7 @@ import com.deelabs.untisplus.domain.GetMessagesOfDayUseCase
 import com.deelabs.untisplus.domain.GetMessagesOfDayUseCaseImpl
 import com.deelabs.untisplus.domain.GetMessagesUseCase
 import com.deelabs.untisplus.domain.GetMessagesUseCaseImpl
+import com.deelabs.untisplus.domain.GetOfficeHourRegistrationsUseCase
 import com.deelabs.untisplus.domain.GetOfficeHoursUseCase
 import com.deelabs.untisplus.domain.GetRoomFinderItemsUseCase
 import com.deelabs.untisplus.domain.GetRoomFinderItemsUseCaseImpl
@@ -31,4 +32,6 @@ val useCaseModule = module {
 	factory { GetHomeworkUseCase(get(), get(), get()) }
 
 	factory { GetOfficeHoursUseCase(get(), get()) }
+
+	factory { GetOfficeHourRegistrationsUseCase(get(), get()) }
 }

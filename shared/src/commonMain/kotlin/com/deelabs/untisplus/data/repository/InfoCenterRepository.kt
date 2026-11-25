@@ -11,6 +11,7 @@ import com.deelabs.untisplus.api.model.untis.absence.StudentAbsence
 import com.deelabs.untisplus.api.model.untis.classreg.Exam
 import com.deelabs.untisplus.api.model.untis.classreg.HomeWork
 import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
+import com.deelabs.untisplus.api.model.response.OfficeHourRegistrationsResult
 import com.deelabs.untisplus.api.model.untis.timetable.OfficeHour
 import com.deelabs.untisplus.data.cache.DiskCache
 import crocodile8.universal_cache.CachedSource
@@ -30,6 +31,8 @@ interface InfoCenterRepository {
 
 	fun officeHoursSource(): CachedSource<OfficeHoursParams, List<OfficeHour>>
 
+	fun officeHourRegistrationsSource(): CachedSource<OfficeHourRegistrationParams, OfficeHourRegistrationsResult>
+
 	data class EventsParams(
 		val elementId: Long,
 		val elementType: ElementType,
@@ -47,6 +50,11 @@ interface InfoCenterRepository {
 	data class OfficeHoursParams(
 		val klasseId: Long,
 		val startDate: LocalDate
+	)
+
+	data class OfficeHourRegistrationParams(
+		val periodId: Long,
+		val teacherId: Long
 	)
 }
 
@@ -128,7 +136,7 @@ class UntisInfoCenterRepository constructor(
 					key = user.key
 				).absences
 			},
-			cache = DiskCache(cacheDir.resolve("infocenter").resolve("homework"), serializer()),
+			cache = DiskCache(cacheDir.resolve("infocenter").resolve("absences"), serializer()),
 			timeProvider = timeProvider
 		)
 	}
@@ -146,6 +154,23 @@ class UntisInfoCenterRepository constructor(
 				).officeHours
 			},
 			cache = DiskCache(cacheDir.resolve("infocenter").resolve("officehours"), serializer()),
+			timeProvider = timeProvider
+		)
+	}
+
+	override fun officeHourRegistrationsSource(): CachedSource<InfoCenterRepository.OfficeHourRegistrationParams, OfficeHourRegistrationsResult> {
+		val user = currentUserProvider.currentUser!!
+		return CachedSource(
+			source = { params ->
+				officeHoursApi.getOfficeHourRegistrations(
+					periodId = params.periodId,
+					teacherId = params.teacherId,
+					apiUrl = user.jsonRpcApiUrlString,
+					user = user.user,
+					key = user.key
+				)
+			},
+			cache = DiskCache(cacheDir.resolve("infocenter").resolve("officehourregistrations"), serializer()),
 			timeProvider = timeProvider
 		)
 	}

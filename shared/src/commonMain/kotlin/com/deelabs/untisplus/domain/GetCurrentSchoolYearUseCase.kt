@@ -10,9 +10,11 @@ import kotlinx.datetime.todayIn
 class GetCurrentSchoolYearUseCase constructor(
 	private val masterDataRepository: MasterDataRepository
 ) {
-	operator fun invoke(currentDate: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault())): SchoolYearEntity? {
-		return masterDataRepository.userData?.schoolYears?.find {
-			currentDate > it.startDate && currentDate < it.endDate
+	suspend operator fun invoke(currentDate: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault())): SchoolYearEntity? {
+		val schoolYears = masterDataRepository.schoolYears()
+			.ifEmpty { masterDataRepository.userData?.schoolYears.orEmpty() }
+		return schoolYears.find {
+			currentDate >= it.startDate && currentDate <= it.endDate
 		}
 	}
 }

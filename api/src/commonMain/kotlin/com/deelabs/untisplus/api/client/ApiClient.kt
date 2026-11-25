@@ -129,6 +129,7 @@ open class ApiClient() {
 		const val METHOD_GET_HOMEWORK = "getHomeWork2017"
 		const val METHOD_GET_MESSAGES = "getMessagesOfDay2017"
 		const val METHOD_GET_OFFICEHOURS = "getOfficeHours2017"
+		const val METHOD_GET_OFFICE_HOUR_REGISTRATIONS = "getOfficeHourRegistrations2017"
 		const val METHOD_GET_PERIOD_DATA = "getPeriodData2017"
 		const val METHOD_GET_TIMETABLE = "getTimetable2017"
 		const val METHOD_GET_USER_DATA = "getUserData2017"

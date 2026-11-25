@@ -36,7 +36,8 @@ abstract class TimetableDependantWorker(
 	companion object {
 		fun getPersonalTimetableElement(user: User, userSettings: UserSettings): PeriodElement? {
 			return userSettings.timetablePersonalTimetable?.toPeriodElement()
-				?: user.userData.getPeriodElement()
+				?: user.userData.getUsablePeriodElement()
+				?: user.userData.getFallbackPeriodElements().firstOrNull()
 		}
 	}
 

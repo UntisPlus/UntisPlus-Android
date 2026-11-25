@@ -2,6 +2,7 @@ package com.deelabs.untisplus.ui.pages.infocenter.fragments
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.deelabs.untisplus.R
+import com.deelabs.untisplus.api.model.untis.Person
 import com.deelabs.untisplus.api.model.untis.absence.StudentAbsence
 import com.deelabs.untisplus.data.database.entities.ExcuseStatusEntity
 import kotlinx.datetime.toJavaLocalDateTime
@@ -32,39 +34,53 @@ import java.time.format.FormatStyle
 fun InfoCenterAbsences(
 	uiState: AbsencesUiState,
 	proxyAvailable: Boolean = false,
+	children: List<Person> = emptyList(),
 	onSetNote: (StudentAbsence, String) -> Unit = { _, _ -> }
 ) {
 	var editing by remember { mutableStateOf<StudentAbsence?>(null) }
+	var selectedChildId by remember { mutableStateOf<Long?>(null) }
+	val childNames = remember(children) { children.associate { it.id to it.fullName() } }
 
-	Crossfade(targetState = uiState, label = "InfoCenter Absences Content") { state ->
-		when (state) {
-			AbsencesUiState.Loading -> InfoCenterLoading()
-			is AbsencesUiState.Success -> {
-				state.absences.fold(
-					onSuccess = {
-						if (state.isEmpty) {
-							Text(
-								text = stringResource(R.string.infocenter_absences_empty),
-								textAlign = TextAlign.Center,
-								modifier = Modifier.fillMaxWidth()
-							)
-						} else {
-							LazyColumn(
-								horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()
-							) {
-								items(it) { absence ->
-									AbsenceItem(
-										item = absence,
-										excuseStatuses = state.excuseStatuses,
-										proxyAvailable = proxyAvailable,
-										onEditNote = { editing = absence }
-									)
+	Column(modifier = Modifier.fillMaxSize()) {
+		InfoCenterChildTabs(children, selectedChildId) { selectedChildId = it }
+
+		Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+			Crossfade(targetState = uiState, label = "InfoCenter Absences Content") { state ->
+				when (state) {
+					AbsencesUiState.Loading -> InfoCenterLoading()
+					is AbsencesUiState.Success -> {
+						state.absences.fold(
+							onSuccess = { absences ->
+								val visibleAbsences = absences.filter {
+									selectedChildId == null || it.studentId == selectedChildId
 								}
-							}
-						}
-					},
-					onFailure = { InfoCenterError(it) }
-				)
+								if (visibleAbsences.isEmpty()) {
+									Text(
+										text = stringResource(R.string.infocenter_absences_empty),
+										textAlign = TextAlign.Center,
+										modifier = Modifier.fillMaxWidth()
+									)
+								} else {
+									LazyColumn(
+										horizontalAlignment = Alignment.CenterHorizontally,
+										modifier = Modifier.fillMaxSize()
+									) {
+										items(visibleAbsences) { absence ->
+											AbsenceItem(
+												item = absence,
+												studentName = childNames[absence.studentId],
+												excuseStatuses = state.excuseStatuses,
+												proxyAvailable = proxyAvailable,
+												onEditNote = { editing = absence }
+											)
+										}
+									}
+								}
+							},
+							onFailure = { InfoCenterError(it) }
+						)
+					}
+				}
 			}
 		}
 	}
@@ -84,14 +100,16 @@ fun InfoCenterAbsences(
 @Composable
 private fun AbsenceItem(
 	item: StudentAbsence,
+	studentName: String?,
 	excuseStatuses: List<ExcuseStatusEntity>,
 	proxyAvailable: Boolean,
 	onEditNote: () -> Unit
 ) {
+	val date = item.startDateTime.toJavaLocalDateTime().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG))
 	ListItem(
 		modifier = if (proxyAvailable) Modifier.clickable(onClick = onEditNote) else Modifier,
 		headlineContent = {
-			Text(item.startDateTime.toJavaLocalDateTime().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)))
+			Text(if (studentName.isNullOrBlank()) date else stringResource(R.string.parent_absence_student, studentName, date))
 		},
 		supportingContent = {
 			Column {

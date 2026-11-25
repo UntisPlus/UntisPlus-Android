@@ -19,9 +19,9 @@ class GetOfficeHoursUseCase constructor(
 		private const val ONE_HOUR: Long = 60 * 60 * 1000
 	}
 
-	operator fun invoke(): Flow<Result<List<OfficeHour>>> = infoCenterRepository.officeHoursSource()
+	operator fun invoke(klasseId: Long = -1): Flow<Result<List<OfficeHour>>> = infoCenterRepository.officeHoursSource()
 		.get(
-			InfoCenterRepository.OfficeHoursParams(-1, Clock.System.todayIn(TimeZone.currentSystemDefault())),
+			InfoCenterRepository.OfficeHoursParams(klasseId, Clock.System.todayIn(TimeZone.currentSystemDefault())),
 			FromCache.CACHED_THEN_LOAD,
 			maxAge = ONE_HOUR,
 			additionalKey = currentUserProvider.currentUser!!.id

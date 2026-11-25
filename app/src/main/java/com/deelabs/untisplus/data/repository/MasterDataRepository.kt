@@ -82,6 +82,8 @@ class UntisMasterDataRepository constructor(
 
 	override fun getShortName(id: Long, type: ElementType?, default: String): String {
 		return when (type) {
+			ElementType.STUDENT -> _userData.value?.user?.userData?.children
+				?.firstOrNull { it?.id == id }?.fullName()
 			ElementType.CLASS -> _allClasses.value[id]?.name
 			ElementType.TEACHER -> _allTeachers.value[id]?.name
 			ElementType.SUBJECT -> _allSubjects.value[id]?.name
@@ -95,6 +97,8 @@ class UntisMasterDataRepository constructor(
 
 	override fun getLongName(id: Long, type: ElementType, default: String): String {
 		return when (type) {
+			ElementType.STUDENT -> _userData.value?.user?.userData?.children
+				?.firstOrNull { it?.id == id }?.fullName()
 			ElementType.CLASS -> _allClasses.value[id]?.longName
 			ElementType.TEACHER -> _allTeachers.value[id]?.run { "$firstName $lastName" }
 			ElementType.SUBJECT -> _allSubjects.value[id]?.longName

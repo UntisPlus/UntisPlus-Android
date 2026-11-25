@@ -1,9 +1,12 @@
 package com.deelabs.untisplus.api.client
 
 import com.deelabs.untisplus.api.exception.UntisApiException
+import com.deelabs.untisplus.api.model.request.OfficeHourRegistrationsParams
 import com.deelabs.untisplus.api.model.request.OfficeHoursParams
 import com.deelabs.untisplus.api.model.request.RequestData
 import com.deelabs.untisplus.api.model.request.StudentAbsencesParams
+import com.deelabs.untisplus.api.model.response.OfficeHourRegistrationsResponse
+import com.deelabs.untisplus.api.model.response.OfficeHourRegistrationsResult
 import com.deelabs.untisplus.api.model.response.OfficeHoursResponse
 import com.deelabs.untisplus.api.model.response.OfficeHoursResult
 import com.deelabs.untisplus.api.model.response.StudentAbsencesResponse
@@ -43,6 +46,30 @@ open class OfficeHoursApi(
 		)
 
 		val response: OfficeHoursResponse = request(apiUrl, body).body()
+
+		return response.result ?: throw UntisApiException(response.error)
+	}
+
+	/** Read-only lookup of the timeslots for one office hour. */
+	open suspend fun getOfficeHourRegistrations(
+		apiUrl: String,
+		periodId: Long,
+		teacherId: Long,
+		user: String?,
+		key: String?
+	): OfficeHourRegistrationsResult {
+		val body = RequestData(
+			method = METHOD_GET_OFFICE_HOUR_REGISTRATIONS,
+			params = listOf(
+				OfficeHourRegistrationsParams(
+					periodId = periodId,
+					teacherId = teacherId,
+					auth = Auth(user, key)
+				)
+			)
+		)
+
+		val response: OfficeHourRegistrationsResponse = request(apiUrl, body).body()
 
 		return response.result ?: throw UntisApiException(response.error)
 	}

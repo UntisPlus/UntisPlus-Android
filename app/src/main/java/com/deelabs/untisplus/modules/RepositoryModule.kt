@@ -2,8 +2,10 @@ package com.deelabs.untisplus.modules
 
 import com.deelabs.untisplus.data.repository.GlobalSettingsRepository
 import com.deelabs.untisplus.data.repository.CurrentUserProvider
+import com.deelabs.untisplus.data.repository.ChildSelectionRepository
 import com.deelabs.untisplus.data.repository.ClassRegisterRepository
 import com.deelabs.untisplus.data.repository.CustomLinksRepository
+import com.deelabs.untisplus.data.repository.DefaultChildSelectionRepository
 import com.deelabs.untisplus.data.repository.DataStoreProxyCompatibilityStore
 import com.deelabs.untisplus.data.repository.ImportedCalendarRepository
 import com.deelabs.untisplus.data.repository.RestClassRegisterRepository
@@ -64,6 +66,8 @@ val repositoryModule = module {
 	}
 
 	single<CustomLinksRepository> { RestCustomLinksRepository(get()) }
+
+	single<ChildSelectionRepository> { DefaultChildSelectionRepository() }
 
 	factory<ClassRegisterRepository> { RestClassRegisterRepository(get(), get(), get()) }
 

@@ -55,9 +55,11 @@ name and code. Release tags must update that file in the same commit.
 ## Store metadata
 
 The icon and feature graphic were drawn locally for UntisPlus and remain
-placeholders pending commissioned artwork. Phone screenshots are captured from
-the app's own instrumented tests with seeded demo data, then given a simple
-UntisPlus header overlay. No Untis GmbH or F-Droid logo artwork was copied.
+placeholders pending commissioned artwork. Phone screenshots were captured
+manually from the installed app after the account switch, then resized and
+given a simple UntisPlus header overlay. No seeded demo data or instrumented
+test harness was used for the final images. No Untis GmbH or F-Droid logo
+artwork was copied.
 Locale descriptions and historical changelogs derive from upstream BetterUntis
 and were rebranded; the remaining BetterUntis mentions are attribution for the
 fork's origin.

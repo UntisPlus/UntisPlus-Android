@@ -6,6 +6,7 @@ import com.deelabs.untisplus.api.model.untis.absence.StudentAbsence
 import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
 import com.deelabs.untisplus.api.model.untis.timetable.Period
 import com.deelabs.untisplus.data.cache.DiskCache
+import com.deelabs.untisplus.data.database.entities.User
 import com.deelabs.untisplus.data.database.entities.UserDao
 import com.deelabs.untisplus.data.database.entities.jsonRpcApiUrlString
 import crocodile8.universal_cache.CachedSource
@@ -18,7 +19,8 @@ import kotlinx.serialization.serializer
 import okio.Path
 
 interface TimetableRepository {
-	fun timetableSource(): CachedSource<TimetableParams, List<Period>>
+	/** Defaults to the active user. Pass a user explicitly for work that must not change the active profile. */
+	fun timetableSource(user: User? = null): CachedSource<TimetableParams, List<Period>>
 	fun periodDataSource(): CachedSource<Set<Period>, PeriodDataResult>
 
 	suspend fun postLessonTopic(periodId: Long, lessonTopic: String): Result<Boolean>
@@ -46,8 +48,8 @@ class UntisTimetableRepository constructor(
 	private val timeProvider: TimeProvider,
 	private val userDao: UserDao,
 ) : TimetableRepository {
-	override fun timetableSource(): CachedSource<TimetableRepository.TimetableParams, List<Period>> {
-		val user = currentUserProvider.currentUser!!
+	override fun timetableSource(user: User?): CachedSource<TimetableRepository.TimetableParams, List<Period>> {
+		val user = user ?: currentUserProvider.currentUser!!
 		return CachedSource(
 			source = { params ->
 				val timetableResponse = api.getTimetable(

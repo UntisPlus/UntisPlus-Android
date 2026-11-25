@@ -34,4 +34,10 @@
 
 	<color name="color_launcher_background">#FFFFFF</color>
 	<color name="color_anonymous_login_info_background">#44ffffff</color>
+
+	<color name="widget_surface">#FFFFFFFF</color>
+	<color name="widget_on_surface">#FF1B1B1B</color>
+	<color name="widget_on_surface_muted">#FF5F6368</color>
+	<color name="widget_header">#FFD32F2F</color>
+	<color name="widget_on_header">#FFFFFFFF</color>
 </resources>

@@ -14,21 +14,25 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.pm.ShortcutInfoCompat
-import androidx.core.content.pm.ShortcutManagerCompat.createShortcutResultIntent
+import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.api.model.untis.timetable.PeriodElement
 import com.deelabs.untisplus.data.database.entities.User
 import com.deelabs.untisplus.data.database.entities.UserDao
 import com.deelabs.untisplus.data.repository.MasterDataRepository
+import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.helpers.AppTheme
 import com.deelabs.untisplus.ui.common.ProfileSelectorAction
 import com.deelabs.untisplus.ui.dialogs.ElementPickerDialogFullscreen
+import kotlinx.serialization.json.Json
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class ShortcutConfigureActivity : ComponentActivity(), KoinComponent {
 	private val userDao: UserDao by inject()
+
+	private val userRepository: UserRepository by inject()
 
 	private val masterDataRepository: MasterDataRepository by inject()
 
@@ -73,12 +77,17 @@ class ShortcutConfigureActivity : ComponentActivity(), KoinComponent {
 					}
 				) {*/
 				val users = remember { mutableStateListOf<User>() }
-				var selectedUserId by rememberSaveable { mutableLongStateOf(-1L) }
+				var selectedUserId by rememberSaveable {
+					mutableLongStateOf(userRepository.currentUser?.id ?: -1L)
+				}
 
 				LaunchedEffect(userDao) {
 					userDao.getAllFlow().collect {
 						users.clear()
 						users.addAll(it)
+						if (selectedUserId == -1L) {
+							selectedUserId = it.firstOrNull()?.id ?: -1L
+						}
 					}
 				}
 
@@ -113,23 +122,29 @@ class ShortcutConfigureActivity : ComponentActivity(), KoinComponent {
 			.setAction("")
 			.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
 			.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-			.putExtra("user", userId)
-			.putExtra("type", element?.type?.name)
-			.putExtra("id", element?.id)
+			.putExtra(MainActivity.EXTRA_LONG_USER_ID, userId)
+			.putExtra(MainActivity.EXTRA_STRING_ELEMENT_TYPE, element?.type?.name)
+			.putExtra(MainActivity.EXTRA_LONG_ELEMENT_ID, element?.id ?: -1L)
 
-		setResult(
-			RESULT_OK,
-			createShortcutResultIntent(
-				this,
-				ShortcutInfoCompat.Builder(this, "${element?.type}-${element?.id}")
-					.setIntent(shortcutIntent)
-					.setShortLabel(
-						if (element == null) resources.getString(R.string.all_personal)
-						else masterDataRepository.getShortName(element, resources.getString(R.string.widget_timetable))
-					)
-					.setIcon(IconCompat.createWithResource(this, R.mipmap.ic_shortcut))
-					.build()
+		val shortcutInfo = ShortcutInfoCompat.Builder(this, "${userId}-${element?.type}-${element?.id}")
+			.setIntent(shortcutIntent)
+			.setShortLabel(
+				if (element == null) resources.getString(R.string.all_personal)
+				else masterDataRepository.getShortName(element, resources.getString(R.string.widget_timetable))
 			)
-		)
+			.setIcon(IconCompat.createWithResource(this, R.mipmap.ic_shortcut))
+			.build()
+
+		// Ask the launcher to pin the shortcut while the user is still in this flow.
+		ShortcutManagerCompat.requestPinShortcut(this, shortcutInfo, null)
+
+		val resultIntent = Intent()
+		element?.let {
+			resultIntent.putExtra(
+				MainActivity.EXTRA_STRING_PERIOD_ELEMENT,
+				Json.encodeToString(PeriodElement.serializer(), it)
+			)
+		}
+		setResult(RESULT_OK, resultIntent)
 	}
 }

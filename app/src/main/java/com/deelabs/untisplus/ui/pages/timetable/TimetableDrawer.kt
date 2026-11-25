@@ -1,5 +1,6 @@
 package com.deelabs.untisplus.ui.pages.timetable
 
+import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
@@ -38,6 +40,7 @@ import org.koin.androidx.compose.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.activities.MainActivity
+import com.deelabs.untisplus.activities.ShortcutConfigureActivity
 import com.deelabs.untisplus.activities.main.DrawerItems
 import com.deelabs.untisplus.activities.main.DrawerText
 import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
@@ -77,17 +80,14 @@ fun TimetableDrawer(
 		)
 	}
 
+	val context = LocalContext.current
 	val shortcutLauncher =
 		rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { activityResult ->
-			val periodElement: PeriodElement? = activityResult.data?.let { intent ->
-				Json.decodeFromString(
-					PeriodElement.serializer(),
-					intent.getStringExtra(MainActivity.EXTRA_STRING_PERIOD_ELEMENT) ?: ""
-				)
-			}
-
-			periodElement?.let {
-				//onShowTimetable(it to state.timetableDatabaseInterface.getLongName(it))
+			val serialized = activityResult.data?.getStringExtra(MainActivity.EXTRA_STRING_PERIOD_ELEMENT)
+			if (!serialized.isNullOrBlank()) {
+				runCatching { Json.decodeFromString(PeriodElement.serializer(), serialized) }
+					.getOrNull()
+					?.let(onElementPicked)
 			}
 		}
 
@@ -226,6 +226,22 @@ fun TimetableDrawer(
 					selected = false,
 					onClick = {
 						bookmarksElementPicker = ElementType.CLASS
+					},
+					modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+				)
+
+				NavigationDrawerItem(
+					icon = {
+						Icon(
+							painterResource(id = R.drawable.all_prefs_personal),
+							contentDescription = null
+						)
+					},
+					label = { Text(stringResource(id = R.string.widget_timetable_link)) },
+					selected = false,
+					onClick = {
+						scope.launch { drawerState.close() }
+						shortcutLauncher.launch(Intent(context, ShortcutConfigureActivity::class.java))
 					},
 					modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
 				)

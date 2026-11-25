@@ -10,6 +10,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
+import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
+import com.deelabs.untisplus.api.model.untis.timetable.PeriodElement
 import com.deelabs.untisplus.data.database.entities.ImportedCalendarEntity
 import com.deelabs.untisplus.data.repository.ImportedCalendarRepository
 import com.deelabs.untisplus.data.repository.UserRepository
@@ -22,6 +24,7 @@ import com.deelabs.untisplus.ui.pages.main.MainViewModel
 import com.deelabs.untisplus.workers.TimetableChangeWorker
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -31,6 +34,9 @@ class MainActivity : ComponentActivity(), KoinComponent {
 		const val MESSENGER_PACKAGE_NAME = "com.untis.chat"
 
 		const val EXTRA_STRING_PERIOD_ELEMENT = "com.deelabs.untisplus.activities.main.element"
+		const val EXTRA_LONG_USER_ID = "com.deelabs.untisplus.activities.main.userId"
+		const val EXTRA_STRING_ELEMENT_TYPE = "com.deelabs.untisplus.activities.main.elementType"
+		const val EXTRA_LONG_ELEMENT_ID = "com.deelabs.untisplus.activities.main.elementId"
 	}
 
 	private val appNavigator: AppNavigator by inject()
@@ -165,6 +171,33 @@ class MainActivity : ComponentActivity(), KoinComponent {
 				appNavigator.navigate(AppRoutes.LoginDataInput(autoLoginData = intent.data.toString()))
 			}
 			isCalendarImport(intent) -> handleCalendarImport(intent)
+			isTimetableShortcut(intent) -> handleTimetableShortcut(intent)
+		}
+	}
+
+	private fun isTimetableShortcut(intent: Intent): Boolean =
+		intent.hasExtra(EXTRA_LONG_USER_ID)
+			|| intent.hasExtra(EXTRA_STRING_ELEMENT_TYPE)
+			|| intent.hasExtra(EXTRA_STRING_PERIOD_ELEMENT)
+
+	private fun handleTimetableShortcut(intent: Intent) {
+		val element = runCatching {
+			val serialized = intent.getStringExtra(EXTRA_STRING_PERIOD_ELEMENT)
+			if (!serialized.isNullOrBlank()) {
+				Json.decodeFromString(PeriodElement.serializer(), serialized)
+			} else {
+				val typeName = intent.getStringExtra(EXTRA_STRING_ELEMENT_TYPE)
+					?: return@runCatching null
+				val elementId = intent.getLongExtra(EXTRA_LONG_ELEMENT_ID, -1L)
+				if (elementId < 0) return@runCatching null
+				PeriodElement(ElementType.valueOf(typeName), elementId)
+			}
+		}.getOrNull()
+
+		val userId = intent.getLongExtra(EXTRA_LONG_USER_ID, -1L)
+		lifecycleScope.launch {
+			if (userId != -1L) userRepository.switchUser(userId)
+			appNavigator.navigate(AppRoutes.Timetable(element))
 		}
 	}
 

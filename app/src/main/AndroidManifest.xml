@@ -94,7 +94,6 @@
 			</intent-filter>
 		</activity>
 
-		<!-- TODO: Implement
 		<activity
 			android:name=".activities.ShortcutConfigureActivity"
 			android:exported="true"
@@ -115,7 +114,7 @@
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
 			</intent-filter>
-		</activity>-->
+		</activity>
 
 		<activity
 			android:name=".activities.AutoMuteConfigurationActivity"
@@ -141,7 +140,6 @@
 			android:exported="false"
 			android:foregroundServiceType="dataSync" />
 
-		<!-- TODO: Implement
 		<receiver
 			android:name=".widgets.TimetableWidgetReceiver"
 			android:exported="true"
@@ -156,19 +154,7 @@
 				android:resource="@xml/widget_info" />
 		</receiver>
 
-		<receiver
-			android:name=".widgets.MessagesWidgetReceiver"
-			android:exported="true"
-			android:label="@string/widget_daily_messages">
-
-			<intent-filter>
-				<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-			</intent-filter>
-
-			<meta-data
-				android:name="android.appwidget.provider"
-				android:resource="@xml/widget_info" />
-		</receiver>-->
+		<!-- Daily messages widget is intentionally not enabled: it has no implemented data path. -->
 
 		<provider
 			android:name="androidx.startup.InitializationProvider"

@@ -1,12 +1,42 @@
 package com.deelabs.untisplus.activities
 
+import android.app.Activity
 import android.appwidget.AppWidgetManager
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.lifecycle.lifecycleScope
+import com.deelabs.untisplus.R
+import com.deelabs.untisplus.api.model.untis.timetable.PeriodElement
+import com.deelabs.untisplus.data.database.entities.UserDao
+import com.deelabs.untisplus.data.repository.MasterDataRepository
+import com.deelabs.untisplus.data.repository.UserRepository
+import com.deelabs.untisplus.helpers.AppTheme
+import com.deelabs.untisplus.ui.dialogs.ElementPickerDialogFullscreen
+import com.deelabs.untisplus.widgets.TimetableWidget
+import com.deelabs.untisplus.widgets.WidgetConfigurationStore
+import com.deelabs.untisplus.workers.WidgetUpdateWorker
+import androidx.work.WorkManager
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-// TODO
-class ElementPickerWidgetConfigureActivity : ComponentActivity() {
+/** Configures a timetable widget with the active profile and a timetable element. */
+class ElementPickerWidgetConfigureActivity : ComponentActivity(), KoinComponent {
+	private val userDao: UserDao by inject()
+	private val userRepository: UserRepository by inject()
+	private val masterDataRepository: MasterDataRepository by inject()
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setResult(RESULT_CANCELED)
@@ -21,108 +51,45 @@ class ElementPickerWidgetConfigureActivity : ComponentActivity() {
 			return
 		}
 
-		//val users = userDatabase.userDao().getAll()
-
 		setContent {
-			/*AppTheme(navBarInset = false) {
-				var selectedUserId by rememberSaveable {
-					mutableStateOf(users.firstOrNull()?.id ?: -1)
+			AppTheme {
+				var userId by remember { mutableLongStateOf(userRepository.currentUser?.id ?: -1L) }
+
+				LaunchedEffect(Unit) {
+					if (userId == -1L) {
+						userId = (userRepository.userState.first() as? UserRepository.UserState.User)?.user?.id
+							?: userDao.getAllAsync().firstOrNull()?.id
+							?: -1L
+					}
 				}
 
-				val timetableDatabaseInterface by remember(selectedUserId) {
-					mutableStateOf(TimetableDatabaseInterface(userDatabase, selectedUserId))
-				}
-
-				val context = this
-
-				var showConfirmationDialog by remember { mutableStateOf(true) }
-
-				Surface(
-					modifier = Modifier.fillMaxSize()
-				) {
+				if (userId == -1L) {
+					Text(stringResource(R.string.widget_select_profile))
+				} else {
 					ElementPickerDialogFullscreen(
-						title = { Text(stringResource(id = R.string.widget_configuration)) },
-						timetableDatabaseInterface = timetableDatabaseInterface,
+						title = { Text(stringResource(R.string.widget_configuration)) },
+						masterDataRepository = masterDataRepository,
 						onDismiss = { finish() },
-						onSelect = { element ->
-							/*runBlocking {
-								val user = userDatabase.userDao().getById(selectedUserId) ?: run {
-									setResult(Activity.RESULT_CANCELED)
-									finish()
-									return@runBlocking
-								}
-
-								val selectedElement =
-									element
-										?: TimetableDependantWorker.loadPersonalTimetableElement(
-											user,
-											context
-										)?.let {
-											PeriodElement(
-												it.second,
-												it.first,
-												it.first
-											)
-										} ?: run {
-											finish()
-											return@runBlocking
-										}
-
-								val glanceId =
-									GlanceAppWidgetManager(context).getGlanceIdBy(appWidgetId)
-								updateAppWidgetState(context, glanceId) { prefs ->
-									prefs[longPreferencesKey(PREFERENCE_KEY_LONG_USER)] =
-										selectedUserId
-									prefs[intPreferencesKey(PREFERENCE_KEY_INT_ELEMENT_ID)] =
-										selectedElement.id
-									prefs[stringPreferencesKey(PREFERENCE_KEY_STRING_ELEMENT_TYPE)] =
-										selectedElement.type
-								}
-								BaseComposeWidget().update(context, glanceId)
-								WidgetUpdateWorker.enqueue(WorkManager.getInstance(context))
-
-								val resultValue = Intent().putExtra(
-									AppWidgetManager.EXTRA_APPWIDGET_ID,
-									appWidgetId
-								)
-								setResult(Activity.RESULT_OK, resultValue)
-								finish()
-							}*/
-						},
-						additionalActions = {
-							ProfileSelectorAction(
-								users = userDatabase.userDao().getAll(),
-								currentSelectionId = selectedUserId,
-								hideIfSingleProfile = true,
-								onSelectionChange = {
-									selectedUserId = it.id
-								}
-							)
-						}
+						onSelect = { element -> saveConfiguration(appWidgetId, userId, element) }
 					)
-
-					if (showConfirmationDialog)
-						AlertDialog(
-							onDismissRequest = {
-								showConfirmationDialog = false
-							},
-							title = {
-								Text(getString(R.string.widget_disclaimer_title))
-							},
-							text = {
-								Text(getString(R.string.widget_disclaimer_text))
-							},
-							confirmButton = {
-								TextButton(
-									onClick = {
-										showConfirmationDialog = false
-									}) {
-									Text(stringResource(id = R.string.all_ok))
-								}
-							}
-						)
 				}
-			}*/
+			}
+		}
+	}
+
+	private fun saveConfiguration(appWidgetId: Int, userId: Long, element: PeriodElement?) {
+		lifecycleScope.launch {
+			val glanceId = GlanceAppWidgetManager(this@ElementPickerWidgetConfigureActivity)
+				.getGlanceIdBy(appWidgetId)
+			WidgetConfigurationStore.write(this@ElementPickerWidgetConfigureActivity, glanceId, userId, element)
+			TimetableWidget().update(this@ElementPickerWidgetConfigureActivity, glanceId)
+			WidgetUpdateWorker.enqueue(WorkManager.getInstance(this@ElementPickerWidgetConfigureActivity))
+
+			setResult(
+				Activity.RESULT_OK,
+				Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+			)
+			finish()
 		}
 	}
 }

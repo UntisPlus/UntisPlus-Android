@@ -224,6 +224,7 @@ dependencies {
 	implementation(libs.androidx.constraintlayout)
 	implementation(libs.androidx.datastore)
 	implementation(libs.androidx.fragment)
+	implementation(libs.androidx.glance)
 	implementation(libs.androidx.lifecycle)
 	implementation(libs.androidx.lifecycle.compose)
 	implementation(libs.androidx.navigation.compose)

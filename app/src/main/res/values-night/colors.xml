@@ -3,4 +3,10 @@
 	<color name="colorDivider">#1FFFFFFF</color>
 
 	<color name="appBarColorThemePixel">@color/design_dark_default_color_background</color>
+
+	<color name="widget_surface">#FF1B1B1B</color>
+	<color name="widget_on_surface">#FFE6E1E5</color>
+	<color name="widget_on_surface_muted">#FFB3B3B3</color>
+	<color name="widget_header">#FFEF5350</color>
+	<color name="widget_on_header">#FF1B1B1B</color>
 </resources>

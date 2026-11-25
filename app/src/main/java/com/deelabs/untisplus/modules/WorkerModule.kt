@@ -2,6 +2,8 @@ package com.deelabs.untisplus.modules
 
 import com.deelabs.untisplus.workers.AutoMuteSetupWorker
 import com.deelabs.untisplus.workers.DailyWorker
+import com.deelabs.untisplus.workers.EventReminderSyncWorker
+import com.deelabs.untisplus.workers.EventReminderWorker
 import com.deelabs.untisplus.workers.ImportedCalendarSyncWorker
 import com.deelabs.untisplus.workers.NotificationSetupWorker
 import com.deelabs.untisplus.workers.TimetableChangeWorker
@@ -16,4 +18,6 @@ val workerModule = module {
 	workerOf(::NotificationSetupWorker)
 	workerOf(::ImportedCalendarSyncWorker)
 	workerOf(::TimetableChangeWorker)
+	workerOf(::EventReminderSyncWorker)
+	workerOf(::EventReminderWorker)
 }

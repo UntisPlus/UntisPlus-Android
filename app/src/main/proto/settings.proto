@@ -92,6 +92,7 @@ message UserSettings {
   // Stable notification key -> content signature, so repeated refreshes are silent.
   map<string, string> infocenterMessageNotificationsSeen = 69;
   bool infocenterMessageNotificationsInitialized = 70;
+  bool eventRemindersEnabled = 71;
 }
 
 message GlobalSettings {

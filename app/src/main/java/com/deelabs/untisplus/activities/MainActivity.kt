@@ -35,6 +35,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
 
 		const val EXTRA_STRING_PERIOD_ELEMENT = "com.deelabs.untisplus.activities.main.element"
 		const val EXTRA_LONG_USER_ID = "com.deelabs.untisplus.activities.main.userId"
+		const val EXTRA_BOOLEAN_WIDGET_MESSAGES = "com.deelabs.untisplus.activities.main.widgetMessages"
 		const val EXTRA_STRING_ELEMENT_TYPE = "com.deelabs.untisplus.activities.main.elementType"
 		const val EXTRA_LONG_ELEMENT_ID = "com.deelabs.untisplus.activities.main.elementId"
 	}
@@ -171,7 +172,16 @@ class MainActivity : ComponentActivity(), KoinComponent {
 				appNavigator.navigate(AppRoutes.LoginDataInput(autoLoginData = intent.data.toString()))
 			}
 			isCalendarImport(intent) -> handleCalendarImport(intent)
+			intent.getBooleanExtra(EXTRA_BOOLEAN_WIDGET_MESSAGES, false) -> handleMessagesWidgetShortcut(intent)
 			isTimetableShortcut(intent) -> handleTimetableShortcut(intent)
+		}
+	}
+
+	private fun handleMessagesWidgetShortcut(intent: Intent) {
+		val userId = intent.getLongExtra(EXTRA_LONG_USER_ID, -1L)
+		lifecycleScope.launch {
+			if (userId != -1L) userRepository.switchUser(userId)
+			appNavigator.navigate(AppRoutes.InfoCenter)
 		}
 	}
 

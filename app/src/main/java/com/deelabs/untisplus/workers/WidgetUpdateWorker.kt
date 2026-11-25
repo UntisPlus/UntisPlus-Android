@@ -7,11 +7,12 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.CoroutineWorker
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import com.deelabs.untisplus.widgets.MessagesWidget
 import com.deelabs.untisplus.widgets.TimetableWidget
 
 /**
- * Refreshes all configured timetable widgets. The widget itself loads the
- * persisted profile/element, so this worker only asks Glance to re-render.
+ * Refreshes all configured timetable and daily-message widgets. Each widget
+ * loads its own persisted profile, so this worker only asks Glance to re-render.
  */
 class WidgetUpdateWorker constructor(
 	context: Context,
@@ -30,10 +31,13 @@ class WidgetUpdateWorker constructor(
 	}
 
 	override suspend fun doWork(): Result = try {
-		val widget = TimetableWidget()
-		GlanceAppWidgetManager(applicationContext)
-			.getGlanceIds(TimetableWidget::class.java)
-			.forEach { glanceId -> widget.update(applicationContext, glanceId) }
+		val manager = GlanceAppWidgetManager(applicationContext)
+		val timetableWidget = TimetableWidget()
+		manager.getGlanceIds(TimetableWidget::class.java)
+			.forEach { glanceId -> timetableWidget.update(applicationContext, glanceId) }
+		val messagesWidget = MessagesWidget()
+		manager.getGlanceIds(MessagesWidget::class.java)
+			.forEach { glanceId -> messagesWidget.update(applicationContext, glanceId) }
 		Result.success()
 	} catch (e: Exception) {
 		Log.w(LOG_TAG, "Widget refresh failed", e)

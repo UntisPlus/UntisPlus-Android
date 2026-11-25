@@ -473,6 +473,12 @@
     <string name="settings_dialog_url_open_text">UntisPlus could not find an app that can handle opening links.\nPlease ensure you have a web browser installed or open the link on another device:</string>
     <string name="widget_configuration">Widget Configuration</string>
     <string name="widget_daily_messages">Daily Messages</string>
+    <string name="widget_messages_empty">No daily messages for today</string>
+    <string name="widget_messages_load_error">Daily messages could not be loaded. Tap to open UntisPlus.</string>
+    <string name="widget_messages_more">+%1$d more</string>
+    <string name="widget_messages_no_profile">This widget\'s profile is no longer available. Open UntisPlus to configure it again.</string>
+    <string name="widget_messages_not_loaded">Open UntisPlus once to load messages for this widget.</string>
+    <string name="widget_messages_untitled">Message</string>
     <string name="widget_select_profile">Please select a profile for the widget</string>
     <string name="widget_timetable">Timetable</string>
     <string name="widget_timetable_empty">No timetable available for today</string>

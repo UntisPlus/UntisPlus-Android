@@ -8,8 +8,10 @@ including multiple themes and dark mode.
 
 Easily add multiple profiles with separate settings and timetables.
 
-Protect your privacy: UntisPlus contains no Google Play Services, Firebase,
-ads, tracking or in-app purchases. QR scanning uses an embedded scanner.
+UntisPlus contains no Google Play Services, Firebase, ads or in-app
+purchases. New accounts use the developer-operated UntisPlus proxy by
+default; choose the official school endpoint or a custom endpoint if you do
+not want traffic relayed through it. QR scanning uses an embedded scanner.
 
 Use notifications to show information about the next lesson.
 
@@ -30,4 +32,5 @@ The official app is proprietary and includes tracking software and
 in-app purchases. UntisPlus is free and open source, feature-rich and
 respects your privacy.
 
-WebUntis is a proprietary network.
+WebUntis is a proprietary network. The default proxy and the Untis service
+are listed under Anti-Features; no third-party tracking SDK is included.

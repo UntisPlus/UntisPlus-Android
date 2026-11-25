@@ -9,8 +9,10 @@ Die App erlaubt endlose Anpassungsmöglichkeiten des Stundenplans und verfügt
 Verwende mehrere Profile auf einmal mit separaten Einstellungen und
 Stundenplänen.
 
-Schütze deine Privatsphäre: UntisPlus enthält keine Google Play Dienste,
-kein Firebase, keine Werbung, kein Tracking und keine In-App-Käufe.
+UntisPlus enthält keine Google Play Dienste, kein Firebase, keine Werbung
+und keine In-App-Käufe. Neue Konten nutzen standardmäßig den vom Entwickler
+betriebenen UntisPlus-Proxy; wähle den offiziellen Schul-Server oder einen
+eigenen Endpunkt, wenn du keine Weiterleitung über diesen Proxy möchtest.
 QR-Scannen nutzt einen eingebauten Scanner.
 
 Lass dir über Benachrichtigungen Details zur nächsten Stunde anzeigen.
@@ -33,4 +35,5 @@ Die offizielle App ist proprietär und beinhaltet Tracking-Software und
 In-App-Käufe. UntisPlus ist kostenlos und Open Source, funktionsreich und
 schützt deine Privatsphäre.
 
-WebUntis ist ein propritäres Netzwerk.
+WebUntis ist ein propritäres Netzwerk. Der Standard-Proxy und der Untis-Dienst
+sind unter den Anti-Features aufgeführt; Tracking-SDKs sind nicht enthalten.

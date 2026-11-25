@@ -11,14 +11,24 @@ home screen widgets.
 - Source: https://github.com/UntisPlus/UntisPlus-Android
 - License: GPL-3.0-or-later
 - Issue tracker: https://github.com/UntisPlus/UntisPlus-Android/issues
-- No Google Play Services, Firebase, ML Kit, ads, tracking or in-app purchases.
+- No Google Play Services, Firebase, ML Kit, ads, in-app purchases, or
+  third-party analytics/crash-reporting SDKs.
 - `scripts/check-foss.sh` guards source and `releaseRuntimeClasspath` against
   proprietary Google components in CI.
 - Release runtime audit found 202 resolved libraries, all with accepted FOSS
   licenses (Apache-2.0, MIT, BSD-3-Clause, GPL-2.0-with-Classpath-Exception).
 
-The app depends on the proprietary Untis service, so the metadata declares the
-`NonFreeNet` anti-feature, matching BetterUntis.
+## Network and privacy
+
+New accounts use the developer-operated UntisPlus proxy at
+`api-untis.deelabs.tech` by default. Login credentials and timetable requests
+are relayed through it, and a `/me` compatibility probe is made once at login.
+Users can choose the official school endpoint or a custom endpoint to avoid the
+developer proxy. The metadata therefore declares both `NonFreeNet` and
+`Tracking`, with reasons in the build metadata.
+
+No third-party tracking SDKs are included, and official accounts do not make
+proxy calls. Optional proxy features only send what the user explicitly uses.
 
 ## Build
 

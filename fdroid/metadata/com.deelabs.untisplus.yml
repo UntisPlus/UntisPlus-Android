@@ -9,7 +9,9 @@ IssueTracker: https://github.com/UntisPlus/UntisPlus-Android/issues
 Changelog: https://github.com/UntisPlus/UntisPlus-Android/releases
 AntiFeatures:
   NonFreeNet:
-    en-US: The Untis service itself is not libre.
+    en-US: The Untis service itself is not libre, and the default login route uses the developer-operated UntisPlus proxy.
+  Tracking:
+    en-US: By default, credentials and timetable requests are relayed through the developer-operated api-untis.deelabs.tech proxy, and a /me compatibility probe is made at login. Official or custom endpoints avoid this.
 AutoName: UntisPlus
 RepoType: git
 Repo: https://github.com/UntisPlus/UntisPlus-Android

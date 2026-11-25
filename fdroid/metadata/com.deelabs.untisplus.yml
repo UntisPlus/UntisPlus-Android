@@ -30,8 +30,7 @@ MaintainerNotes: |-
   The pinned commit is the stable v1.4.0 source with F-Droid store metadata.
   The upstream v1.4.0 tag is intentionally not used because it predates the
   final FOSS manifest cleanup and CI fixes. versionCode is derived in Gradle
-  from versionName; stable releases add 99, so v1.4.0 is 1040099. Do not
-  enable tag-based auto updates unless a static version code source is added.
+  from versionName; stable releases add 99, so v1.4.0 is 1040099.
   Re-run ./scripts/check-foss.sh before packaging future updates.
   Auto-update reads `fdroid/version.txt`; every release tag must update that
   file and keep it in sync with versionNameValue/deriveVersionCode() in

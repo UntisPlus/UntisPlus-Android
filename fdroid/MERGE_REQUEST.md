@@ -54,7 +54,10 @@ name and code. Release tags must update that file in the same commit.
 
 ## Store metadata
 
-The icon, feature graphic, screenshots, locale descriptions, and historical
-changelogs were imported from the upstream BetterUntis `fdroid` branch and then
-rebranded for UntisPlus. The remaining BetterUntis mentions are attribution for
-the fork's origin.
+The icon and feature graphic were drawn locally for UntisPlus and remain
+placeholders pending commissioned artwork. Phone screenshots are captured from
+the app's own instrumented tests with seeded demo data, then given a simple
+UntisPlus header overlay. No Untis GmbH or F-Droid logo artwork was copied.
+Locale descriptions and historical changelogs derive from upstream BetterUntis
+and were rebranded; the remaining BetterUntis mentions are attribution for the
+fork's origin.

@@ -12,3 +12,10 @@ signing.properties
 /vendor
 /screenshots
 sentry.properties
+/.bundle/
+/docs/APP-INTEGRATION.md
+/docs/FEATURE-BACKLOG.md
+/docs/KMP-MIGRATION.md
+/docs/PLAN-seamless-login.md
+/docs/PROJECT-STATUS.md
+/UPSTREAM_ISSUES.md

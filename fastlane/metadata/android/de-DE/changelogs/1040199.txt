@@ -1,0 +1,6 @@
+- Offizielles Login-QR-Format aus der Profilverwaltung exportieren
+- Stundenplan-Widgets und Verknüpfungen wiederherstellen, einschließlich der
+  Korrektur, damit konfigurierte Widgets erhalten bleiben
+- Android 16 / API 36 als Zielversion und Google-Abhängigkeitsmetadaten entfernt
+- Öffentliche Datenschutzerklärung und Link in Einstellungen → Über hinzugefügt
+- Komplett freier Build ohne Werbung, Analytics oder Tracking-SDKs

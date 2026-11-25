@@ -43,6 +43,9 @@ import com.deelabs.untisplus.ui.navigation.AppRoutes
 import com.deelabs.untisplus.ui.pages.settings.SettingsScreenViewModel
 import kotlinx.coroutines.launch
 
+private const val URL_UNTISPLUS_PRIVACY_POLICY =
+	"https://untisplus.github.io/UntisPlus-Android/privacy/"
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsCategoryAbout(navController: NavController, viewModel: SettingsScreenViewModel) {
@@ -152,6 +155,20 @@ fun SettingsCategoryAbout(navController: NavController, viewModel: SettingsScree
 			leadingContent = {
 				Icon(
 					painter = painterResource(R.drawable.settings_info_github),
+					contentDescription = null
+				)
+			}
+		)
+
+		Preference(
+			title = { Text(stringResource(R.string.preference_info_untisplus_privacy)) },
+			summary = { Text(stringResource(R.string.preference_info_untisplus_privacy_desc)) },
+			onClick = {
+				uriHandler.openUri(URL_UNTISPLUS_PRIVACY_POLICY)
+			},
+			leadingContent = {
+				Icon(
+					painter = painterResource(R.drawable.settings_info),
 					contentDescription = null
 				)
 			}

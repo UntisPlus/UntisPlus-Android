@@ -19,7 +19,7 @@ plugins {
 // Version override for the release workflow. Debug builds use their own
 // dev channel version and embed the current git commit so the app can compare
 // itself against the UntisPlus dev branch.
-val versionNameValue = "v1.4.0"
+val versionNameValue = "v1.4.1"
 val devVersionNameValue = "$versionNameValue-dev"
 
 // Use the provider API so the external process and its output are tracked by the
@@ -60,8 +60,15 @@ fun deriveVersionCode(name: String): Int {
 }
 
 android {
-	compileSdk = 35
+	compileSdk = 36
 	namespace = "com.deelabs.untisplus"
+
+	// Google's dependency metadata is not useful to a fully FOSS release and
+	// is removed from both APK and AAB outputs.
+	dependenciesInfo {
+		includeInApk = false
+		includeInBundle = false
+	}
 
 	androidResources {
 		generateLocaleConfig = true
@@ -70,7 +77,7 @@ android {
 	defaultConfig {
 		applicationId = "com.deelabs.untisplus"
 		minSdk = 21
-		targetSdk = 35
+		targetSdk = 36
 		versionCode = deriveVersionCode(versionNameValue)
 		versionName = versionNameValue
 		vectorDrawables.useSupportLibrary = true

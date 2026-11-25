@@ -340,6 +340,8 @@
     <string name="preference_info_privacy">External Content</string>
     <string name="preference_info_privacy_desc">Contributors are loaded from GitHub. Read their privacy policy for further information.</string>
     <string name="preference_info_privacy_policy">Privacy Policy</string>
+    <string name="preference_info_untisplus_privacy">UntisPlus privacy policy</string>
+    <string name="preference_info_untisplus_privacy_desc">How login data and timetable requests are handled</string>
     <string name="preference_marker">Time indicator</string>
     <string name="preference_notifications_clear">Clear all notifications</string>
     <string name="preference_notifications_enable">Enable break notifications</string>

@@ -39,3 +39,5 @@ lässt dich selbst wählen, welcher Endpunkt deine Daten verarbeitet.
 
 WebUntis ist ein propritäres Netzwerk. Der Standard-Proxy und der Untis-Dienst
 sind unter den Anti-Features aufgeführt; Tracking-SDKs sind nicht enthalten.
+
+Datenschutzerklärung: https://untisplus.github.io/UntisPlus-Android/privacy/

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>UntisPlus privacy policy</title>
+	<style>
+		body { font-family: system-ui, sans-serif; line-height: 1.55; max-width: 48rem; margin: 2rem auto; padding: 0 1rem; color: #222; }
+		h1, h2 { line-height: 1.25; }
+		code { background: #f3f3f3; padding: 0.1rem 0.3rem; border-radius: 3px; }
+		.updated { color: #555; }
+	</style>
+</head>
+<body>
+	<h1>UntisPlus privacy policy</h1>
+	<p class="updated">Effective 2026-11-25 · Applies to UntisPlus v1.4.1 and later.</p>
+
+	<p>UntisPlus is an independent, open-source Android client for the Untis timetable system. It is a hard fork of BetterUntis and is not affiliated with Untis GmbH. This policy explains what data the app handles and why.</p>
+
+	<h2>Short version</h2>
+	<ul>
+		<li>UntisPlus has no ads, analytics, crash-reporting SDKs, Google Play Services, or Firebase.</li>
+		<li>New accounts use a developer-operated proxy by default. It relays login and timetable requests so the app can work with schools that require the official app's API contract.</li>
+		<li>You can choose a direct WebUntis server or your own proxy instead. Then the developer proxy is not used.</li>
+		<li>Profile data is stored locally on your device. Deleting a profile removes it from the app; uninstalling removes the remaining app data.</li>
+	</ul>
+
+	<h2>Who is responsible</h2>
+	<p>The UntisPlus project and the default proxy at <code>api-untis.deelabs.tech</code> are operated by deelabs. Contact: <a href="mailto:info@deelabs.tech">info@deelabs.tech</a>. Source code and issue tracker: <a href="https://github.com/UntisPlus/UntisPlus-Android">github.com/UntisPlus/UntisPlus-Android</a>.</p>
+
+	<h2>Data the app handles</h2>
+	<p>Depending on the features you use, UntisPlus processes:</p>
+	<ul>
+		<li><strong>Login details:</strong> school/login name, username, password or app-specific key, and the school server URL. These are entered by you and saved locally in the app so you do not need to sign in again.</li>
+		<li><strong>Timetable and school data:</strong> lessons, teachers, rooms, classes, messages, events, absences, contact hours, and room-finder queries.</li>
+		<li><strong>Settings and local state:</strong> themes, notification preferences, widgets, shortcuts, and cached timetable data.</li>
+		<li><strong>QR data:</strong> the login QR exported by UntisPlus contains the school host, login name, user, app-specific key, and school ID. It does <em>not</em> contain your password.</li>
+	</ul>
+	<p>UntisPlus does not collect advertising IDs, precise location, contacts, call logs, SMS, or device fingerprints.</p>
+
+	<h2>Default developer proxy</h2>
+	<p>When you create a new account with the default options, login and timetable requests are sent through <code>api-untis.deelabs.tech</code>. The proxy:</p>
+	<ul>
+		<li>relays your credentials and requests to your school's WebUntis server and returns the response to the app;</li>
+		<li>makes a one-time <code>/me</code> compatibility probe at login to detect supported proxy features;</li>
+		<li>is used only to provide app functionality and to troubleshoot or secure the service;</li>
+		<li>does not sell data, show ads, build advertising profiles, or feed third-party analytics or crash-reporting SDKs.</li>
+	</ul>
+	<p>Because the proxy operator can see credentials and timetable traffic passing through it, this route is disclosed as an anti-feature in F-Droid metadata. Proxy access is limited to the developer and operational logs are kept only as long as needed to operate and troubleshoot the service. You can request deletion of proxy-side data by contacting <a href="mailto:info@deelabs.tech">info@deelabs.tech</a>.</p>
+
+	<h2>Other endpoints</h2>
+	<p>In Advanced login options you can connect directly to your school's official WebUntis server, run your own UntisPlus-compatible proxy, or use another custom endpoint. If you do, your device communicates with that endpoint instead of the default proxy. The operator of that endpoint is responsible for its own privacy practices. Your school's Untis server is a separate third-party service.</p>
+
+	<h2>Local storage and deletion</h2>
+	<p>Profile credentials, settings, and caches are stored in the app's private storage on your device. You can delete a profile at any time in profile management; this removes its locally stored credentials and associated app data. Uninstalling UntisPlus removes all remaining app data from that device.</p>
+	<p>UntisPlus does not create a separate online "app account". If you nevertheless want a deletion request handled on the proxy side, email <a href="mailto:info@deelabs.tech">info@deelabs.tech</a> with the school/login identifier involved. Depending on where you live, you may also have rights to access, correction, or deletion of personal data.</p>
+
+	<h2>App permissions</h2>
+	<ul>
+		<li><strong>Internet:</strong> required for every WebUntis/proxy request.</li>
+		<li><strong>Camera:</strong> only for the embedded ZXing scanner when you scan a login QR code. The app does not record video or upload camera images.</li>
+		<li><strong>Notifications / exact alarms / boot receiver / foreground data-sync service:</strong> used solely to show timetable, break, and change notifications at the times you configure.</li>
+		<li><strong>Notification policy access:</strong> used only when you choose notification-related settings that require it.</li>
+	</ul>
+
+	<h2>Other network requests</h2>
+	<p>The app checks GitHub for releases and, on the About screen, contributor information. Those requests go to GitHub and are covered by <a href="https://docs.github.com/en/github/site-policy/github-privacy-statement">GitHub's privacy statement</a>. No request is made to Google Play Services, Firebase, ad networks, or analytics providers.</p>
+
+	<h2>Children</h2>
+	<p>UntisPlus is not directed at children as a standalone social service. School accounts are provided and controlled by the school or guardian; schools and guardians are responsible for their use of Untis.</p>
+
+	<h2>Changes</h2>
+	<p>This policy may change when the app's data handling changes. The current version is always published at this URL and linked from the app's About screen.</p>
+
+	<p><a href="https://github.com/UntisPlus/UntisPlus-Android">Source code</a> · <a href="mailto:info@deelabs.tech">Contact</a></p>
+</body>
+</html>

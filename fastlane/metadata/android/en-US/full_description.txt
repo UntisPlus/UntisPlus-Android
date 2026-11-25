@@ -36,3 +36,5 @@ you choose which endpoint handles your data.
 
 WebUntis is a proprietary network. The default proxy and the Untis service
 are listed under Anti-Features; no third-party tracking SDK is included.
+
+Privacy policy: https://untisplus.github.io/UntisPlus-Android/privacy/

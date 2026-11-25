@@ -1,0 +1,6 @@
+- Add official-style login QR export from profile management
+- Revive timetable home screen widgets and shortcuts, with the configuration
+  result fix so configured widgets are kept
+- Target Android 16 / API 36 and remove Google dependency-info metadata
+- Add a public privacy policy and an in-app link under Settings → About
+- Keep the build fully FOSS, with no ads, analytics, or tracking SDKs

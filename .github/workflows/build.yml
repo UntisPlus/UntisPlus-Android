@@ -48,11 +48,11 @@ jobs:
 
       - name: Assemble debug APK
         if: ${{ matrix.variant == 'debug' }}
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --parallel --console=plain
 
       - name: Assemble release APK
         if: ${{ matrix.variant == 'release' }}
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --parallel --console=plain
 
       - name: Upload ${{ matrix.variant }} APK
         uses: actions/upload-artifact@v4

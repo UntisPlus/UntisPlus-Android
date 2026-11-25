@@ -58,6 +58,6 @@ class GithubIssue(type: Type, log: String) : Issue(type, log) {
 		"**Additional information**\n" +
 		"\n" +
 		"- Android version: _${Build.VERSION.RELEASE}_\n" +
-		"- BetterUntis version: _${version}_\n" +
+		"- UntisPlus version: _${version}_\n" +
 		"- Installation source: _${installationSource}_"
 }

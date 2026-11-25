@@ -33,9 +33,9 @@ jobs:
           # Use the MIT-licensed cache implementation; the default "enhanced"
           # provider is backed by a proprietary library.
           cache-provider: basic
-          # Pull requests only read the cache; trusted branch/dispatch builds can
-          # populate it so later dev runs start from warm outputs.
-          cache-read-only: ${{ github.event_name == 'pull_request' }}
+          # Pull requests and the debug matrix job only read the cache. The release
+          # job writes the shared basic-cache entry so the two jobs don't race.
+          cache-read-only: ${{ github.event_name == 'pull_request' || matrix.variant == 'debug' }}
 
       - name: Verify FOSS dependency tree
         shell: bash

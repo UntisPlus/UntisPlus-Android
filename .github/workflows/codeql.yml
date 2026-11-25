@@ -45,8 +45,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           # Keep CI on the MIT-licensed cache implementation instead of the
-          # proprietary enhanced cache provider used by default.
+          # proprietary enhanced cache provider used by default. CodeQL only
+          # restores the cache; the release workflow owns writing it.
           cache-provider: basic
+          cache-read-only: true
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4

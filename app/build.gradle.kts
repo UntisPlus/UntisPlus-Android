@@ -22,16 +22,15 @@ plugins {
 val versionNameValue = "v1.4.0"
 val devVersionNameValue = "$versionNameValue-dev"
 
-fun gitCommitSha(): String = runCatching {
-	val process = ProcessBuilder("git", "rev-parse", "--short=7", "HEAD")
-		.directory(rootDir)
-		.redirectErrorStream(true)
-		.start()
-	val output = process.inputStream.bufferedReader().readText().trim()
-	val exitCode = process.waitFor()
-	process.destroy()
-	if (exitCode == 0 && output.isNotBlank()) output else "unknown"
-}.getOrDefault("unknown")
+// Use the provider API so the external process and its output are tracked by the
+// configuration cache; a plain ProcessBuilder is not supported there.
+val gitCommitSha: String = providers.exec {
+	commandLine("git", "rev-parse", "--short=7", "HEAD")
+	workingDir(rootDir)
+	isIgnoreExitValue = true
+}.standardOutput.asText
+	.map { it.trim().ifEmpty { "unknown" } }
+	.get()
 
 // SSO identity providers proven to render correctly inside the app's own WebView and
 // complete auto-login on this project's target devices. A school's SSO button is only
@@ -84,7 +83,7 @@ android {
 		)
 		buildConfigField("String", "RELEASE_VERSION_NAME", "\"$versionNameValue\"")
 		buildConfigField("String", "DEV_VERSION_NAME", "\"$devVersionNameValue\"")
-		buildConfigField("String", "GIT_COMMIT_SHA", "\"${gitCommitSha()}\"")
+		buildConfigField("String", "GIT_COMMIT_SHA", "\"${gitCommitSha}\"")
 
 		ksp {
 			arg("room.schemaLocation", "$projectDir/schemas")
@@ -131,7 +130,7 @@ android {
 			isMinifyEnabled = false
 			isShrinkResources = false
 			applicationIdSuffix = ".debug"
-			versionNameSuffix = "-dev+${gitCommitSha()}"
+			versionNameSuffix = "-dev+${gitCommitSha}"
 
 			kotlinOptions {
 				freeCompilerArgs = listOf("-Xdebug")
@@ -180,8 +179,8 @@ kotlin {
 }
 
 aboutLibraries {
-	includePlatform = false
-	duplicationMode = com.mikepenz.aboutlibraries.plugin.DuplicateMode.MERGE
+	collect.includePlatform = false
+	library.duplicationMode = com.mikepenz.aboutlibraries.plugin.DuplicateMode.MERGE
 }
 
 protobuf {

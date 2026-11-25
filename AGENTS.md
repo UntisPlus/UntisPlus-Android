@@ -22,7 +22,7 @@ Fully FOSS — no Google Play Services anywhere (QR scanning uses ZXing embedded
 Indentation is tabs for `.kt`/`.gradle`/`.xml` (`.editorconfig`) — match existing files.
 
 ## Generated code — do not hand-edit
-- `:api`: each `api/spec/untis-intern/untis-*.yaml` gets an `openApiGenerate<Name>` task (e.g. `openApiGenerateUntisMobile`) writing Kotlin into `api/build/generated/src/main/kotlin`; `compileKotlin` depends on them automatically. To change API models/clients, edit the YAML spec or the handwritten code under `api/src/main/kotlin`, never files under `build/`. Note `OffsetDateTime` is type-mapped to the custom `com.deelabs.untisplus.api.serializer.DateTime`.
+- `:api`: each `api/spec/untis-intern/untis-*.yaml` gets an `openApiGenerate<Name>` task (e.g. `openApiGenerateUntisMobile`) writing Kotlin into `api/build/openapi/<spec>/src/main/kotlin`; `compileKotlin` depends on them automatically. To change API models/clients, edit the YAML spec or the handwritten code under `api/src/main/kotlin`, never files under `build/`. Note `OffsetDateTime` is type-mapped to the custom `com.deelabs.untisplus.api.serializer.DateTime`.
 - `:app`: protobuf-lite code is generated from `app/src/main/proto/settings.proto` (persisted via protostore); extend settings by editing the `.proto`.
 - Room schemas are exported to `app/schemas/<DatabaseClass>/` — commit the new schema JSON with any Room migration.
 

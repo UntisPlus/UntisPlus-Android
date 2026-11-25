@@ -22,9 +22,9 @@ The app depends on the proprietary Untis service, so the metadata declares the
 
 ## Build
 
-The build is pinned to `2f04eb7d121bd96312b78f697c3f4099b6180286`, the stable
-v1.4.0 source plus Fastlane text metadata. The upstream `v1.4.0` tag is not
-used because it predates the final FOSS manifest cleanup and CI fixes.
+The build is pinned to the stable v1.4.0 source with Fastlane metadata. The
+upstream `v1.4.0` tag is not used because it predates the final FOSS manifest
+cleanup and CI fixes.
 
 Verified locally:
 
@@ -35,4 +35,8 @@ Verified locally:
 so `v1.4.0` is `1040099`. Tag-based auto updates should stay disabled until a
 static version-code source is added.
 
-No screenshots or feature graphics are included.
+## Store metadata
+
+The icon, feature graphic, screenshots, locale descriptions, and historical
+changelogs were imported from the upstream BetterUntis `fdroid` branch and
+adapted for UntisPlus where needed.

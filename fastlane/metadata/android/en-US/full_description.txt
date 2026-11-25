@@ -1,26 +1,33 @@
-UntisPlus is a free and open source Android client for the Untis timetable
-system. It is a hard fork of BetterUntis with its own application ID, so it
-can be installed side by side with the original app.
+UntisPlus is an open-source mobile client for the Untis timetable system
+which allows you to view your timetable on your smartphone. It is a hard
+fork of BetterUntis with its own application ID, so it can be installed
+side by side with the original app.
 
-Features:
-- Modern Material 3 interface built with Jetpack Compose
-- Fast timetable loading with smart caching
-- Multiple separate accounts and profiles
-- RoomFinder to find free rooms
-- Info Center for events, contact hours, messages and your own absences
-- Parent/guardian views with tabs for all children and each child
-- Teacher class tools such as absence checking and lesson topic editing
-- Break notifications and automatic muting during lessons
-- Home screen widgets
+The app allows customization of almost any aspect of your timetable,
+including multiple themes and dark mode.
 
-UntisPlus can also open read-only details for office hour registrations. It
-never books or changes registrations.
+Easily add multiple profiles with separate settings and timetables.
 
-Untis is proprietary timetable software provided by schools. To use
-UntisPlus, your school must use Untis and give you an account unless
-anonymous access is available.
+Protect your privacy: UntisPlus contains no Google Play Services, Firebase,
+ads, tracking or in-app purchases. QR scanning uses an embedded scanner.
 
-UntisPlus contains no Google Play Services, Firebase, ads, tracking or
-in-app purchases. QR scanning uses an embedded open source scanner.
+Use notifications to show information about the next lesson.
 
-The official Untis service is not free software; see the Anti-Features note.
+Other features include a room finder to search for free rooms in your
+school, an info center with events, contact hours, messages and absences,
+teacher class tools, parent/guardian views and home screen widgets.
+
+Enjoy a fast and smooth experience with UntisPlus.
+
+Untis is proprietary timetable software. More information about Untis can be
+found at https://untis.at.
+To use Untis, your school must provide it.
+Your school must also give you an account which you can use to access
+your current timetable if no anonymous access is available.
+
+Why use this app when there is an official one?
+The official app is proprietary and includes tracking software and
+in-app purchases. UntisPlus is free and open source, feature-rich and
+respects your privacy.
+
+WebUntis is a proprietary network.

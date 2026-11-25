@@ -1,0 +1,8 @@
+- Neue Klassenwerkzeuge für Lehrkräfte: Abwesenheitsprüfung, Stunden-Themen,
+  Klassenbuch-Details und Sprechstunden
+- Eltern-/Erziehungsberechtigten-Konten mit Tabs für alle Kinder und jedes
+  Kind sowie schreibgeschützten Anmeldedetails
+- Eigene Links und zwischengespeicherte UntisPlus-Kompatibilitätsprüfung
+  beim Login
+- Sprechstunden-Fehler behoben
+- Komplett freier Build ohne Google Play Dienste, Firebase oder Tracking

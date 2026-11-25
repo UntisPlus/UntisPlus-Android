@@ -1,1 +1,1 @@
-FOSS Untis client with teacher and parent features
+An alternative open-source mobile client for the Untis timetable system

@@ -3,6 +3,7 @@ package com.deelabs.untisplus.data.cache
 import crocodile8.universal_cache.keep.Cache
 import crocodile8.universal_cache.keep.CacheKey
 import crocodile8.universal_cache.keep.CachedData
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -13,6 +14,11 @@ import okio.FileSystem
 import okio.HashingSink
 import okio.Path
 import okio.buffer
+
+// The cache library enforces maxAge on CachedData.time. Filesystem mtime cannot be
+// set portably through Okio's FileSystem, so the supplied time is stored with the
+// value instead. Okio writes and reads Longs big-endian.
+private const val TIME_HEADER_BYTES = 8
 
 class DiskCache<KeyType : Any, ValueType : Any>(
 	private val cacheDir: Path,
@@ -38,10 +44,18 @@ class DiskCache<KeyType : Any, ValueType : Any>(
 			val cacheFile = getCacheFile(key)
 			if (!fileSystem.exists(cacheFile)) return null
 
-			val decoded = fileSystem.read(cacheFile) { readByteArray() }
-				.let { Cbor.decodeFromByteArray(valueSerializer, it) }
-			val lastModified = fileSystem.metadata(cacheFile).lastModifiedAtMillis ?: 0L
-			return CachedData(decoded, lastModified)
+			return try {
+				val bytes = fileSystem.read(cacheFile) { readByteArray() }
+				if (bytes.size < TIME_HEADER_BYTES) return null
+				val buffer = Buffer().write(bytes)
+				val time = buffer.readLong()
+				val decoded = Cbor.decodeFromByteArray(valueSerializer, buffer.readByteArray())
+				CachedData(decoded, time)
+			} catch (e: Exception) {
+				if (e is CancellationException) throw e
+				// A truncated or corrupt cache file is a cache miss, not a failure.
+				null
+			}
 		}
 	}
 
@@ -50,7 +64,10 @@ class DiskCache<KeyType : Any, ValueType : Any>(
 		val key = CacheKey(params, additionalKey)
 		cacheLock.withLock {
 			val encoded = Cbor.encodeToByteArray(valueSerializer, value)
-			fileSystem.write(getCacheFile(key)) { write(encoded) }
+			fileSystem.write(getCacheFile(key)) {
+				writeLong(time)
+				write(encoded)
+			}
 		}
 	}
 

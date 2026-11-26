@@ -44,10 +44,28 @@ internal data class EventReminder(
  * are local only: the day before an entry is due at 18:00 device-local time.
  */
 internal object EventReminderPlan {
-	const val TAG_REMINDER = "eventreminder"
-	const val KEY_TAG_PREFIX = "eventreminder_key_"
-	const val DUE_TAG_PREFIX = "eventreminder_due_"
+	const val REMINDER_TAG_PREFIX = "eventreminder_user_"
 	const val REMINDER_HOUR = 18
+
+	/** Reminder work is per profile; a sync must never cancel another profile's work. */
+	fun reminderTag(userId: Long): String = "$REMINDER_TAG_PREFIX$userId"
+
+	private fun dueTagPrefix(userId: Long): String = "${reminderTag(userId)}_due_"
+
+	fun keyTag(userId: Long, key: String): String = "${reminderTag(userId)}_key_$key"
+
+	fun dueTag(userId: Long, key: String, dueDate: LocalDate): String =
+		"${dueTagPrefix(userId)}${key}_$dueDate"
+
+	/** Parses a due-date tag back into its reminder key; ignores other users' tags. */
+	fun dueDateFromTag(userId: Long, tag: String): Pair<String, String>? {
+		val prefix = dueTagPrefix(userId)
+		if (!tag.startsWith(prefix)) return null
+		val body = tag.removePrefix(prefix)
+		val key = body.substringBeforeLast('_')
+		val dueDate = body.substringAfterLast('_')
+		return if (key.isBlank() || dueDate.isBlank()) null else key to dueDate
+	}
 
 	/** Includes the profile and element so ids from different sources never collide. */
 	fun key(userId: Long, elementId: Long, kind: EventReminderKind, entryId: Long): String =
@@ -92,6 +110,10 @@ internal object EventReminderPlan {
 	}
 
 }
+
+/** Extracts only this profile's reminder keys and due dates from WorkManager tags. */
+internal fun existingDueDatesFromTags(userId: Long, tags: List<String>): Map<String, String> =
+	tags.mapNotNull { EventReminderPlan.dueDateFromTag(userId, it) }.toMap()
 
 internal fun EventReminder.initialDelayMillis(now: LocalDateTime): Long =
 	Duration.between(now, remindAt).toMillis().coerceAtLeast(0)

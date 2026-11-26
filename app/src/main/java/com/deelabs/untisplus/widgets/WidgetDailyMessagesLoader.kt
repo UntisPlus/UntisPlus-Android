@@ -4,11 +4,12 @@ import android.content.Context
 import androidx.core.text.HtmlCompat
 import com.deelabs.untisplus.R
 import com.deelabs.untisplus.api.model.untis.MessageOfDay
+import com.deelabs.untisplus.data.cache.CacheRead
+import com.deelabs.untisplus.data.cache.readFreshOrCached
 import com.deelabs.untisplus.data.database.entities.UserDao
 import com.deelabs.untisplus.data.database.entities.getDisplayedName
 import com.deelabs.untisplus.data.repository.InfoCenterRepository
 import com.deelabs.untisplus.data.repository.UserRepository
-import crocodile8.universal_cache.FromCache
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.last
 import kotlinx.datetime.toKotlinLocalDate
@@ -29,9 +30,9 @@ internal data class WidgetDailyMessages(
 )
 
 /**
- * Reads today's messages from the Info Center's existing disk cache. The cache
- * is filled by the app's regular proxy-backed Info Center refresh; the widget
- * itself never starts a network request or touches a login flow.
+ * Reads today's messages from the Info Center's existing disk cache, using the
+ * repository's normal refresh for stale entries. A cold, corrupt or expired
+ * cache produces an explicit error state rather than blank content.
  */
 internal class WidgetDailyMessagesLoader : KoinComponent {
 	private val userDao: UserDao by inject()
@@ -50,23 +51,46 @@ internal class WidgetDailyMessagesLoader : KoinComponent {
 		}
 
 		val today = LocalDate.now().toKotlinLocalDate()
-		val messages = runCatching {
-			infoCenterRepository.messagesOfDaySource()
-				.get(today, FromCache.ONLY, additionalKey = user.id)
-				.last()
-		}.getOrNull().orEmpty()
-
-		val plainMessages = messages.map { message ->
-			message.copy(body = HtmlCompat.fromHtml(message.body, HtmlCompat.FROM_HTML_MODE_COMPACT).toString())
-		}
-
-		return formatWidgetDailyMessages(
-			messages = plainMessages,
+		return buildWidgetDailyMessages(
+			readCache = {
+				readFreshOrCached<List<MessageOfDay>> { fromCache, maxAge ->
+					infoCenterRepository.messagesOfDaySource()
+						.get(today, fromCache, maxAge = maxAge, additionalKey = user.id)
+						.last()
+				}
+			},
 			header = user.getDisplayedName(context),
 			emptyMessage = context.getString(R.string.widget_messages_empty),
+			unavailableMessage = context.getString(R.string.widget_messages_load_error),
 			unknownSubject = context.getString(R.string.widget_messages_untitled),
+			plainText = { body ->
+				HtmlCompat.fromHtml(body, HtmlCompat.FROM_HTML_MODE_COMPACT).toString()
+			},
 		)
 	}
+}
+
+/** Pure widget state builder; [readCache] is fakeable in account-free tests. */
+internal suspend fun buildWidgetDailyMessages(
+	readCache: suspend () -> CacheRead<List<MessageOfDay>>,
+	header: String,
+	emptyMessage: String,
+	unavailableMessage: String,
+	unknownSubject: String,
+	plainText: (String) -> String = { it },
+): WidgetDailyMessages {
+	val read = readCache()
+	if (read !is CacheRead.Value) {
+		return WidgetDailyMessages(header = header, message = unavailableMessage)
+	}
+
+	val plainMessages = read.value.map { it.copy(body = plainText(it.body)) }
+	return formatWidgetDailyMessages(
+		messages = plainMessages,
+		header = header,
+		emptyMessage = emptyMessage,
+		unknownSubject = unknownSubject,
+	)
 }
 
 internal fun formatWidgetDailyMessages(

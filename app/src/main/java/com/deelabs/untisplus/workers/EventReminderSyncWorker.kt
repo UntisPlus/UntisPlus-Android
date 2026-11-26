@@ -10,15 +10,20 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.deelabs.untisplus.R
+import com.deelabs.untisplus.api.model.untis.classreg.Exam
+import com.deelabs.untisplus.api.model.untis.classreg.HomeWork
 import com.deelabs.untisplus.api.model.untis.enumeration.ElementType
+import com.deelabs.untisplus.data.cache.CacheRead
+import com.deelabs.untisplus.data.cache.readFreshOrCached
 import com.deelabs.untisplus.data.database.entities.User
 import com.deelabs.untisplus.data.repository.InfoCenterRepository
 import com.deelabs.untisplus.data.repository.MasterDataRepository
 import com.deelabs.untisplus.data.repository.UserRepository
 import com.deelabs.untisplus.data.repository.UserSettingsRepository
 import com.deelabs.untisplus.domain.GetCurrentSchoolYearUseCase
-import crocodile8.universal_cache.FromCache
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import java.time.Clock
@@ -30,10 +35,10 @@ import java.util.concurrent.TimeUnit
 /**
  * Rebuilds local homework/exam reminders from cached Info Center state.
  *
- * This worker never requests data from the network. [FromCache.ONLY] reads the
- * same disk cache that the Info Center screen fills; if the cache is empty, no
- * reminders are created. Opening the Info Center is therefore the only way data
- * reaches this worker, and existing break/first-lesson alarms are untouched.
+ * Reads are freshness-aware: stale data triggers a refresh, and a cold,
+ * corrupt or still-expired cache is reported as unavailable instead of empty.
+ * When any read is unavailable the existing reminders are preserved untouched.
+ * Break/first-lesson alarms are never touched.
  */
 class EventReminderSyncWorker constructor(
 	private val userRepository: UserRepository,
@@ -76,12 +81,15 @@ class EventReminderSyncWorker constructor(
 			)
 		}
 
-		fun cancel(context: Context) {
+		/**
+		 * Opt-out cancels only the given profile's reminders. The periodic sync
+		 * request is shared by all profiles and intentionally stays enqueued.
+		 */
+		fun cancel(context: Context, userId: Long?) {
+			val id = userId ?: return
 			val workManager = WorkManager.getInstance(context)
-			workManager.cancelUniqueWork(WORK_NAME)
-			workManager.cancelUniqueWork(WORK_NAME_NOW)
 			try {
-				val existing = existingDueDates(workManager)
+				val existing = existingDueDates(workManager, id)
 				EventReminderNotifications.cancel(
 					context,
 					existing.keys.map(EventReminderPlan::notificationIdFor)
@@ -89,69 +97,83 @@ class EventReminderSyncWorker constructor(
 			} catch (e: Exception) {
 				Log.w(LOG_TAG, "Could not cancel reminder notifications", e)
 			}
-			workManager.cancelAllWorkByTag(EventReminderPlan.TAG_REMINDER)
+			workManager.cancelAllWorkByTag(EventReminderPlan.reminderTag(id))
 		}
 
-		private fun existingDueDates(workManager: WorkManager): Map<String, String> =
-			workManager.getWorkInfosByTag(EventReminderPlan.TAG_REMINDER).get()
-				.mapNotNull { info ->
-					val dueTag = info.tags.firstOrNull { it.startsWith(EventReminderPlan.DUE_TAG_PREFIX) }
-						?.removePrefix(EventReminderPlan.DUE_TAG_PREFIX)
-						?: return@mapNotNull null
-					dueTag.substringBeforeLast('_') to dueTag.substringAfterLast('_')
-				}
-				.toMap()
+		private fun existingDueDates(workManager: WorkManager, userId: Long): Map<String, String> =
+			existingDueDatesFromTags(
+				userId,
+				workManager.getWorkInfosByTag(EventReminderPlan.reminderTag(userId)).get()
+					.flatMap { it.tags }
+			)
 	}
 
 	override suspend fun doWork(): Result {
 		val user = userRepository.currentUser ?: return Result.success()
 		val settings = userSettingsRepository.getSettings(user.id).first()
 		if (!settings.eventRemindersEnabled || !settings.notificationsEnable) {
-			cancel(applicationContext)
+			cancel(applicationContext, user.id)
 			return Result.success()
 		}
 
 		EventReminderNotifications.ensureChannels(applicationContext)
 
 		return try {
-			val candidates = collectCandidates(user)
+			val workManager = WorkManager.getInstance(applicationContext)
 			val now = LocalDateTime.now(clock)
-			replaceReminders(user.id, candidates, EventReminderPlan.build(candidates, now), now)
+			val plan = planEventReminderSync(
+				reads = collectCandidateReads(user),
+				existingDueDates = existingDueDates(workManager, user.id),
+				now = now,
+			)
+			when (plan) {
+				EventReminderSyncPlan.Keep ->
+					Log.i(LOG_TAG, "Cached Info Center data unavailable; existing reminders kept")
+				is EventReminderSyncPlan.Apply -> applyPlan(user.id, plan, workManager, now)
+			}
 			Result.success()
 		} catch (e: Exception) {
-			// No network is involved; a corrupt/missing cache should not cause a
-			// retry storm. The next periodic run will pick up fresh local state.
+			// No new network endpoint is used here; a corrupt cache should not
+			// cause a retry storm. The next periodic run re-reads local state.
 			Log.w(LOG_TAG, "Event reminder sync failed", e)
 			Result.success()
 		}
 	}
 
-	private suspend fun collectCandidates(user: User): List<EventReminderCandidate> {
-		val today = kotlinx.datetime.Clock.System.todayIn(TimeZone.currentSystemDefault())
+	private suspend fun collectCandidateReads(user: User): List<CacheRead<List<EventReminderCandidate>>> {
+		val today: LocalDate = kotlinx.datetime.Clock.System.todayIn(TimeZone.currentSystemDefault())
 		val endDate = getCurrentSchoolYear(today)?.endDate ?: today
-		return eventElements(user).flatMap { element ->
+		return eventElements(user).map { element ->
+			val params = InfoCenterRepository.EventsParams(element.id, element.type, today, endDate)
 			try {
-				val params = InfoCenterRepository.EventsParams(element.id, element.type, today, endDate)
-				val homework = infoCenterRepository.homeworkSource()
-					.get(params, FromCache.ONLY, additionalKey = user.id)
-					.first()
-				val exams = infoCenterRepository.examsSource()
-					.get(params, FromCache.ONLY, additionalKey = user.id)
-					.first()
-
-				homework.map { it.toEventReminderCandidate(user.id, element.id, element.name) } +
-					exams.map {
-						it.toEventReminderCandidate(
-							userId = user.id,
-							elementId = element.id,
-							subject = masterDataRepository.getShortName(it.subjectId, ElementType.SUBJECT, ""),
-							studentName = element.name
-						)
-					}
+				val homework = readFreshOrCached<List<HomeWork>> { fromCache, maxAge ->
+					infoCenterRepository.homeworkSource()
+						.get(params, fromCache, maxAge = maxAge, additionalKey = user.id)
+						.last()
+				}
+				val exams = readFreshOrCached<List<Exam>> { fromCache, maxAge ->
+					infoCenterRepository.examsSource()
+						.get(params, fromCache, maxAge = maxAge, additionalKey = user.id)
+						.last()
+				}
+				if (homework is CacheRead.Value && exams is CacheRead.Value) {
+					CacheRead.Value(
+						homework.value.map { it.toEventReminderCandidate(user.id, element.id, element.name) } +
+							exams.value.map {
+								it.toEventReminderCandidate(
+									userId = user.id,
+									elementId = element.id,
+									subject = masterDataRepository.getShortName(it.subjectId, ElementType.SUBJECT, ""),
+									studentName = element.name
+								)
+							}
+					)
+				} else {
+					CacheRead.Unavailable
+				}
 			} catch (e: Exception) {
-				// A missing cache for one element must not drop reminders for the others.
-				Log.w(LOG_TAG, "No cached events for element ${element.id}; skipping", e)
-				emptyList()
+				Log.w(LOG_TAG, "Cached Info Center events unusable for element ${element.id}; keeping reminders", e)
+				CacheRead.Unavailable
 			}
 		}
 	}
@@ -166,25 +188,21 @@ class EventReminderSyncWorker constructor(
 			listOf(EventElement(userData.elemId, userData.elemType ?: ElementType.STUDENT, null))
 	}
 
-	private fun replaceReminders(
+	private fun applyPlan(
 		userId: Long,
-		candidates: List<EventReminderCandidate>,
-		reminders: List<EventReminder>,
-		now: LocalDateTime
+		plan: EventReminderSyncPlan.Apply,
+		workManager: WorkManager,
+		now: LocalDateTime,
 	) {
-		val workManager = WorkManager.getInstance(applicationContext)
-		val existing = existingDueDates(workManager)
-		val cancelKeys = EventReminderPlan.keysToCancel(existing, candidates)
-
-		// Remove notifications for entries that disappeared or moved; keep ones
-		// for unchanged entries that already fired and are still visible.
+		// Drops notifications for entries that disappeared or moved, plus this
+		// profile's queued work. Other profiles' tags are never matched.
 		EventReminderNotifications.cancel(
 			applicationContext,
-			cancelKeys.map(EventReminderPlan::notificationIdFor)
+			plan.cancelKeys.map(EventReminderPlan::notificationIdFor)
 		)
-		workManager.cancelAllWorkByTag(EventReminderPlan.TAG_REMINDER)
+		workManager.cancelAllWorkByTag(EventReminderPlan.reminderTag(userId))
 
-		reminders.forEach { reminder ->
+		plan.reminders.forEach { reminder ->
 			EventReminderWorker.enqueue(
 				workManager = workManager,
 				userId = userId,

@@ -153,7 +153,7 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 					}
 				} else {
 					clearNotifications()
-					EventReminderSyncWorker.cancel(context)
+					EventReminderSyncWorker.cancel(context, viewModel.currentUserId())
 					TimetableChangeWorker.cancel(context)
 					TimetableChangeService.stop(context)
 					scope.launch {
@@ -236,7 +236,7 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 			value = { it.eventRemindersEnabled },
 			onValueChange = {
 				eventRemindersEnabled = it
-				if (it) refreshEventReminders() else EventReminderSyncWorker.cancel(context)
+				if (it) refreshEventReminders() else EventReminderSyncWorker.cancel(context, viewModel.currentUserId())
 			}
 		)
 	}

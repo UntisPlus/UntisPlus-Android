@@ -35,11 +35,11 @@ class EventReminderWorker constructor(
 				reminder.key,
 				ExistingWorkPolicy.REPLACE,
 				OneTimeWorkRequestBuilder<EventReminderWorker>()
-					.addTag(EventReminderPlan.TAG_REMINDER)
-					.addTag(EventReminderPlan.KEY_TAG_PREFIX + reminder.key)
+					.addTag(EventReminderPlan.reminderTag(userId))
+					.addTag(EventReminderPlan.keyTag(userId, reminder.key))
 					// WorkInfo no longer exposes input data, so the due date is
-					// kept in a tag for change/cancellation detection.
-					.addTag(EventReminderPlan.DUE_TAG_PREFIX + reminder.key + "_" + reminder.dueDate)
+					// kept in a per-profile tag for change/cancellation detection.
+					.addTag(EventReminderPlan.dueTag(userId, reminder.key, reminder.dueDate))
 					.setInitialDelay(delayMillis, TimeUnit.MILLISECONDS)
 					.setInputData(
 						workDataOf(

@@ -6,6 +6,7 @@ import androidx.work.WorkManager
 import com.deelabs.untisplus.modules.appModules
 import com.deelabs.untisplus.workers.DailyWorker
 import com.deelabs.untisplus.workers.DailyWorker.Companion.TAG_DAILY_WORK
+import com.deelabs.untisplus.workers.EventReminderSyncWorker
 import com.deelabs.untisplus.workers.ImportedCalendarSyncWorker
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -33,5 +34,6 @@ class App : Application() {
 		}
 
 		ImportedCalendarSyncWorker.schedule(applicationContext)
+		EventReminderSyncWorker.schedule(applicationContext)
 	}
 }

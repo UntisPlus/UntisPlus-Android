@@ -117,6 +117,16 @@
 		</activity>
 
 		<activity
+			android:name=".activities.MessagesWidgetConfigureActivity"
+			android:exported="true"
+			android:label="@string/widget_configuration">
+
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+			</intent-filter>
+		</activity>
+
+		<activity
 			android:name=".activities.AutoMuteConfigurationActivity"
 			android:exported="true">
 			<intent-filter>
@@ -154,7 +164,19 @@
 				android:resource="@xml/widget_info" />
 		</receiver>
 
-		<!-- Daily messages widget is intentionally not enabled: it has no implemented data path. -->
+		<receiver
+			android:name=".widgets.MessagesWidgetReceiver"
+			android:exported="true"
+			android:label="@string/widget_daily_messages">
+
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+			</intent-filter>
+
+			<meta-data
+				android:name="android.appwidget.provider"
+				android:resource="@xml/widget_info_messages" />
+		</receiver>
 
 		<provider
 			android:name="androidx.startup.InitializationProvider"

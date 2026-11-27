@@ -39,9 +39,10 @@ sufficient and to remove `Tracking` on merge if they agree.
 
 ## Build
 
-The build is pinned to the v1.4.1 source with Fastlane metadata. The old
-`v1.4.0` tag is intentionally untouched; v1.4.1 is the shared release version
-for GitHub, F-Droid and Google Play.
+The build is pinned to `b492387531964d2294054d219971331f58c42fa9`, which is the
+v1.4.1 source plus the issuebot follow-ups, build fix and account-free feature
+fixes, with Fastlane metadata. The old `v1.4.0` tag is intentionally untouched;
+v1.4.1 remains the shared release version for GitHub, F-Droid and Google Play.
 
 Verified locally:
 
@@ -57,6 +58,40 @@ SDK 36 if the build image does not already provide it. Auto-update is enabled:
 `UpdateCheckMode: Tags` watches `vX.Y.Z` tags and `UpdateCheckData` reads
 `fdroid/version.txt` for the name and code. Release tags must update that file
 in the same commit.
+
+## Issuebot follow-up
+
+The RFP bot report on `c5c5f0b5` was addressed upstream:
+
+- The Gradle wrapper was regenerated with the official Gradle 8.13 wrapper JAR
+  (`81a82aae...`) and `distributionSha256Sum=20f1b117...` for the 8.13 binary
+  distribution. The previous JAR matched the official 8.9 wrapper.
+- The Foojay toolchain-resolver convention plugin was removed from
+  `settings.gradle.kts`. The F-Droid recipe installs JDK 21 explicitly, and
+  `gradle/gradle-daemon-jvm.properties` keeps the daemon on Java 21.
+- A local `fdroid build` with fdroidserver 2.4.6 found that `yes | sdkmanager`
+  exited 141 under the recipe shell's `pipefail`, so the build stopped after the
+  SDK packages were installed. The prebuild now accepts only that specific
+  status; real sdkmanager failures still fail the build.
+- A forced `fdroid build -t` then exposed a configuration-cache interaction:
+  the project enables `org.gradle.configuration-cache=true`, and F-Droid runs
+  `clean` and `assembleRelease` as two separate Gradle invocations. The second
+  one failed at `lintVitalReportRelease`/`minifyReleaseWithR8`. Passing
+  `-Porg.gradle.configuration-cache=false` does not override the project
+  setting, and recipes cannot pass arbitrary `-D` flags, so the prebuild now
+  appends `org.gradle.configuration-cache=false` to the build checkout's
+  `gradle.properties`. A forced fdroidserver 2.4.6 build against the fixed
+  source revision then succeeded.
+- `Translation` points to the source string directory. `crowdin.yml` exists,
+  but the repository does not publish a public Crowdin project URL; maintainers
+  should tell us if they prefer a different translation guide URL.
+- The OpenCensus entries came from dependency verification metadata generated
+  for the whole build (`help` configuration), pulled in by Android Gradle
+  Plugin, UTP and KSP. They are not app runtime dependencies:
+  `:app:dependencyInsight --dependency opencensus-api --configuration releaseRuntimeClasspath`
+  reports no match, and a `dexdump` scan of the release APK reports no
+  `io/opencensus` classes. Both `NonFreeNet` and `Tracking` remain declared.
+  As before, maintainers are asked whether `NonFreeNet` alone is sufficient.
 
 ## Store metadata
 

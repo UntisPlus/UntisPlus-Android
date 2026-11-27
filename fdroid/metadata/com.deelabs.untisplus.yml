@@ -6,6 +6,7 @@ AuthorName: deelabs
 AuthorEmail: info@deelabs.tech
 SourceCode: https://github.com/UntisPlus/UntisPlus-Android
 IssueTracker: https://github.com/UntisPlus/UntisPlus-Android/issues
+Translation: https://github.com/UntisPlus/UntisPlus-Android/tree/master/app/src/main/res
 Changelog: https://github.com/UntisPlus/UntisPlus-Android/releases
 AntiFeatures:
   NonFreeNet:
@@ -18,25 +19,31 @@ Repo: https://github.com/UntisPlus/UntisPlus-Android
 Builds:
   - versionName: v1.4.1
     versionCode: 1040199
-    commit: 4a403ad5a050c845924e59fcbf28d19922e8678b
+    commit: b492387531964d2294054d219971331f58c42fa9
     sudo:
       - apt-get update
       - apt-get install -y openjdk-21-jdk-headless
       - update-java-alternatives -a
     prebuild:
-      - yes | $$SDK$$/cmdline-tools/latest/bin/sdkmanager --sdk_root=$$SDK$$ "platforms;android-36" "build-tools;36.0.0"
+      - yes | $$SDK$$/cmdline-tools/latest/bin/sdkmanager --sdk_root=$$SDK$$ "platforms;android-36" "build-tools;36.0.0" || test $? -eq 141
+      - printf '%s\n' 'org.gradle.configuration-cache=false' >> gradle.properties
     gradle:
       - yes
     output: app/build/outputs/apk/release/app-release-unsigned.apk
 MaintainerNotes: |-
-  The pinned commit is the v1.4.1 source: QR export, revived widgets, API 36
-  targeting, dependency-info removal, public privacy policy, and Play review
-  notes. The old v1.4.0 tag is intentionally untouched. versionCode is derived
-  in Gradle from versionName; stable releases add 99, so v1.4.1 is 1040199.
-  The prebuild step installs SDK 36 in case the build image lacks it. Re-run
-  ./scripts/check-foss.sh before packaging future updates. Auto-update reads
-  `fdroid/version.txt`; every release tag must update that file and keep it in
-  sync with versionNameValue/deriveVersionCode() in app/build.gradle.kts.
+  The pinned commit is the v1.4.1 source plus the issuebot follow-ups: official
+  Gradle 8.13 wrapper, no Foojay resolver, sdkmanager SIGPIPE handling, and a
+  build-only configuration-cache override. It also carries the account-free
+  cache, reminder, widget and timetable-title fixes. The old v1.4.0 tag is
+  intentionally untouched. versionCode is derived in Gradle from versionName;
+  stable releases add 99, so v1.4.1 is 1040199.
+  The prebuild step installs SDK 36 in case the build image lacks it and
+  disables Gradle's configuration cache in the build checkout; the cached task
+  graph otherwise breaks lint/R8 across F-Droid's separate clean and
+  assembleRelease invocations. Re-run ./scripts/check-foss.sh before packaging
+  future updates. Auto-update reads `fdroid/version.txt`; every release tag
+  must update that file and keep it in sync with versionNameValue/
+  deriveVersionCode() in app/build.gradle.kts.
   Tracking is declared deliberately because the default provider relays
   credentials and timetable requests through the developer-operated proxy and
   probes /me. There is no analytics SDK; maintainers may decide whether

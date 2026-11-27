@@ -28,7 +28,7 @@ The link above installs the signed release APK. For automatic updates, add the r
 
 ## Building
 
-Requirements: Android Studio or the command line; the Gradle build pins a Java 21 toolchain and provisions it automatically if missing.
+Requirements: Android Studio or the command line with Java 21; the Gradle build pins both the daemon JVM and the project toolchain to Java 21, and the F-Droid recipe installs JDK 21 explicitly.
 
 ```sh
 ./gradlew assembleDebug           # fully FOSS build (no proprietary dependencies)

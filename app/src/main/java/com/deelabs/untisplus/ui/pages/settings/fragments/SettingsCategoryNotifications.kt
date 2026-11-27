@@ -38,8 +38,10 @@ import com.deelabs.untisplus.data.settings.model.NotificationVisibility
 import com.deelabs.untisplus.services.TimetableChangeService
 import com.deelabs.untisplus.ui.common.disabled
 import com.deelabs.untisplus.ui.dialogs.ElementPickerDialogFullscreen
+import com.deelabs.untisplus.notifications.InfoCenterNotifications
 import com.deelabs.untisplus.ui.navigation.AppRoutes
 import com.deelabs.untisplus.ui.pages.settings.SettingsScreenViewModel
+import com.deelabs.untisplus.workers.EventReminderSyncWorker
 import com.deelabs.untisplus.workers.NotificationSetupWorker
 import com.deelabs.untisplus.workers.TimetableChangeWorker
 import kotlinx.coroutines.delay
@@ -82,6 +84,12 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 		WorkManager.getInstance(context).apply {
 			enqueue(OneTimeWorkRequestBuilder<NotificationSetupWorker>().build())
 		}
+	}
+
+	fun refreshEventReminders() = scope.launch {
+		delay(1000) // Let protostore persist the opt-in before the worker reads it.
+		EventReminderSyncWorker.schedule(context)
+		EventReminderSyncWorker.syncNow(context)
 	}
 
 	fun restartTimetableStream() = scope.launch {
@@ -137,6 +145,7 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 					if (notificationPermissionGranted) {
 						notificationsMessageVisible = false
 						enqueueNotificationSetup()
+						if (this.eventRemindersEnabled) refreshEventReminders() else EventReminderSyncWorker.schedule(context)
 						true
 					} else {
 						notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
@@ -144,8 +153,15 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 					}
 				} else {
 					clearNotifications()
+					EventReminderSyncWorker.cancel(context, viewModel.currentUserId())
 					TimetableChangeWorker.cancel(context)
 					TimetableChangeService.stop(context)
+					scope.launch {
+						viewModel.userSettingsRepository.updateSettings {
+							clearInfocenterMessageNotificationsSeen()
+							infocenterMessageNotificationsInitialized = false
+						}
+					}
 					false
 				}
 			}
@@ -184,6 +200,43 @@ fun SettingsCategoryNotifications(navController: NavController, viewModel: Setti
 			onValueChange = {
 				notificationsBeforeFirstTime = it
 				enqueueNotificationSetup()
+			}
+		)
+	}
+
+	PreferenceGroup(stringResource(R.string.preference_category_notifications_infocenter)) {
+		SwitchPreference(
+			title = { Text(stringResource(R.string.preference_notifications_infocenter)) },
+			summary = { Text(stringResource(R.string.preference_notifications_infocenter_desc)) },
+			enabledCondition = { it.notificationsEnable },
+			settingsRepository = viewModel.userSettingsRepository,
+			value = { it.infocenterMessageNotifications },
+			onValueChange = { enabled ->
+				scope.launch {
+					viewModel.userSettingsRepository.updateSettings {
+						infocenterMessageNotifications = enabled
+						if (!enabled) {
+							clearInfocenterMessageNotificationsSeen()
+							infocenterMessageNotificationsInitialized = false
+						}
+					}
+					if (enabled) InfoCenterNotifications.ensureChannels(context)
+					else InfoCenterNotifications.cancel(context)
+				}
+			}
+		)
+	}
+
+	PreferenceGroup(stringResource(R.string.preference_category_notifications_events)) {
+		SwitchPreference(
+			title = { Text(stringResource(R.string.preference_notifications_event_reminders)) },
+			summary = { Text(stringResource(R.string.preference_notifications_event_reminders_desc)) },
+			enabledCondition = { it.notificationsEnable },
+			settingsRepository = viewModel.userSettingsRepository,
+			value = { it.eventRemindersEnabled },
+			onValueChange = {
+				eventRemindersEnabled = it
+				if (it) refreshEventReminders() else EventReminderSyncWorker.cancel(context, viewModel.currentUserId())
 			}
 		)
 	}

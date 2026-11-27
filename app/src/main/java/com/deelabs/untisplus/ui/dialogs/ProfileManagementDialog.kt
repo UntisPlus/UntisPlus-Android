@@ -40,6 +40,7 @@ import com.deelabs.untisplus.R
 import com.deelabs.untisplus.data.database.entities.User
 import com.deelabs.untisplus.data.database.entities.getDisplayedName
 import com.deelabs.untisplus.data.repository.UserRepository
+import com.deelabs.untisplus.notifications.InfoCenterNotifications
 import com.deelabs.untisplus.ui.common.AppScaffold
 import com.deelabs.untisplus.ui.functional.insetsPaddingValues
 import kotlinx.coroutines.launch
@@ -181,6 +182,7 @@ fun ProfileManagementDialog(
 						onClick = {
 							scope.launch {
 								userRepository.deleteUser(user)
+								InfoCenterNotifications.cancel(context)
 								deleteDialog = null
 							}
 						}) {

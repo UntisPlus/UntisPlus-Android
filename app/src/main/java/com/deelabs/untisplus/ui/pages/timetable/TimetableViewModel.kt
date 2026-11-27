@@ -34,6 +34,7 @@ import com.deelabs.untisplus.mappers.TimetableMapper
 import com.deelabs.untisplus.models.PeriodItem
 import com.deelabs.untisplus.models.ImportedCalendarEventItem
 import com.deelabs.untisplus.models.TimetableItem
+import com.deelabs.untisplus.notifications.InfoCenterNotificationController
 import com.deelabs.untisplus.services.WeekLogicService
 import com.deelabs.untisplus.ui.navigation.AppNavigator
 import com.deelabs.untisplus.ui.navigation.AppRoutes
@@ -85,6 +86,7 @@ class TimetableViewModel constructor(
 	internal val weekLogicService: WeekLogicService,
 	buildConfigFieldsProvider: BuildConfigFieldsProvider,
 	savedStateHandle: SavedStateHandle,
+	private val infoCenterNotificationController: InfoCenterNotificationController,
 ) : ViewModel() {
 	private val args = savedStateHandle.toRoute<AppRoutes.Timetable>()
 
@@ -273,6 +275,7 @@ class TimetableViewModel constructor(
 	}
 
 	fun switchUser(user: User) {
+		infoCenterNotificationController.cancel()
 		userRepository.switchUser(user)
 	}
 
@@ -460,15 +463,13 @@ class TimetableViewModel constructor(
 		navigator.navigate(AppRoutes.Settings.Timetable(highlightTitle = R.string.preference_timetable_personal_timetable))
 	}
 
-	fun getTitle(context: Context) = requestedElement?.let {
-		if (it == _personalElement.value) null // Use Profile name for personal timetable
-		else if (it.type == ElementType.STUDENT) {
-			// Parent accounts select children directly from the persisted user data.
-			currentUser.userData.children.firstOrNull { child -> child?.id == it.id }?.fullName()
-				?: masterDataRepository.getLongName(it)
-		} else masterDataRepository.getLongName(it)
+	fun getTitle(context: Context): String {
+		val profileTitle = currentUser.getDisplayedName(context) + (if (isDebug) " (${currentUser.id})" else "")
+		val childNames = currentUser.userData.children.mapNotNull { child ->
+			child?.id?.let { id -> id to child.fullName() }
+		}.toMap()
+		return timetableTitle(requestedElement, _personalElement.value, masterDataRepository, profileTitle, childNames)
 	}
-		?: (currentUser.getDisplayedName(context) + (if (isDebug) " (${currentUser.id})" else ""))
 
 	fun showElement(element: PeriodElement?) {
 		if (requestedElement != element)

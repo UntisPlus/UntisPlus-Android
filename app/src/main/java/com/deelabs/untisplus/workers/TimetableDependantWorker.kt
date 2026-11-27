@@ -48,8 +48,7 @@ abstract class TimetableDependantWorker(
 	): List<Period> {
 		val currentDate = LocalDate.now()
 
-		// TODO This doesn't take user id into account
-		return timetableRepository.timetableSource().get(
+		return timetableRepository.timetableSource(user).get(
 			params = TimetableRepository.TimetableParams(
 				element.id,
 				element.type,

@@ -6,6 +6,7 @@ AuthorName: deelabs
 AuthorEmail: info@deelabs.tech
 SourceCode: https://github.com/UntisPlus/UntisPlus-Android
 IssueTracker: https://github.com/UntisPlus/UntisPlus-Android/issues
+Translation: https://github.com/UntisPlus/UntisPlus-Android/tree/master/app/src/main/res
 Changelog: https://github.com/UntisPlus/UntisPlus-Android/releases
 AntiFeatures:
   NonFreeNet:

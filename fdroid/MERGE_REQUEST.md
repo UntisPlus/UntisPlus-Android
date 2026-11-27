@@ -58,6 +58,27 @@ SDK 36 if the build image does not already provide it. Auto-update is enabled:
 `fdroid/version.txt` for the name and code. Release tags must update that file
 in the same commit.
 
+## Issuebot follow-up
+
+The RFP bot report on `c5c5f0b5` was addressed upstream:
+
+- The Gradle wrapper was regenerated with the official Gradle 8.13 wrapper JAR
+  (`81a82aae...`) and `distributionSha256Sum=20f1b117...` for the 8.13 binary
+  distribution. The previous JAR matched the official 8.9 wrapper.
+- The Foojay toolchain-resolver convention plugin was removed from
+  `settings.gradle.kts`. The F-Droid recipe installs JDK 21 explicitly, and
+  `gradle/gradle-daemon-jvm.properties` keeps the daemon on Java 21.
+- `Translation` points to the source string directory. `crowdin.yml` exists,
+  but the repository does not publish a public Crowdin project URL; maintainers
+  should tell us if they prefer a different translation guide URL.
+- The OpenCensus entries came from dependency verification metadata generated
+  for the whole build (`help` configuration), pulled in by Android Gradle
+  Plugin, UTP and KSP. They are not app runtime dependencies:
+  `:app:dependencyInsight --dependency opencensus-api --configuration releaseRuntimeClasspath`
+  reports no match, and a `dexdump` scan of the release APK reports no
+  `io/opencensus` classes. Both `NonFreeNet` and `Tracking` remain declared.
+  As before, maintainers are asked whether `NonFreeNet` alone is sufficient.
+
 ## Store metadata
 
 The icon and feature graphic were drawn locally for UntisPlus and remain

@@ -72,6 +72,15 @@ The RFP bot report on `c5c5f0b5` was addressed upstream:
   exited 141 under the recipe shell's `pipefail`, so the build stopped after the
   SDK packages were installed. The prebuild now accepts only that specific
   status; real sdkmanager failures still fail the build.
+- A forced `fdroid build -t` then exposed a configuration-cache interaction:
+  the project enables `org.gradle.configuration-cache=true`, and F-Droid runs
+  `clean` and `assembleRelease` as two separate Gradle invocations. The second
+  one failed at `lintVitalReportRelease`/`minifyReleaseWithR8`. Passing
+  `-Porg.gradle.configuration-cache=false` does not override the project
+  setting, and recipes cannot pass arbitrary `-D` flags, so the prebuild now
+  appends `org.gradle.configuration-cache=false` to the build checkout's
+  `gradle.properties`. A forced fdroidserver 2.4.6 build against the fixed
+  source revision then succeeded.
 - `Translation` points to the source string directory. `crowdin.yml` exists,
   but the repository does not publish a public Crowdin project URL; maintainers
   should tell us if they prefer a different translation guide URL.

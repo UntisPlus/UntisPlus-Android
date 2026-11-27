@@ -68,6 +68,10 @@ The RFP bot report on `c5c5f0b5` was addressed upstream:
 - The Foojay toolchain-resolver convention plugin was removed from
   `settings.gradle.kts`. The F-Droid recipe installs JDK 21 explicitly, and
   `gradle/gradle-daemon-jvm.properties` keeps the daemon on Java 21.
+- A local `fdroid build` with fdroidserver 2.4.6 found that `yes | sdkmanager`
+  exited 141 under the recipe shell's `pipefail`, so the build stopped after the
+  SDK packages were installed. The prebuild now accepts only that specific
+  status; real sdkmanager failures still fail the build.
 - `Translation` points to the source string directory. `crowdin.yml` exists,
   but the repository does not publish a public Crowdin project URL; maintainers
   should tell us if they prefer a different translation guide URL.

@@ -39,9 +39,10 @@ sufficient and to remove `Tracking` on merge if they agree.
 
 ## Build
 
-The build is pinned to the v1.4.1 source with Fastlane metadata. The old
-`v1.4.0` tag is intentionally untouched; v1.4.1 is the shared release version
-for GitHub, F-Droid and Google Play.
+The build is pinned to `b492387531964d2294054d219971331f58c42fa9`, which is the
+v1.4.1 source plus the issuebot follow-ups, build fix and account-free feature
+fixes, with Fastlane metadata. The old `v1.4.0` tag is intentionally untouched;
+v1.4.1 remains the shared release version for GitHub, F-Droid and Google Play.
 
 Verified locally:
 

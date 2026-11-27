@@ -11,7 +11,7 @@ All three channels use the same version for this release:
 | Channel | Version | Artifact / source |
 |---|---|---|
 | GitHub Releases | `v1.4.1` | APK + AAB produced by `.github/workflows/deploy.yml` from `master` |
-| F-Droid | `v1.4.1`, code `1040199` | `fdroid/metadata/com.deelabs.untisplus.yml` pinned to the v1.4.1 source commit |
+| F-Droid | `v1.4.1`, code `1040199` | `fdroid/metadata/com.deelabs.untisplus.yml` pinned to `b492387531964d2294054d219971331f58c42fa9` |
 | Google Play | `v1.4.1`, code `1040199` | signed `app-release.aab` from the same source commit |
 
 The `v1.4.0` tag is deliberately untouched. `v1.4.1` is a new version because

@@ -2,9 +2,12 @@
 
 Copy `metadata/com.deelabs.untisplus.yml` to `metadata/com.deelabs.untisplus.yml` in an `fdroiddata` fork, then run the usual `fdroid readmeta`, `fdroid lint`, and `fdroid build` checks before opening the merge request.
 
-The pinned build commit is the v1.4.1 source with QR export, revived widgets,
-API 36 targeting, the public privacy policy, and the updated Fastlane text and
-changelogs in `fastlane/metadata/android/`. The icon and feature graphic were
+The pinned build commit is `b492387531964d2294054d219971331f58c42fa9`, which
+contains the v1.4.1 source plus the issuebot follow-ups, configuration-cache
+build fix, and the account-free cache, reminder, widget and timetable-title
+fixes. It still has the QR export, revived widgets, API 36 targeting, the public
+privacy policy, and the updated Fastlane text and changelogs in
+`fastlane/metadata/android/`. The icon and feature graphic were
 drawn locally for UntisPlus; phone screenshots were captured manually from the
 installed app after the account switch, then resized and given an UntisPlus
 header overlay. Locale text and historical changelogs derive from BetterUntis

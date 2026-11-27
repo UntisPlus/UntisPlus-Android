@@ -19,7 +19,7 @@ Repo: https://github.com/UntisPlus/UntisPlus-Android
 Builds:
   - versionName: v1.4.1
     versionCode: 1040199
-    commit: 4a403ad5a050c845924e59fcbf28d19922e8678b
+    commit: b492387531964d2294054d219971331f58c42fa9
     sudo:
       - apt-get update
       - apt-get install -y openjdk-21-jdk-headless
@@ -31,10 +31,12 @@ Builds:
       - yes
     output: app/build/outputs/apk/release/app-release-unsigned.apk
 MaintainerNotes: |-
-  The pinned commit is the v1.4.1 source: QR export, revived widgets, API 36
-  targeting, dependency-info removal, public privacy policy, and Play review
-  notes. The old v1.4.0 tag is intentionally untouched. versionCode is derived
-  in Gradle from versionName; stable releases add 99, so v1.4.1 is 1040199.
+  The pinned commit is the v1.4.1 source plus the issuebot follow-ups: official
+  Gradle 8.13 wrapper, no Foojay resolver, sdkmanager SIGPIPE handling, and a
+  build-only configuration-cache override. It also carries the account-free
+  cache, reminder, widget and timetable-title fixes. The old v1.4.0 tag is
+  intentionally untouched. versionCode is derived in Gradle from versionName;
+  stable releases add 99, so v1.4.1 is 1040199.
   The prebuild step installs SDK 36 in case the build image lacks it and
   disables Gradle's configuration cache in the build checkout; the cached task
   graph otherwise breaks lint/R8 across F-Droid's separate clean and
